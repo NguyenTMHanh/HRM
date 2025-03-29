@@ -1,15 +1,22 @@
-import React from 'react';
-import Login from './Components/Auth/Login';
-import SideBar from './Components/SideBar/SideBar';
+import React, { useState } from 'react';
+import { Layout } from 'antd';
+import Sidebar from './Components/SideBar/SideBar';
+import HeaderBar from './Components/Header/Header';
 
 function App() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleCollapse = () => {
+    setCollapsed(!collapsed);
+  };
+
   return (
-    <div className="app-container">
-      {/* <div className="login-container">
-        <Login />
-      </div> */}
-      <SideBar/>
-    </div>
+    <Layout>
+      <Sidebar collapsed={collapsed} />
+      <Layout>
+        <HeaderBar collapsed={collapsed} toggleCollapse={toggleCollapse} />
+      </Layout>
+    </Layout>
   );
 }
 

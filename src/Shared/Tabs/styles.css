@@ -1,0 +1,40 @@
+.label-tab-container {
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+    align-items: center;
+    .default-label-tab {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+      text-align: left;
+      color: #8a8a8a;
+    }
+    .count-item-container {
+      padding: 2px 10px;
+      border-radius: 12px;
+      border: 1px solid #8A8A8A;
+      .count-item {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+        text-align: left;
+        color: #8A8A8A;
+      }
+    }
+  }
+  .active-label-tab {
+    color: #3750B2 !important;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    text-align: left;
+  }
+  
+  .active-count-item-container {
+    background-color: #3750B2;
+  }
+  
+  .active-count-item {
+    color: #FFFFFF !important;
+  }

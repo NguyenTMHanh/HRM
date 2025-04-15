@@ -10,13 +10,13 @@
   position: fixed;
   bottom: 0;
   height: 65px;
-  left: 250px; /* 👈 chừa khoảng sidebar */
+  left: 250px; 
   right: 0;
   z-index: 1000;
 }
 
 .footer-btn {
-  font-size: 16px;
+  font-size: 1rem;
   padding: 0 20px;
   border-radius: 8px;
   height: 40px;
@@ -44,12 +44,20 @@
   border-color: #001b45;
   color: #fff;
 }
+.edit-btn {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
 
 .primary-btn:hover {
   background-color: #002d72 !important;
   border-color: #002d72 !important;
 }
-
+.edit-btn:hover {
+  background-color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+}
 .back-btn {
   border: 1px solid #1890ff;
   color: #1890ff;

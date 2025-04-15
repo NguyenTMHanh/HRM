@@ -1,9 +1,8 @@
 import React from 'react';
 import { Collapse } from 'antd';
-import './styles.css'; // Import file CSS thông thường
+import './styles.css';
 
 const CollapseComponent = ({ item, headerStyle, panelStyle, headerTitleStyle }) => {
-  // Chuyển đổi item thành mảng items phù hợp với API mới của Collapse
   const collapseItems = [
     {
       key: item.key,
@@ -15,14 +14,14 @@ const CollapseComponent = ({ item, headerStyle, panelStyle, headerTitleStyle }) 
         </div>
       ),
       children: item.children,
-      className: 'panel-collapse', // Áp dụng className cho panel
+      className: 'panel-collapse', 
       style: panelStyle, 
     },
   ];
 
   return (
     <Collapse
-      defaultActiveKey={['1', '2', '3', '4', '5']}
+      defaultActiveKey={['1', '2', '3', '4', '5', '6']}
       expandIconPosition="end"
       items={collapseItems} 
     />

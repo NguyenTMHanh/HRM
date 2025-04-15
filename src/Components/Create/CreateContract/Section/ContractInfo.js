@@ -2,7 +2,6 @@ import React from 'react';
 import { Form, Input, Row, Col, Select, DatePicker } from 'antd';
 import moment from 'moment';
 
-// Không cần import Option nữa
 const ContractInfo = ({ form }) => {
   const disabledStartDate = (current) => {
     return current && current < moment().startOf('day');

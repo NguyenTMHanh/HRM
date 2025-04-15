@@ -1,0 +1,25 @@
+.info-display {
+    padding: 16px;
+    background: #fff;
+  }
+  
+  .info-row {
+    align-items: center;
+  }
+  
+  .info-label {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #8c8c8c;
+  }
+  
+  .info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #141414;
+  }
+  
+  .info-divider {
+    margin: 12px 0; 
+    background: #e8e8e8; 
+  }

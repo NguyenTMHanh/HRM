@@ -17,8 +17,8 @@ const HumanResource = () => {
     const items = [
         { key: "personal", label: "Thông tin Cá nhân", children: <PersonalInfo /> },
         { key: "personel", label: "Thông tin Hồ sơ nhân sự", children: <PersonelInfo /> },
-        { key: "insurance", label: "Thông tin Bảo hiểm", children: <InsuranceInfo /> },
         { key: "contract", label: "Thông tin Hợp đồng lao động", children: <ContractInfo /> },
+        { key: "insurance", label: "Thông tin Bảo hiểm", children: <InsuranceInfo /> },
         { key: "tax", label: "Thông tin Thuế TNCN", children: <TaxInfo /> },
     ];
 

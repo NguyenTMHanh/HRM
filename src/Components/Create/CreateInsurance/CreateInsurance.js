@@ -167,6 +167,8 @@ function CreateInsurance() {
         onBack={handleBack}
         showNext={isSavedSuccessfully}
         showBack={true}
+        showCancel={true}
+        showSave={true}
       />
     </Form>
   );

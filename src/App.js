@@ -1,11 +1,81 @@
-import React from 'react';
-import Login from './Components/Auth/Login';
-
+import React, { useState } from 'react';
+import { Layout } from 'antd';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Sidebar from './Components/SideBar/SideBar';
+import HeaderBar from './Components/Header/Header';
+import Dashboard from './Components/Dashboard/Dashboad';
+import DailyCheckin from './Components/Checkin/DailyCheckin/DailyCheckin';
+import HistoryCheckin from './Components/Checkin/HistoryCheckin/HistoryCheckin';
+import CreateContract from './Components/Create/CreateContract/CreateContract';
+import CreateInsurance from './Components/Create/CreateInsurance/CreateInsurance';
+import CreatePersonal from './Components/Create/CreatePersonal/CreatePersonal';
+import CreatePersonel from './Components/Create/CreatePersonel/CreatePersonel';
+import CreateTax from './Components/Create/CreateTax/CreateTax';
+import HRProfile from './Components/HR/HRProfile/HRProfile';
+import HRSalary from './Components/HR/HRSalary/HRSalary';
+import HRHistoryCheckin from './Components/HR/HRHistoryCheckin/HRHistoryCheckin';
+import PersonalInfo from './Components/ProfileInfo/PersonalInfo/PersonalInfo';  
+import PersonelInfo from './Components/ProfileInfo/PersonelInfo/PersonelInfo';
+import InsuranceInfo from './Components/ProfileInfo/InsuranceInfo/InsuranceInfo';
+import ContractInfo from './Components/ProfileInfo/ContractInfo/ContractInfo';
+import TaxInfo from './Components/ProfileInfo/TaxInfo/TaxInfo';
+import SalaryInfo from './Components/SalaryInfo/SalaryInfo';
+import YourLetter from './Components/Letter/YourLetter/YourLetter';
+import ApprovedLetter from './Components/Letter/ApprovedLetter/AprovedLetter';
+import StructureSetting from './Components/Setting/StructureSetting/StructureSetting';
+import CheckinSetting from './Components/Setting/CheckinSetting/CheckinSetting';
+import SalarySetting from './Components/Setting/SalarySetting/SalarySetting';
+import ContractSetting from './Components/Setting/ContractSetting/ContractSetting';
+import TaxSetting from './Components/Setting/TaxSetting/TaxSetting';
+import InsuranceSetting from './Components/Setting/InsuranceSetting/InsuranceSetting';
+import DetailPermision from './Components/Permission/DetailPermission/DetailPermisstion';
+import RolePermission from './Components/Permission/RolePermission/RolePermission';
 function App() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleCollapse = () => {
+    setCollapsed(!collapsed);
+  };
+
   return (
-    <div>
-      <Login />
-    </div>
+    <Router>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sidebar collapsed={collapsed} />
+        <Layout>
+          <HeaderBar collapsed={collapsed} toggleCollapse={toggleCollapse} />
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/checkin/daily" element={<DailyCheckin />} />
+            <Route path="/checkin/history" element={<HistoryCheckin />} />
+            <Route path="create/personal" element={<CreatePersonal />}/>
+            <Route path="create/personel" element={<CreatePersonel />}/>
+            <Route path="create/insurance" element={<CreateInsurance />}/>
+            <Route path="create/contract" element={<CreateContract />}/>
+            <Route path="create/tax" element={<CreateTax/>}/>
+            <Route path="/hr/profile" element={<HRProfile/>}/>
+            <Route path="/hr/salary" element={<HRSalary/>}/>
+            <Route path="/hr/checkin/history" element={<HRHistoryCheckin/>}/>
+            <Route path="/infomation/personal" element={<PersonalInfo/>}/>
+            <Route path="/infomation/personel" element={<PersonelInfo/>}/>
+            <Route path="/infomation/insurance" element={<InsuranceInfo/>}/>
+            <Route path="/infomation/contract" element={<ContractInfo/>}/>
+            <Route path="/infomation/tax" element={<TaxInfo/>}/>
+            <Route path="/salary" element={<SalaryInfo/>}/>
+            <Route path="/letter/sent" element={<YourLetter/>}/>
+            <Route path="/letter/approved" element={<ApprovedLetter/>}/>
+            <Route path="/setting/checkin" element={<CheckinSetting/>}/>
+            <Route path="/setting/insurance" element={<InsuranceSetting/>}/>
+            <Route path="/setting/contract" element={<ContractSetting/>}/>
+            <Route path="/setting/structure" element={<StructureSetting/>}/>
+            <Route path="/setting/tax" element={<TaxSetting/>}/>
+            <Route path="/setting/salary" element={<SalarySetting/>}/>
+            <Route path="/permission/role" element={<RolePermission/>}/>
+            <Route path="/permission/detail" element={<DetailPermision/>}/>
+            <Route path="/" element={<Dashboard />} />
+          </Routes>
+        </Layout>
+      </Layout>
+    </Router>
   );
 }
 

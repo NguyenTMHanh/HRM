@@ -1,0 +1,96 @@
+.header-bar {
+    padding: 0 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 65px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); 
+  }
+  
+  .toggle-btn {
+    font-size: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%; 
+    padding: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .toggle-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+    opacity: 0;
+  }
+  
+  .toggle-btn:active::after {
+    width: 150%;
+    height: 150%;
+    opacity: 1;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .icon-btn {
+    font-size: 22px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%; /* Làm tròn nút */
+    padding: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .icon-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+    opacity: 0;
+  }
+  
+  .icon-btn:active::after {
+    width: 150%;
+    height: 150%;
+    opacity: 1;
+  }
+  
+  .user-menu {
+    min-width: 160px;
+  }
+  
+  .username-item {
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .logout-item {
+    color: #ff4d4f;
+  }
+  
+  .logout-icon {
+    color: #ff4d4f;
+  }

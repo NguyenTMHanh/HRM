@@ -15,9 +15,6 @@ function CreatePersonal() {
   const [frontImage, setFrontImage] = useState(null);  
   const [backImage, setBackImage] = useState(null);    
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false); 
-  const [provinceMap, setProvinceMap] = useState({});
-  const [districtMap, setDistrictMap] = useState({});
-  const [wardMap, setWardMap] = useState({});
   const navigate = useNavigate();
 
   const handleCancel = () => {
@@ -57,13 +54,13 @@ function CreatePersonal() {
           issuedPlace: formData.issuedPlace,
           frontImage: formData.frontImage,
           backImage: formData.backImage,
-          provinceResident: provinceMap[formData.provinceResident] || formData.provinceResident,
-          districtResident: districtMap[formData.districtResident] || formData.districtResident,
-          wardResident: wardMap[formData.wardResident] || formData.wardResident,
+          provinceResident: formData.provinceResident,
+          districtResident: formData.districtResident,
+          wardResident: formData.wardResident,
           houseNumberResident: formData.houseNumberResident,
-          provinceContact: provinceMap[formData.provinceContact] || formData.provinceContact,
-          districtContact: districtMap[formData.districtContact] || formData.districtContact,
-          wardContact: wardMap[formData.wardContact] || formData.wardContact,
+          provinceContact: formData.provinceContact,
+          districtContact: formData.districtContact,
+          wardContact: formData.wardContact,
           houseNumberContact: formData.houseNumberContact,
           phoneNumber: formData.phoneNumber,
           email: formData.email,
@@ -123,11 +120,7 @@ function CreatePersonal() {
               item={{
                 key: '3',
                 header: 'Thông tin thường trú',
-                children: <ResidentInfo
-                  setProvinceMap={setProvinceMap}
-                  setDistrictMap={setDistrictMap}
-                  setWardMap={setWardMap}
-                />,
+                children: <ResidentInfo />,
               }}
             />
           </div>
@@ -137,11 +130,7 @@ function CreatePersonal() {
               item={{
                 key: '4',
                 header: 'Thông tin liên hệ',
-                children: <ContactInfo
-                  setProvinceMap={setProvinceMap}
-                  setDistrictMap={setDistrictMap}
-                  setWardMap={setWardMap}
-                />,
+                children: <ContactInfo />,
               }}
             />
           </div>
@@ -163,6 +152,7 @@ function CreatePersonal() {
         onCancel={handleCancel}
         onNext={handleNext}
         showNext={isSavedSuccessfully}
+        //nextDisabled={!isSavedSuccessfully} // Truyền prop để vô hiệu hóa nút "Tiếp tục"
       />
     </>
   );

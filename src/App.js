@@ -14,7 +14,7 @@ import CreateTax from './Components/Create/CreateTax/CreateTax';
 import HRProfile from './Components/HR/HRProfile/HRProfile';
 import HRSalary from './Components/HR/HRSalary/HRSalary';
 import HRHistoryCheckin from './Components/HR/HRHistoryCheckin/HRHistoryCheckin';
-import PersonalInfo from './Components/ProfileInfo/PersonalInfo/PersonalInfo';  
+import PersonalInfo from './Components/ProfileInfo/PersonalInfo/PersonalInfo';
 import PersonelInfo from './Components/ProfileInfo/PersonelInfo/PersonelInfo';
 import InsuranceInfo from './Components/ProfileInfo/InsuranceInfo/InsuranceInfo';
 import ContractInfo from './Components/ProfileInfo/ContractInfo/ContractInfo';
@@ -30,6 +30,8 @@ import TaxSetting from './Components/Setting/TaxSetting/TaxSetting';
 import InsuranceSetting from './Components/Setting/InsuranceSetting/InsuranceSetting';
 import DetailPermision from './Components/Permission/DetailPermission/DetailPermisstion';
 import RolePermission from './Components/Permission/RolePermission/RolePermission';
+import Create from './Components/Create/Create';
+import HumanResource from './Components/ProfileInfo/ProfileInfo';
 function App() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -47,30 +49,34 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/checkin/daily" element={<DailyCheckin />} />
             <Route path="/checkin/history" element={<HistoryCheckin />} />
-            <Route path="create/personal" element={<CreatePersonal />}/>
-            <Route path="create/personel" element={<CreatePersonel />}/>
-            <Route path="create/insurance" element={<CreateInsurance />}/>
-            <Route path="create/contract" element={<CreateContract />}/>
-            <Route path="create/tax" element={<CreateTax/>}/>
-            <Route path="/hr/profile" element={<HRProfile/>}/>
-            <Route path="/hr/salary" element={<HRSalary/>}/>
-            <Route path="/hr/checkin/history" element={<HRHistoryCheckin/>}/>
-            <Route path="/infomation/personal" element={<PersonalInfo/>}/>
-            <Route path="/infomation/personel" element={<PersonelInfo/>}/>
-            <Route path="/infomation/insurance" element={<InsuranceInfo/>}/>
-            <Route path="/infomation/contract" element={<ContractInfo/>}/>
-            <Route path="/infomation/tax" element={<TaxInfo/>}/>
-            <Route path="/salary" element={<SalaryInfo/>}/>
-            <Route path="/letter/sent" element={<YourLetter/>}/>
-            <Route path="/letter/approved" element={<ApprovedLetter/>}/>
-            <Route path="/setting/checkin" element={<CheckinSetting/>}/>
-            <Route path="/setting/insurance" element={<InsuranceSetting/>}/>
-            <Route path="/setting/contract" element={<ContractSetting/>}/>
-            <Route path="/setting/structure" element={<StructureSetting/>}/>
-            <Route path="/setting/tax" element={<TaxSetting/>}/>
-            <Route path="/setting/salary" element={<SalarySetting/>}/>
-            <Route path="/permission/role" element={<RolePermission/>}/>
-            <Route path="/permission/detail" element={<DetailPermision/>}/>
+            <Route path="/hr/profile" element={<HRProfile />} />
+            <Route path="/hr/salary" element={<HRSalary />} />
+            <Route path="/hr/checkin/history" element={<HRHistoryCheckin />} />
+            <Route path="/Infomation" element={<HumanResource />} >
+              <Route path="personal" element={<PersonalInfo />} />
+              <Route path="personel" element={<PersonelInfo />} />
+              <Route path="insurance" element={<InsuranceInfo />} />
+              <Route path="contract" element={<ContractInfo />} />
+              <Route path="tax" element={<TaxInfo />} />
+            </Route>
+            <Route path="/salary" element={<SalaryInfo />} />
+            <Route path="/letter/sent" element={<YourLetter />} />
+            <Route path="/letter/approved" element={<ApprovedLetter />} />
+            <Route path="/setting/checkin" element={<CheckinSetting />} />
+            <Route path="/setting/insurance" element={<InsuranceSetting />} />
+            <Route path="/setting/contract" element={<ContractSetting />} />
+            <Route path="/setting/structure" element={<StructureSetting />} />
+            <Route path="/setting/tax" element={<TaxSetting />} />
+            <Route path="/setting/salary" element={<SalarySetting />} />
+            <Route path="/permission/role" element={<RolePermission />} />
+            <Route path="/permission/detail" element={<DetailPermision />} />
+            <Route path="/create" element={<Create />} >
+              <Route path="personal" element={<CreatePersonal />} />
+              <Route path="personel" element={<CreatePersonel />} />
+              <Route path="insurance" element={<CreateInsurance />} />
+              <Route path="contract" element={<CreateContract />} />
+              <Route path="tax" element={<CreateTax />} />
+            </Route>
             <Route path="/" element={<Dashboard />} />
           </Routes>
         </Layout>

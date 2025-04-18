@@ -8,7 +8,7 @@ import PersonelInfo from "./PersonelInfo/PersonelInfo";
 import TaxInfo from "./TaxInfo/TaxInfo";
 import "./styles.css";
 
-const HumanResource = () => {
+const ProfileInfo = () => {
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -37,4 +37,4 @@ const HumanResource = () => {
     );
 };
 
-export default HumanResource;
+export default ProfileInfo;

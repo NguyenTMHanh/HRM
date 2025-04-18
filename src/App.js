@@ -32,6 +32,10 @@ import DetailPermision from './Components/Permission/DetailPermission/DetailPerm
 import RolePermission from './Components/Permission/RolePermission/RolePermission';
 import Create from './Components/Create/Create';
 import HumanResource from './Components/ProfileInfo/ProfileInfo';
+import HRPersonel from './Components/HR/HRProfile/Section/HRPersonel';
+import HRContract from './Components/HR/HRProfile/Section/HRContract';
+import HRInsurance from './Components/HR/HRProfile/Section/HRInsurance';
+import HRTax from './Components/HR/HRProfile/Section/HRTax';
 function App() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -49,10 +53,16 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/checkin/daily" element={<DailyCheckin />} />
             <Route path="/checkin/history" element={<HistoryCheckin />} />
-            <Route path="/hr/profile" element={<HRProfile />} />
+            <Route path="/hr/profile" element={<HRProfile />}>
+              <Route path="personel" element={<HRPersonel/>} />
+              <Route path="insurance" element={<HRInsurance/>} />
+              <Route path="contract" element={<HRContract />} />
+              <Route path="tax" element={<HRTax />} />
+            </Route>
+
             <Route path="/hr/salary" element={<HRSalary />} />
             <Route path="/hr/checkin/history" element={<HRHistoryCheckin />} />
-            <Route path="/Infomation" element={<HumanResource />} >
+            <Route path="/infomation" element={<HumanResource />} >
               <Route path="personal" element={<PersonalInfo />} />
               <Route path="personel" element={<PersonelInfo />} />
               <Route path="insurance" element={<InsuranceInfo />} />

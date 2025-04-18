@@ -71,7 +71,7 @@ const MenuList = ({ darkTheme }) => {
         navigate('/salary');
         break;
       case 'hr-profile':
-        navigate('/hr/profile');
+        navigate('/hr/profile/personel');
         break;
       case 'hr-salary-table':
         navigate('/hr/salary');

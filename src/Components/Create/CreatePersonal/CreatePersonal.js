@@ -163,6 +163,8 @@ function CreatePersonal() {
         onCancel={handleCancel}
         onNext={handleNext}
         showNext={isSavedSuccessfully}
+        showCancel={true}
+        showSave={true}
       />
     </>
   );

@@ -4,7 +4,6 @@ import { UploadOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import moment from "moment";
 
-// Styled components cho nút
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
   border-color: #f5222d;

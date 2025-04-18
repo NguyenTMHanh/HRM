@@ -98,6 +98,8 @@ function CreateTax() {
         onCancel={handleCancel}
         onBack={handleBack}
         showBack={true}
+        showCancel={true}
+        showSave={true}
       />
     </>
   );

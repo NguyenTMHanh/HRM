@@ -4,16 +4,18 @@ import './styles.css';
 
 const { Footer } = Layout;
 
-function FooterBar({ onSave, onCancel, onNext, onBack, showNext, showBack }) {
+function FooterBar({ onSave, onCancel, onNext, onBack, onEdit, showSave, showCancel, showNext, showBack, showEdit }) {
   return (
     <Footer className="footer-bar">
       <Space>
-        <Button
-          className="footer-btn cancel-btn"
-          onClick={onCancel}
-        >
-          Hủy bỏ
-        </Button>
+        {showCancel && (
+          <Button
+            className="footer-btn cancel-btn"
+            onClick={onCancel}
+          >
+            Hủy bỏ
+          </Button>
+        )}
         {showBack && (
           <Button
             className="footer-btn primary-btn"
@@ -23,13 +25,24 @@ function FooterBar({ onSave, onCancel, onNext, onBack, showNext, showBack }) {
             Quay lại
           </Button>
         )}
-        <Button
-          className="footer-btn primary-btn"
-          type="primary"
-          onClick={onSave}
-        >
-          Lưu
-        </Button>
+        {showSave && (
+          <Button
+            className="footer-btn primary-btn"
+            type="primary"
+            onClick={onSave}
+          >
+            Lưu
+          </Button>
+        )}
+        {showEdit && (
+          <Button
+            className="footer-btn edit-btn"
+            type="primary"
+            onClick={onEdit}
+          >
+            Chỉnh sửa
+          </Button>
+        )}
         {showNext && (
           <Button
             className="footer-btn primary-btn"

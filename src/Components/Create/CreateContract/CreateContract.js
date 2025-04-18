@@ -87,25 +87,24 @@ function CreateContract() {
     <>
       <Form form={form} layout="vertical" initialValues={initialValues}>
         <div className="scroll-container">
-          <div className='collapse-container'>
+        <div className='collapse-container'>
             <Collapse
               item={{
                 key: '1',
-                header: 'Thông tin phụ cấp',
-                children: <Allowance form={form} />, 
-              }}
-            />
-          </div>
-
-          <div className='collapse-container'>
-            <Collapse
-              item={{
-                key: '2',
                 header: 'Thông tin HĐLĐ',
                 children: <ContractInfo form={form} />,
               }}
             />
           </div>
+          <div className='collapse-container'>
+            <Collapse
+              item={{
+                key: '2',
+                header: 'Thông tin phụ cấp',
+                children: <Allowance form={form} />, 
+              }}
+            />
+          </div>          
         </div>
       </Form>
       <FooterBar
@@ -115,6 +114,8 @@ function CreateContract() {
         onBack={handleBack}
         showNext={isSavedSuccessfully}
         showBack={true}
+        showCancel={true}
+        showSave={true}
       />
     </>
   );

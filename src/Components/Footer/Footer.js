@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layout, Button, Space } from 'antd';
+import { SaveOutlined, CloseOutlined, ArrowRightOutlined, ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import './styles.css';
 
 const { Footer } = Layout;
@@ -7,50 +8,45 @@ const { Footer } = Layout;
 function FooterBar({ onSave, onCancel, onNext, onBack, onEdit, showSave, showCancel, showNext, showBack, showEdit }) {
   return (
     <Footer className="footer-bar">
-      <Space>
+      <Space size="middle">
         {showCancel && (
           <Button
             className="footer-btn cancel-btn"
             onClick={onCancel}
-          >
-            Hủy bỏ
-          </Button>
+            icon={<CloseOutlined />}
+          />
         )}
         {showBack && (
           <Button
             className="footer-btn primary-btn"
             onClick={onBack}
             type="primary"
-          >
-            Quay lại
-          </Button>
+            icon={<ArrowLeftOutlined />}
+          />
         )}
         {showSave && (
           <Button
             className="footer-btn primary-btn"
             type="primary"
             onClick={onSave}
-          >
-            Lưu
-          </Button>
+            icon={<SaveOutlined />}
+          />
         )}
         {showEdit && (
           <Button
             className="footer-btn edit-btn"
             type="primary"
             onClick={onEdit}
-          >
-            Chỉnh sửa
-          </Button>
+            icon={<EditOutlined />}
+          />
         )}
         {showNext && (
           <Button
             className="footer-btn primary-btn"
             type="primary"
             onClick={onNext}
-          >
-            Tiếp tục
-          </Button>
+            icon={<ArrowRightOutlined />}
+          />
         )}
       </Space>
     </Footer>

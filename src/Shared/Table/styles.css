@@ -1,7 +1,7 @@
 .table-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 220px);          
+  height: calc(100vh - 220px);
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  width: 50%;
+  width: 80%;
 }
 
 .search-container {
@@ -85,29 +85,60 @@
 .scrollable-table {
   flex: 1;
   overflow-y: auto;
-  overflow-x: auto;          
+  overflow-x: auto;
   border-radius: 6px;
 }
 
-.table {
-  width: 100%;
-  height: auto;
+table {
   border-collapse: collapse;
-  font-size: 0.9rem;
-  background-color: white;
+  width: 100%;
+  font-family: Arial, sans-serif;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   padding: 10px 14px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #bbb;
+  border-top: 1px solid #bbb;
+  border-left: 1px solid #bbb;
+  border-right: 1px solid #bbb;
   text-align: left;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .table th {
-  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  text-align: left;
+}
+
+td.group-cell {
+  border-right: 2px solid #ccc;
+}
+
+.table thead tr:first-child th {
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  border-bottom: 2px solid #ccc;
+}
+
+.table thead th {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+}
+
+.table thead tr:first-child th.group-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+}
+
+.table thead tr:nth-child(2) th {
+  position: sticky;
+  top: 40px;
+  z-index: 2;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
 }
 
 .table tbody tr:hover {
@@ -115,9 +146,15 @@
   transition: background-color 0.2s ease-in-out;
 }
 
+.table td input[type="checkbox"] {
+  display: block;
+  margin: 0;
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;
+  justify-content: flex-start;
 }
 
 .btn {
@@ -206,4 +243,17 @@
 .table::-webkit-scrollbar-track,
 .scrollable-table::-webkit-scrollbar-track {
   background: #f1f1f1;
+}
+
+.branch-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.branch-filter select {
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }

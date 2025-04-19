@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaArrowLeft, FaArrowRight, FaSearch, FaPlus } from 're
 import './styles.css';
 import { useNavigate } from 'react-router-dom';
 
-const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, showAdd = true, groupBy }) => {
+const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, showAdd = true, showCreate=true, groupBy }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -112,11 +112,12 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
             </select>
           </div>
         </div>
-
-        <button className="create-new-btn" onClick={handleCreateNew}>
-          <FaPlus size={14} />
-          Tạo mới
-        </button>
+        {showCreate && (
+                  <button className="create-new-btn" onClick={handleCreateNew}>
+                  <FaPlus size={14} />
+                  Tạo mới
+                </button>
+        )}
       </div>
 
       <div className="scrollable-table">

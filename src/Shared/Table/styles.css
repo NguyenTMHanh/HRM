@@ -132,6 +132,7 @@ td.group-cell {
   top: 0;
   z-index: 3;
   background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  text-align: center; /* Center the group headers */
 }
 
 .table thead tr:nth-child(2) th {

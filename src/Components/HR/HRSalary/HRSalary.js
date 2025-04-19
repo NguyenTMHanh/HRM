@@ -1,10 +1,15 @@
 import React from 'react';
+import moment from 'moment';
 import TableComponent from '../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import './styles.css';
 
 const HRSalary = () => {
   const navigate = useNavigate();
+
+  // Get current year and month using moment
+  const currentYear = moment().format('YYYY'); // e.g., "2025"
+  const currentMonth = moment().format('MM'); // e.g., "04"
 
   // Generate year options (last 10 years)
   const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
@@ -236,7 +241,6 @@ const HRSalary = () => {
     alert(`Deleting salary info of ${item.employeeId}`);
   };
 
-
   const filterData = (data, searchTerm) => {
     return data.filter((item) =>
       item.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -249,7 +253,7 @@ const HRSalary = () => {
       <div className="filter-controls">
         <div className="year-month-filter">
           <label htmlFor="year-select">Năm: </label>
-          <select id="year-select">
+          <select id="year-select" defaultValue={currentYear}>
             {years.map((year) => (
               <option key={year} value={year}>
                 {year}
@@ -258,7 +262,7 @@ const HRSalary = () => {
           </select>
 
           <label htmlFor="month-select">Tháng: </label>
-          <select id="month-select">
+          <select id="month-select" defaultValue={currentMonth}>
             {months.map((month) => (
               <option key={month} value={month}>
                 {month}

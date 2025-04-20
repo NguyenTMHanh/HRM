@@ -1,0 +1,124 @@
+.question-dlg .ant-modal {
+    width: 400px !important; 
+  }
+  
+  .question-dlg .ant-modal-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+  }
+  
+  .question-dlg .ant-modal-body {
+    padding: 16px;
+  }
+  
+  .question-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  
+  .question-input {
+    border-radius: 4px;
+    border: 1px solid #d9d9d9;
+    font-size: 14px;
+    resize: none; 
+  }
+  
+  .question-input:hover,
+  .question-input:focus {
+    border-color: #1890ff;
+    box-shadow: none; 
+  }
+  
+  .question-dlg .ant-modal-footer {
+    padding: 8px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  
+  .question-dlg .cancel-btn {
+    border: 1px solid #ff4d4f;
+    color: #ff4d4f;
+    background: #ffffff;
+    border-radius: 20px; 
+  }
+  
+  .question-dlg .cancel-btn:hover {
+    background: linear-gradient(90deg,  #ff4d4f 0%,#fad1d2  100%) !important; 
+    border-color: #ff4d4f !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+  }
+  
+  .question-dlg .submit-btn {
+    background: #ffffff;
+    border-color: #001b45 !important; 
+    color: #001b45; 
+    border-radius: 20px; 
+  }
+  
+  .question-dlg .submit-btn:hover {
+    background: linear-gradient(90deg, #001b45 0%, #c0d8f5 100%) !important; 
+    color: #ffffff !important; 
+    transform: translateY(-2px);
+  }
+
+  .confirm-dlg .ant-modal {
+    width: 400px !important;
+  }
+  
+  .confirm-dlg .ant-modal-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #000;
+  }
+  
+  .confirm-dlg .ant-modal-body {
+    padding: 16px;
+  }
+  
+  .confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .confirm-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #000;
+  }
+  
+  .confirm-dlg .ant-radio-group {
+    margin-bottom: 16px;
+  }
+  
+  .confirm-dlg .cancel-btn {
+    border: 1px solid #ff4d4f;
+    color: #ff4d4f;
+    background: #ffffff;
+    border-radius: 20px;
+  }
+  
+  .confirm-dlg .cancel-btn:hover {
+    background: linear-gradient(90deg, #ff4d4f 0%, #fad1d2 100%) !important;
+    border-color: #ff4d4f !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+  }
+  
+  .confirm-dlg .confirm-btn {
+    background: #ffffff;
+    border-color: #001b45 !important;
+    color: #001b45;
+    border-radius: 20px;
+  }
+  
+  .confirm-dlg .confirm-btn:hover {
+    background: linear-gradient(90deg, #001b45 0%, #c0d8f5 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+  }

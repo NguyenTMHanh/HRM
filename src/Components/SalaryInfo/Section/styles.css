@@ -1,0 +1,88 @@
+.info-display {
+  padding: 16px;
+  background: #fff;
+}
+
+.info-row {
+  align-items: center;
+}
+
+.info-label {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #8c8c8c;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #141414;
+}
+
+.info-divider {
+  margin: 12px 0; 
+  background: #e8e8e8; 
+}
+
+.custom-allowance-table .ant-table-cell {
+  font-size: 1rem;
+}
+
+.custom-allowance-table .ant-table-thead > tr > th {
+  background-color: #f0f2f5;
+  font-weight: bold;
+  text-align: left;
+  padding: 8px 16px; 
+}
+
+.custom-allowance-table .ant-table-tbody > tr > td {
+  padding: 8px 16px; 
+  text-align: left; 
+}
+
+.custom-allowance-table .ant-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.custom-allowance-table .ant-table-thead > tr > th,
+.custom-allowance-table .ant-table-tbody > tr > td {
+  width: 25%; 
+}
+
+.custom-allowance-table .ant-checkbox-wrapper {
+  display: flex;
+  align-items: center; 
+  justify-content: flex-start; 
+  margin: 0; 
+}
+
+.custom-allowance-table .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.custom-allowance-table .ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: #fff;
+}
+
+.custom-allowance-table .ant-checkbox-inner {
+  border-color: #d9d9d9;
+  background-color: #fff;
+}
+
+.custom-allowance-table .ant-checkbox-disabled .ant-checkbox-inner {
+  background-color: #f5f5f5;
+  border-color: #d9d9d9;
+}
+
+.custom-allowance-table .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.custom-allowance-table .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: #fff;
+}
+
+

@@ -14,16 +14,16 @@ const CollapseComponent = ({ item, headerStyle, panelStyle, headerTitleStyle }) 
         </div>
       ),
       children: item.children,
-      className: 'panel-collapse', 
-      style: panelStyle, 
+      className: 'panel-collapse',
+      style: panelStyle,
     },
   ];
 
   return (
     <Collapse
-      defaultActiveKey={['1', '2', '3', '4', '5', '6']}
+      defaultActiveKey={Array.from({ length: 15}, (_, i) => String(i + 1))}
       expandIconPosition="end"
-      items={collapseItems} 
+      items={collapseItems}
     />
   );
 };

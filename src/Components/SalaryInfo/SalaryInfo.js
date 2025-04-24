@@ -266,7 +266,7 @@ function SalaryInfo() {
         </div>
       </div>
       <div className="main-content-salary">
-        <div className="left-column">
+        <div className="left-column-salary">
           <div className="collapse-container">
             <Collapse
               item={{
@@ -386,7 +386,7 @@ function SalaryInfo() {
           </div>
         </div>
 
-        <div className="right-column">
+        <div className="right-column-salary">
           <div className="collapse-container">
             <Collapse
               item={{

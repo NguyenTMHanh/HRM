@@ -1,5 +1,5 @@
 .scroll-container {
-  padding: 20px;
+  padding: 0px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -19,7 +19,6 @@
   max-width: 70%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   overflow-y: auto;
   height: 100%; 
   scrollbar-width: thin;

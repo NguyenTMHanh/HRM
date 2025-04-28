@@ -50,6 +50,18 @@ const WorkInfo = () => {
           <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày gia nhập"/>
         </Form.Item>
       </Col>
+      
+      <Col xs={24} sm={6}>
+        <Form.Item
+          label="Cơ sở làm việc"
+          name="workLocation"
+          rules={[{ required: true, message: 'Vui lòng chọn cơ sở làm việc!' }]}
+        >
+          <Select>
+            {locations.map(loc => <Select.Option key={loc} value={loc}>{loc}</Select.Option>)}
+          </Select>
+        </Form.Item>
+      </Col>
 
       <Col xs={24} sm={6}>
         <Form.Item
@@ -107,18 +119,6 @@ const WorkInfo = () => {
         >
           <Select>
             {managers.map(manager => <Select.Option key={manager} value={manager}>{manager}</Select.Option>)}
-          </Select>
-        </Form.Item>
-      </Col>
-
-      <Col xs={24} sm={6}>
-        <Form.Item
-          label="Cơ sở làm việc"
-          name="workLocation"
-          rules={[{ required: true, message: 'Vui lòng chọn cơ sở làm việc!' }]}
-        >
-          <Select>
-            {locations.map(loc => <Select.Option key={loc} value={loc}>{loc}</Select.Option>)}
           </Select>
         </Form.Item>
       </Col>

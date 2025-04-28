@@ -1,0 +1,47 @@
+.headerTabs {
+    /* Style cho container chính của tabs */
+  }
+  
+  .headerTabs :global(.ant-tabs-nav) {
+    padding: 10px 20px;
+    margin: 10px 10px 0px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    border-radius: 10px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .headerTabs :global(.ant-tabs-nav .ant-tabs-tab) {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1c2526;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .headerTabs :global(.ant-tabs-nav .ant-tabs-tab:hover) {
+    background-color: #f5f5f5;
+    color: #007bff;
+  }
+  
+  .headerTabs :global(.ant-tabs-nav .ant-tabs-tab-active) {
+    background-color: white;
+    color: #1c2526 !important;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  
+  .headerTabs :global(.ant-tabs-nav .ant-tabs-tab:last-child) {
+    margin-right: 0;
+  }
+  
+  .headerTabs :global(.ant-tabs-nav .ant-tabs-tab-disabled) {
+    color: #ccc;
+  }
+  

@@ -36,6 +36,12 @@ import HRPersonel from './Components/HR/HRProfile/Section/HRPersonel';
 import HRContract from './Components/HR/HRProfile/Section/HRContract';
 import HRInsurance from './Components/HR/HRProfile/Section/HRInsurance';
 import HRTax from './Components/HR/HRProfile/Section/HRTax';
+import Branch from './Components/Setting/StructureSetting/Page/Branch/Branch';
+import StructureView from './Components/Setting/StructureSetting/Page/StructureView/StructureView';
+import Rank from './Components/Setting/StructureSetting/Page/Rank/Rank';
+import Department from './Components/Setting/StructureSetting/Page/Department/Department';
+import JobTitle from './Components/Setting/StructureSetting/Page/JobTitle/JobTitle';
+import Position from './Components/Setting/StructureSetting/Page/Position/Position';
 function App() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -75,7 +81,14 @@ function App() {
             <Route path="/setting/checkin" element={<CheckinSetting />} />
             <Route path="/setting/insurance" element={<InsuranceSetting />} />
             <Route path="/setting/contract" element={<ContractSetting />} />
-            <Route path="/setting/structure" element={<StructureSetting />} />
+            <Route path="/setting/structure" element={<StructureSetting />}>
+              <Route path="rank" element={<Rank />} />
+              <Route path="branch" element={<Branch />} />
+              <Route path="department" element={<Department />} />
+              <Route path="jobtitle" element={<JobTitle />} />
+              <Route path="position" element={<Position />} />
+              <Route path="view" element={<StructureView />} />
+            </Route>
             <Route path="/setting/tax" element={<TaxSetting />} />
             <Route path="/setting/salary" element={<SalarySetting />} />
             <Route path="/permission/role" element={<RolePermission />} />

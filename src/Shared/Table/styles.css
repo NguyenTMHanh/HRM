@@ -195,6 +195,14 @@ td.group-cell {
   background-color: #fbbf24;
 }
 
+.btn-view {
+  background-color: #17a2b8;
+}
+
+.btn-view:hover {
+  background-color: #138496;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -253,6 +261,19 @@ td.group-cell {
 }
 
 .branch-filter select {
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.department-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.department-filter select {
   padding: 6px;
   font-size: 14px;
   border: 1px solid #ccc;

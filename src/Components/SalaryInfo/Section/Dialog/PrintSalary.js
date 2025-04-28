@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Radio, Button, Space, Select } from 'antd';
+import FooterBar from '../../../Footer/Footer';
 import './styles.css';
 
 const { Option } = Select;
@@ -8,7 +9,7 @@ const PrintSalary = ({ open, onCancel, onConfirm }) => {
   const [exportOption, setExportOption] = useState('pdf');
   const [selectedPaySlip, setSelectedPaySlip] = useState('Phiếu lương 1'); 
 
-  const handleConfirm = () => {
+  const handleExport = () => {
     onConfirm(exportOption, selectedPaySlip);
   };
 
@@ -21,14 +22,13 @@ const PrintSalary = ({ open, onCancel, onConfirm }) => {
       onCancel={onCancel}
       centered={true}
       footer={
-        <Space>
-          <Button onClick={onCancel} className="cancel-btn">
-            Hủy
-          </Button>
-          <Button type="primary" onClick={handleConfirm} className="confirm-btn">
-            Xuất
-          </Button>
-        </Space>
+        <FooterBar
+          onExport={handleExport}
+          onCancel={onCancel}
+          showExport={true}
+          showCancel={true}
+          isModalFooter={true} 
+        />
       }
       className="confirm-dlg"
     >

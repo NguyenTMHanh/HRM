@@ -86,7 +86,7 @@ const MenuList = ({ darkTheme }) => {
         navigate('/letter/approved');
         break;
       case 'setting-structure':
-        navigate('/setting/structure');
+        navigate('/setting/structure/rank');
         break;
       case 'setting-checkin':
         navigate('/setting/checkin');

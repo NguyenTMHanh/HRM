@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaArrowLeft, FaArrowRight, FaSearch, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaArrowLeft, FaArrowRight, FaSearch, FaPlus, FaEye } from 'react-icons/fa';
 import './styles.css';
-import { useNavigate } from 'react-router-dom';
 
-const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, showAdd = true, showCreate=true, groupBy }) => {
+const TableComponent = ({
+  data,
+  columns,
+  onEdit,
+  onDelete,
+  filterData,
+  onAdd,
+  onView,
+  showView = true,
+  showAdd = true,
+  showCreate = true,
+  onCreate,
+  groupBy,
+  onBranchShow = true,
+  onDepartmentShow = true,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState('All');
-  const navigate = useNavigate();
 
   // Get unique branches
   const uniqueBranches = [...new Set(data.map(item => item.branch))];
@@ -42,10 +55,6 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
     setCurrentPage(1);
   };
 
-  const handleCreateNew = () => {
-    navigate('/create/personal');
-  };
-
   // Reset department to 'All' when branch changes
   const handleBranchChange = (e) => {
     setSelectedBranch(e.target.value);
@@ -70,37 +79,41 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
             </button>
           </div>
 
-          {/* Branch Filter */}
-          <div className="branch-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label htmlFor="branch-select" style={{ fontSize: '14px' }}>Chi nhánh: </label>
-            <select
-              id="branch-select"
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
-            >
-              <option value="All">Tất cả</option>
-              {uniqueBranches.map(branch => (
-                <option key={branch} value={branch}>{branch}</option>
-              ))}
-            </select>
-          </div>
+          {/* Branch Filter - Chỉ hiển thị nếu onBranchShow là true */}
+          {onBranchShow && (
+            <div className="branch-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="branch-select" style={{ fontSize: '14px' }}>Chi nhánh: </label>
+              <select
+                id="branch-select"
+                value={selectedBranch}
+                onChange={handleBranchChange}
+                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="All">Tất cả</option>
+                {uniqueBranches.map(branch => (
+                  <option key={branch} value={branch}>{branch}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          {/* Department Filter */}
-          <div className="department-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label htmlFor="department-select" style={{ fontSize: '14px' }}>Bộ phận: </label>
-            <select
-              id="department-select"
-              value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
-              style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
-            >
-              <option value="All">Tất cả</option>
-              {uniqueDepartments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-          </div>
+          {/* Department Filter - Chỉ hiển thị nếu onDepartmentShow là true */}
+          {onDepartmentShow && (
+            <div className="department-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="department-select" style={{ fontSize: '14px' }}>Bộ phận: </label>
+              <select
+                id="department-select"
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="All">Tất cả</option>
+                {uniqueDepartments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="items-per-page">
             <label>Số hàng hiển thị:</label>
@@ -113,10 +126,10 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
           </div>
         </div>
         {showCreate && (
-                  <button className="create-new-btn" onClick={handleCreateNew}>
-                  <FaPlus size={14} />
-                  Tạo mới
-                </button>
+          <button className="create-new-btn" onClick={onCreate}>
+            <FaPlus size={14} />
+            Tạo mới
+          </button>
         )}
       </div>
 
@@ -130,14 +143,14 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
                     {group.label}
                   </th>
                 ))}
-                <th>Action</th>
+                <th>Thao tác</th>
               </tr>
             )}
             <tr>
               {columns.map((column) => (
                 <th key={column.key}>{column.label}</th>
               ))}
-              <th>Action</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -151,24 +164,31 @@ const TableComponent = ({ data, columns, onEdit, onDelete, filterData, onAdd, sh
                         checked={item[column.key] || false}
                         readOnly
                       />
+                    ) : column.render ? ( // Check for render function
+                      column.render(item[column.key], item) // Use render if it exists
                     ) : (
-                      item[column.key]
+                      item[column.key] // Fallback to raw value
                     )}
                   </td>
                 ))}
                 <td>
                   <div className="action-buttons">
+                    {showView && (
+                      <button onClick={() => onView(item)} className="btn btn-view">
+                        <FaEye />
+                      </button>
+                    )}
+                    {showAdd && (
+                      <button onClick={() => onAdd(item)} className="btn btn-add">
+                        <FaPlus />
+                      </button>
+                    )}
                     <button onClick={() => onEdit(item)} className="btn btn-edit">
                       <FaEdit />
                     </button>
                     <button onClick={() => onDelete(item)} className="btn btn-delete">
                       <FaTrash />
                     </button>
-                    {showAdd && (
-                      <button onClick={() => onAdd(item)} className="btn btn-add">
-                        <FaPlus />
-                      </button>
-                    )}
                   </div>
                 </td>
               </tr>

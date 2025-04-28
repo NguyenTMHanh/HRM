@@ -1,28 +1,31 @@
 import React from 'react';
-import { Layout, Button, Space } from 'antd';
-import { SaveOutlined, CloseOutlined, ArrowRightOutlined, ArrowLeftOutlined, EditOutlined, CheckOutlined, QuestionOutlined } from '@ant-design/icons';
+import { Button, Space } from 'antd';
+import { SaveOutlined, CloseOutlined, ArrowRightOutlined, ArrowLeftOutlined, EditOutlined, CheckOutlined, QuestionOutlined, SendOutlined, ExportOutlined } from '@ant-design/icons';
 import './styles.css';
 
-const { Footer } = Layout;
-
-function FooterBar({ 
-  onSave, 
-  onCancel, 
-  onNext, 
-  onBack, 
-  onEdit, 
-  onConfirm, 
-  onQuestion, 
-  showSave, 
-  showCancel, 
-  showNext, 
-  showBack, 
-  showEdit, 
-  showConfirm, 
-  showQuestion 
+function FooterBar({
+  onSave,
+  onCancel,
+  onNext,
+  onBack,
+  onEdit,
+  onConfirm,
+  onQuestion,
+  onSend,
+  onExport,
+  showSave,
+  showCancel,
+  showNext,
+  showBack,
+  showEdit,
+  showConfirm,
+  showQuestion,
+  showSend,
+  showExport,
+  isModalFooter = false, 
 }) {
   return (
-    <Footer className="footer-bar">
+    <div className={`footer-bar ${isModalFooter ? 'modal-footer-bar' : ''}`}>
       <Space size="middle">
         {showCancel && (
           <Button
@@ -35,7 +38,7 @@ function FooterBar({
         )}
         {showBack && (
           <Button
-            className="footer-btn primary-btn "
+            className="footer-btn primary-btn"
             onClick={onBack}
             type="primary"
             icon={<ArrowLeftOutlined />}
@@ -83,6 +86,16 @@ function FooterBar({
             Thắc mắc
           </Button>
         )}
+        {showExport && (
+          <Button
+            className="footer-btn primary-btn"
+            type="primary"
+            onClick={onExport}
+            icon={<ExportOutlined />}
+          >
+            Xuất
+          </Button>
+        )}
         {showNext && (
           <Button
             className="footer-btn primary-btn"
@@ -93,8 +106,18 @@ function FooterBar({
             Tiếp theo
           </Button>
         )}
+        {showSend && (
+          <Button
+            className="footer-btn primary-btn"
+            type="primary"
+            onClick={onSend}
+            icon={<SendOutlined />}
+          >
+            Gửi
+          </Button>
+        )}
       </Space>
-    </Footer>
+    </div>
   );
 }
 

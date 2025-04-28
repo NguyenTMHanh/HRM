@@ -1,0 +1,17 @@
+.status {
+  font-weight: 500;
+  padding: 4px 12px; 
+  border-radius: 16px; 
+  display: inline-block;
+  background-color: #ffffff;
+}
+
+.active {
+  border: 1px solid #2e7d32; 
+  color: #2e7d32;
+}
+
+.inactive {
+  border: 1px solid #d81b60; 
+  color: #d81b60; 
+}

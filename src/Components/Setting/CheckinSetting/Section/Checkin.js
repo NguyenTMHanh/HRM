@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, TimePicker,message } from 'antd';
+import { Form, Row, Col, TimePicker, message } from 'antd';
 import FooterBar from '../../../Footer/Footer';
 import dayjs from 'dayjs';
 
@@ -32,21 +32,38 @@ const Checkin = () => {
       const values = await form.validateFields();
 
       const formattedValues = {
-        checkIn: values.checkIn ? values.checkIn.format("HH:mm") : null,
-        checkOut: values.checkOut ? values.checkOut.format("HH:mm") : null,
+        checkIn: values.checkIn ? values.checkIn.format('HH:mm') : null,
+        checkOut: values.checkOut ? values.checkOut.format('HH:mm') : null,
       };
 
       console.log('Saved values:', formattedValues);
       setIsEditing(false);
-      message.success("Lưu dữ liệu thành công!");
+      message.success('Lưu dữ liệu thành công!');
     } catch (error) {
       console.log('Validation failed:', error);
-      message.error("Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.");
+      message.error('Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.');
     }
   };
 
   return (
     <div style={{ position: 'relative' }}>
+      <style>
+        {`
+          .ant-picker-disabled .ant-picker-input input {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; /* Keep text color normal */
+            cursor: not-allowed;
+          }
+
+          .ant-picker-disabled {
+            background-color: white !important;
+          }
+
+          .ant-picker-disabled .ant-picker-suffix {
+            color: rgba(0, 0, 0, 0.25);
+          }
+        `}
+      </style>
       <Form form={form} layout="vertical">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12}>

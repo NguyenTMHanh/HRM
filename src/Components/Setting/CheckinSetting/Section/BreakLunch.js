@@ -7,8 +7,8 @@ const BreakLunch = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const initialData = {
-    breakHours: 1, // Default hours
-    breakMinutes: 0, // Default minutes
+    breakHours: 1, 
+    breakMinutes: 0, 
   };
 
   useEffect(() => {
@@ -47,6 +47,15 @@ const BreakLunch = () => {
 
   return (
     <div style={{ position: 'relative' }}>
+      <style>
+        {`
+          .ant-input-number-disabled .ant-input-number-input {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; 
+            cursor: not-allowed; 
+          }
+        `}
+      </style>
       <Form form={form} layout="vertical">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12}>

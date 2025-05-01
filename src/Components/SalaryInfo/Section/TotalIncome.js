@@ -12,7 +12,7 @@ const TotalIncome = ({
 }) => {
   const formatNumber = (number) => {
     if (!number && number !== 0) return 'N/A';
-    return typeof number === 'number' ? number.toLocaleString() : number;
+    return typeof number === 'number' ? number.toLocaleString('fr-FR') : 'N/A';
   };
 
   const incomeItems = [

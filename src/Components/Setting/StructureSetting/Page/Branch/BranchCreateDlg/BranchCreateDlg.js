@@ -54,7 +54,7 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit }) => {
           <Collapse
             item={{
               key: "1",
-              header: "Thông tin chi nhánh",
+              header: "Cài đặt chi nhánh",
               children: <BranchInfo form={formInstance} />,
             }}
           />

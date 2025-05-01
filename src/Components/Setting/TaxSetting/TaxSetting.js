@@ -1,6 +1,7 @@
 import React from "react";
 import Collapse from "../../../Shared/Collapse/Collapse";
 import TaxRate from "./Section/TaxRate";
+import Deduction from "./Section/Dedution";
 import styles from "./styles.module.css";
 function TaxSetting () {
   return (
@@ -17,7 +18,15 @@ function TaxSetting () {
               />
             </div>
 
-            
+            <div className={styles.collapseContainer}>
+              <Collapse
+                item={{
+                  key: "2",
+                  header: "Cài đặt các khoản giảm trừ Thuế TNCN",
+                  children: <Deduction />,
+                }}
+              />
+            </div>
           </div>
         </div>    
     </>

@@ -46,6 +46,22 @@ const RateBHYT = () => {
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Add custom styles for disabled InputNumber */}
+      <style>
+        {`
+          /* Style for disabled InputNumber */
+          .ant-input-number-disabled .ant-input-number-input {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; /* Keep text color normal */
+            cursor: not-allowed;
+          }
+
+          /* Ensure the InputNumber container retains its border */
+          .ant-input-number-disabled {
+            background-color: white !important;
+          }
+        `}
+      </style>
       <Form form={form} layout="vertical">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12}>

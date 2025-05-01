@@ -212,11 +212,11 @@ const MenuList = ({ darkTheme }) => {
           icon: <SafetyCertificateOutlined />,
           label: 'Bảo hiểm',
         },
-        {
-          key: 'setting-contract',
-          icon: <FileDoneOutlined />,
-          label: 'Hợp đồng',
-        },
+        // {
+        //   key: 'setting-contract',
+        //   icon: <FileDoneOutlined />,
+        //   label: 'Hợp đồng',
+        // },
         {
           key: 'setting-tax',
           icon: <AuditOutlined />,

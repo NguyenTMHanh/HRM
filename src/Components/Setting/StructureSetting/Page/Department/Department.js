@@ -9,6 +9,7 @@ const Department = () => {
   const navigate = useNavigate();
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [departmentData, setDepartmentData] = useState([
     {
       departmentCode: "D001",
@@ -39,7 +40,8 @@ const Department = () => {
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing department: ${item.departmentName}`);
+    setSelectedDepartment(item);
+    setIsDialogVisible(true);
   };
 
   const handleDelete = (item) => {
@@ -47,16 +49,25 @@ const Department = () => {
   };
 
   const handleCreate = () => {
+    setSelectedDepartment(null);
     setIsDialogVisible(true);
   };
 
   const handleDialogClose = () => {
     form.resetFields();
     setIsDialogVisible(false);
+    setSelectedDepartment(null);
   };
 
   const handleDialogSubmit = (values) => {
+    if (selectedDepartment) {
+      console.log("Call Api edit");
+      message.success("Cập nhật bộ phận thành công!");
+    } else {
+      message.success("Tạo bộ phận thành công!");
+    }
     setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const filterData = (data, searchTerm) => {
@@ -88,6 +99,7 @@ const Department = () => {
         onClose={handleDialogClose}
         onSubmit={handleDialogSubmit}
         form={form}
+        selectedDepartment={selectedDepartment}
       />
     </div>
   );

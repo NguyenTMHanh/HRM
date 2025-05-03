@@ -4,12 +4,13 @@ import Status from "../../../../../Shared/Status/Status";
 import { useNavigate } from "react-router-dom";
 import BranchCreateDlg from "./BranchCreateDlg/BranchCreateDlg";
 import styles from "./styles.module.css";
-import { Form } from "antd";
+import { Form, message } from "antd";
 
 const Branch = () => {
   const navigate = useNavigate();
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [structureData, setStructureData] = useState([
     {
       branchCode: "HN001",
@@ -64,7 +65,8 @@ const Branch = () => {
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing branch: ${item.branchName}`);
+    setSelectedBranch(item);
+    setIsDialogVisible(true);
   };
 
   const handleDelete = (item) => {
@@ -72,22 +74,25 @@ const Branch = () => {
   };
 
   const handleCreate = () => {
+    setSelectedBranch(null);
     setIsDialogVisible(true);
   };
 
   const handleDialogClose = () => {
+    form.resetFields();
     setIsDialogVisible(false);
+    setSelectedBranch(null);
   };
 
   const handleDialogSubmit = (values) => {
-    const newBranch = {
-      ...values,
-      departments: Array.isArray(values.departments)
-        ? values.departments
-        : values.departments.split(",").map((dept) => dept.trim()),
-    };
-    setStructureData([...structureData, newBranch]);
+    if (selectedBranch) {
+      console.log("Call API edit");
+      message.success("Cập nhật chi nhánh thành công!");
+    } else {
+      message.success("Tạo chi nhánh thành công!");
+    }
     setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const filterData = (data, searchTerm) => {
@@ -122,6 +127,7 @@ const Branch = () => {
         onClose={handleDialogClose}
         onSubmit={handleDialogSubmit}
         form={form}
+        selectedBranch={selectedBranch}
       />
     </div>
   );

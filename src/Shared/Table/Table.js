@@ -69,7 +69,7 @@ const TableComponent = ({
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

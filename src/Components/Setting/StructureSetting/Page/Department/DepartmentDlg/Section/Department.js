@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Input, Button, Row, Col, Form } from "antd";
 import styled from "styled-components";
 
@@ -43,100 +43,82 @@ const AddButton = styled(Button)`
 `;
 
 const Department = ({ form }) => {
-  const [departments, setDepartments] = useState([]);
-
   const handleAddDepartment = () => {
-    const newId = departments.length + 1;
+    const currentDepartments = form.getFieldValue("departments") || [];
+    const newId = currentDepartments.length + 1;
     const updated = [
-      ...departments,
-      { id: newId, departmentCode: "", name: "", description: "" }
+      ...currentDepartments,
+      { id: newId, departmentCode: `D${newId.toString().padStart(3, "0")}`, name: "", description: "" },
     ];
-    setDepartments(updated);
-    form.setFieldsValue({ departments: updated });
-  };
-
-  const handleDepartmentChange = (index, field, value) => {
-    const updated = [...departments];
-    updated[index][field] = value;
-    setDepartments(updated);
     form.setFieldsValue({ departments: updated });
   };
 
   const handleDeleteDepartment = (index) => {
-    const updated = departments
+    const currentDepartments = form.getFieldValue("departments") || [];
+    const updated = currentDepartments
       .filter((_, i) => i !== index)
       .map((dept, i) => ({
         ...dept,
         id: i + 1,
+        departmentCode: `D${(i + 1).toString().padStart(3, "0")}`,
       }));
-    setDepartments(updated);
     form.setFieldsValue({ departments: updated });
   };
 
-  useEffect(() => {
-    const initial = form.getFieldValue("departments") || [];
-    setDepartments(initial);
-  }, [form]);
-
   return (
-    <>
-      {departments.map((dept, index) => (
-        <Row gutter={[16, 16]} key={index}>
-          <Col xs={24} sm={6}>
-            <Form.Item
-              label="Mã bộ phận"
-              name={["departments", index, "departmentCode"]}
-              rules={[{ required: true, message: "Vui lòng nhập mã bộ phận" }]}
-            >
-              <Input
-                value={dept.departmentCode}
-                placeholder="Mã bộ phận"
-                disabled
-              />
-            </Form.Item>
-          </Col>
+    <Form.List name="departments">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map(({ key, name, ...restField }, index) => (
+            <Row gutter={[16, 16]} key={key}>
+              <Col xs={24} sm={6}>
+                <Form.Item
+                  {...restField}
+                  label="Mã bộ phận"
+                  name={[name, "departmentCode"]}
+                  rules={[{ required: true, message: "Vui lòng nhập mã bộ phận" }]}
+                >
+                  <Input placeholder="Mã bộ phận" disabled />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={8}>
-            <Form.Item
-              label="Tên bộ phận"
-              name={["departments", index, "name"]}
-              rules={[{ required: true, message: "Vui lòng nhập tên bộ phận" }]}
-            >
-              <Input
-                value={dept.name}
-                onChange={(e) => handleDepartmentChange(index, "name", e.target.value)}
-                placeholder="Tên bộ phận"
-              />
-            </Form.Item>
-          </Col>
+              <Col xs={24} sm={8}>
+                <Form.Item
+                  {...restField}
+                  label="Tên bộ phận"
+                  name={[name, "name"]}
+                  rules={[{ required: true, message: "Vui lòng nhập tên bộ phận" }]}
+                >
+                  <Input placeholder="Tên bộ phận" />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={8}>
-            <Form.Item
-              label="Mô tả"
-              name={["departments", index, "description"]}
-            >
-              <Input
-                value={dept.description}
-                onChange={(e) => handleDepartmentChange(index, "description", e.target.value)}
-                placeholder="Mô tả"
-              />
-            </Form.Item>
-          </Col>
+              <Col xs={24} sm={8}>
+                <Form.Item
+                  {...restField}
+                  label="Mô tả"
+                  name={[name, "description"]}
+                >
+                  <Input placeholder="Mô tả" />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <DeleteButton onClick={() => handleDeleteDepartment(index)}>
-              Xóa
-            </DeleteButton>
-          </Col>
-        </Row>
-      ))}
+              <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DeleteButton onClick={() => handleDeleteDepartment(index)}>
+                  Xóa
+                </DeleteButton>
+              </Col>
+            </Row>
+          ))}
 
-      <Form.Item>
-        <AddButton onClick={handleAddDepartment} block>
-          Thêm mới bộ phận
-        </AddButton>
-      </Form.Item>
-    </>
+          <Form.Item>
+            <AddButton onClick={handleAddDepartment} block>
+              Thêm mới bộ phận
+            </AddButton>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };
 

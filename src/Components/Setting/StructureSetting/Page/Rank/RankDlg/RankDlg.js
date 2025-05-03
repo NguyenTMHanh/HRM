@@ -4,28 +4,28 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Rank from "./Section/Rank";
 import FooterBar from "../../../../../Footer/Footer";
 
-const RankDlg = ({ visible, onClose, onSubmit }) => {
-  const [formInstance] = Form.useForm();
-
+const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank }) => {
   const initialValues = {
     ranks: [
       {
-        rankCode: "R001",
-        priority: 1,
-        name: "",
-        description: "",
+        rankCode: selectedRank
+          ? selectedRank.rankCode
+          : `R${Math.floor(Math.random() * 1000)}`.padStart(4, "0"),
+        priority: selectedRank ? selectedRank.priority : 1,
+        name: selectedRank ? selectedRank.rankName : "",
+        description: selectedRank ? selectedRank.description : "",
       },
     ],
   };
 
   useEffect(() => {
     if (visible) {
-      formInstance.setFieldsValue(initialValues);
+      form.setFieldsValue(initialValues);
     }
-  }, [visible, formInstance]);
+  }, [visible, form, selectedRank]);
 
   const handleSave = () => {
-    formInstance
+    form
       .validateFields()
       .then((values) => {
         const dataToSend = {
@@ -33,8 +33,7 @@ const RankDlg = ({ visible, onClose, onSubmit }) => {
         };
         console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        formInstance.resetFields();
-        message.success("Tạo cấp bậc thành công!");
+        form.resetFields();
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -43,7 +42,10 @@ const RankDlg = ({ visible, onClose, onSubmit }) => {
   };
 
   const handleCancel = () => {
-    formInstance.resetFields();
+    form.resetFields();
+  };
+
+  const handleClose = () => {
     onClose();
   };
 
@@ -59,16 +61,16 @@ const RankDlg = ({ visible, onClose, onSubmit }) => {
           isModalFooter={true}
         />
       }
-      onCancel={handleCancel}
+      onCancel={handleClose}
       width={1000}
     >
-      <Form form={formInstance} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={initialValues}>
         <div className="collapse-container">
           <Collapse
             item={{
               key: "1",
-              header: "Cài đặt cấp bậc",
-              children: <Rank form={formInstance} />,
+              header: selectedRank ? "Chỉnh sửa cấp bậc" : "Cài đặt cấp bậc",
+              children: <Rank form={form} />,
             }}
           />
         </div>

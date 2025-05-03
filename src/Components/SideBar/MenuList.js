@@ -239,11 +239,11 @@ const MenuList = ({ darkTheme }) => {
           icon: <TeamOutlined />,
           label: 'Nhóm quyền',
         },
-        {
-          key: 'permission-detail',
-          icon: <ProfileOutlined />,
-          label: 'Chi tiết quyền',
-        },
+        // {
+        //   key: 'permission-detail',
+        //   icon: <ProfileOutlined />,
+        //   label: 'Chi tiết quyền',
+        // },
       ],
     },
   ];

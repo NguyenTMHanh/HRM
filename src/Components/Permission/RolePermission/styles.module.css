@@ -1,0 +1,39 @@
+.tableContent {
+  padding: 20px;
+  margin: 15px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: calc(100vh - 105px); 
+  display: flex;
+  flex-direction: column;
+}
+
+.tableContent .scrollableTable {
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 0;
+  position: relative;
+  flex: 1; 
+}
+
+.tableContent .scrollableTable::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.tableContent .scrollableTable::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.tableContent .scrollableTable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0;
+}
+
+.filterControls {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e5e7eb;
+}

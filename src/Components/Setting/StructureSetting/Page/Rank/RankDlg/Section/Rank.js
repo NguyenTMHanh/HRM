@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Input, Button, Row, Col, Form } from "antd";
 import styled from "styled-components";
 
@@ -43,114 +43,91 @@ const AddButton = styled(Button)`
 `;
 
 const Rank = ({ form }) => {
-  const [ranks, setRanks] = useState([]);
-
   const handleAddRank = () => {
-    const newPriority = ranks.length + 1;
+    const currentRanks = form.getFieldValue("ranks") || [];
+    const newPriority = currentRanks.length + 1;
     const updated = [
-      ...ranks,
-      { rankCode: "", priority: newPriority, name: "", description: "" }
+      ...currentRanks,
+      { rankCode: `R${String(newPriority).padStart(3, "0")}`, priority: newPriority, name: "", description: "" },
     ];
-    setRanks(updated);
-    form.setFieldsValue({ ranks: updated });
-  };
-
-  const handleRankChange = (index, field, value) => {
-    const updated = [...ranks];
-    updated[index][field] = value;
-    setRanks(updated);
     form.setFieldsValue({ ranks: updated });
   };
 
   const handleDeleteRank = (index) => {
-    const updated = ranks.filter((_, i) => i !== index).map((rank, i) => ({
-      ...rank,
-      priority: i + 1,
-    }));
-    setRanks(updated);
+    const currentRanks = form.getFieldValue("ranks") || [];
+    const updated = currentRanks
+      .filter((_, i) => i !== index)
+      .map((rank, i) => ({
+        ...rank,
+        priority: i + 1,
+        rankCode: `R${String(i + 1).padStart(3, "0")}`,
+      }));
     form.setFieldsValue({ ranks: updated });
   };
 
-  useEffect(() => {
-    const initial = form.getFieldValue("ranks") || [];
-    setRanks(initial);
-  }, [form]);
-
   return (
-    <>
-      {ranks.map((rank, index) => (
-        <Row gutter={[16, 16]} key={index}>
-          <Col xs={24} sm={6}>
-            <Form.Item
-              label="Mã cấp bậc"
-              name={["ranks", index, "rankCode"]}
-              rules={[{ required: true, message: "Vui lòng nhập mã cấp bậc" }]}
-            >
-              <Input
-                value={rank.rankCode}
-                placeholder="Mã cấp bậc"
-                disabled
-              />
-            </Form.Item>
-          </Col>
+    <Form.List name="ranks">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map(({ key, name, ...restField }, index) => (
+            <Row gutter={[16, 16]} key={key}>
+              <Col xs={24} sm={6}>
+                <Form.Item
+                  {...restField}
+                  label="Mã cấp bậc"
+                  name={[name, "rankCode"]}
+                  rules={[{ required: true, message: "Vui lòng nhập mã cấp bậc" }]}
+                >
+                  <Input placeholder="Mã cấp bậc" disabled />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={4}>
-            <Form.Item
-              label="Mức độ ưu tiên"
-              name={["ranks", index, "priority"]}
-              rules={[{ required: true, message: "Vui lòng nhập mức độ ưu tiên" }]}
-            >
-              <Input
-                type="number"
-                value={rank.priority}
-                onChange={(e) => handleRankChange(index, "priority", parseInt(e.target.value))}
-                placeholder="Mức độ ưu tiên"
-                min={1}
-              />
-            </Form.Item>
-          </Col>
+              <Col xs={24} sm={4}>
+                <Form.Item
+                  {...restField}
+                  label="Mức độ ưu tiên"
+                  name={[name, "priority"]}
+                  rules={[{ required: true, message: "Vui lòng nhập mức độ ưu tiên" }]}
+                >
+                  <Input type="number" placeholder="Mức độ ưu tiên" min={1} />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={6}>
-            <Form.Item
-              label="Tên cấp bậc"
-              name={["ranks", index, "name"]}
-              rules={[{ required: true, message: "Vui lòng nhập tên cấp bậc" }]}
-            >
-              <Input
-                value={rank.name}
-                onChange={(e) => handleRankChange(index, "name", e.target.value)}
-                placeholder="Tên cấp bậc"
-              />
-            </Form.Item>
-          </Col>
+              <Col xs={24} sm={6}>
+                <Form.Item
+                  {...restField}
+                  label="Tên cấp bậc"
+                  name={[name, "name"]}
+                  rules={[{ required: true, message: "Vui lòng nhập tên cấp bậc" }]}
+                >
+                  <Input placeholder="Tên cấp bậc" />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={6}>
-            <Form.Item
-              label="Mô tả"
-              name={["ranks", index, "description"]}
-            >
-              <Input
-                value={rank.description}
-                onChange={(e) => handleRankChange(index, "description", e.target.value)}
-                placeholder="Mô tả"
-              />
-            </Form.Item>
-          </Col>
+              <Col xs={24} sm={6}>
+                <Form.Item
+                  {...restField}
+                  label="Mô tả"
+                  name={[name, "description"]}
+                >
+                  <Input placeholder="Mô tả" />
+                </Form.Item>
+              </Col>
 
-          <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <DeleteButton onClick={() => handleDeleteRank(index)}>
-              Xóa
-            </DeleteButton>
-          </Col>
-        </Row>
-      ))}
+              <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DeleteButton onClick={() => handleDeleteRank(index)}>Xóa</DeleteButton>
+              </Col>
+            </Row>
+          ))}
 
-      <Form.Item>
-        <AddButton onClick={handleAddRank} block>
-          Thêm mới cấp bậc
-        </AddButton>
-      </Form.Item>
-    </>
+          <Form.Item>
+            <AddButton onClick={handleAddRank} block>
+              Thêm mới cấp bậc
+            </AddButton>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };
 

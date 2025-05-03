@@ -1,35 +1,32 @@
 import React, { useEffect } from "react";
 import { Modal, Form, message } from "antd";
-import Collapse from "../../../../../../Shared/Collapse/Collapse";
-import JobTitle from "./Section/JobTitle";
-import FooterBar from "../../../../../Footer/Footer";
+import Collapse from "../../../../Shared/Collapse/Collapse";
+import RolePermissionCreate from "./Section/RolePermissionCreate";
+import FooterBar from "../../../Footer/Footer";
 
-const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => {
+const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole }) => {
   const initialValues = {
-    jobTitles: [
-      {
-        id: selectedJobTitle ? selectedJobTitle.jobTitleCode : 1,
-        jobTitleCode: selectedJobTitle ? selectedJobTitle.jobTitleCode : `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
-        title: selectedJobTitle ? selectedJobTitle.jobTitleName : "",
-        rank: selectedJobTitle ? selectedJobTitle.rank : null,
-        permissionGroup: selectedJobTitle ? selectedJobTitle.permissionGroup : null,
-        description: selectedJobTitle ? selectedJobTitle.description : "",
-      },
-    ],
+    roleCode: selectedRole ? selectedRole.roleCode : `ROLE${Math.floor(Math.random() * 1000)}`,
+    roleName: selectedRole ? selectedRole.roleName : "",
+    description: selectedRole ? selectedRole.description : "",
+    position: selectedRole ? selectedRole.position : "",
   };
 
   useEffect(() => {
     if (visible) {
       form.setFieldsValue(initialValues);
     }
-  }, [visible, form, selectedJobTitle]);
+  }, [visible, form, selectedRole]);
 
   const handleSave = () => {
     form
       .validateFields()
       .then((values) => {
         const dataToSend = {
-          jobTitles: values.jobTitles || [],
+          roleCode: values.roleCode,
+          roleName: values.roleName,
+          description: values.description,
+          position: values.position,
         };
         console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
@@ -62,15 +59,15 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => 
         />
       }
       onCancel={handleClose}
-      width={1200}
+      width={1000}
     >
       <Form form={form} layout="vertical" initialValues={initialValues}>
         <div className="collapse-container">
           <Collapse
             item={{
               key: "1",
-              header: selectedJobTitle ? "Chỉnh sửa chức vụ" : "Cài đặt chức vụ",
-              children: <JobTitle form={form} />,
+              header: selectedRole ? "Chỉnh sửa nhóm quyền" : "Cài đặt nhóm quyền",
+              children: <RolePermissionCreate form={form} />,
             }}
           />
         </div>
@@ -79,4 +76,4 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => 
   );
 };
 
-export default JobTitleDlg;
+export default RolePermissionDlg;

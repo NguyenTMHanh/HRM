@@ -3,7 +3,7 @@ import { Form, Input, Row, Col, Select } from 'antd';
 
 const { Option } = Select;
 
-// Predefined list of departments (you can adjust this list as needed)
+
 const departmentOptions = [
   "Kế toán",
   "Nhân sự",
@@ -19,7 +19,17 @@ const departmentOptions = [
 const BranchInfo = ({ form }) => {
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={24} sm={6}>
+      <Col xs={24} sm={4}>
+        <Form.Item
+          label="Mã chi nhánh"
+          name="branchCode"
+          rules={[{ required: true, message: 'Vui lòng nhập mã chi nhánh!' }]}
+        >
+          <Input placeholder="Nhập mã chi nhánh" disabled/>
+        </Form.Item>
+      </Col>
+
+      <Col xs={24} sm={5}>
         <Form.Item
           label="Tên chi nhánh"
           name="branchName"
@@ -29,7 +39,7 @@ const BranchInfo = ({ form }) => {
         </Form.Item>
       </Col>
 
-      <Col xs={24} sm={6}>
+      <Col xs={24} sm={5}>
         <Form.Item
           label="Địa chỉ"
           name="address"
@@ -39,7 +49,7 @@ const BranchInfo = ({ form }) => {
         </Form.Item>
       </Col>
 
-      <Col xs={24} sm={6}>
+      <Col xs={24} sm={5}>
         <Form.Item
           label="Trạng thái"
           name="status"
@@ -52,7 +62,7 @@ const BranchInfo = ({ form }) => {
         </Form.Item>
       </Col>
 
-      <Col xs={24} sm={6}>
+      <Col xs={24} sm={5}>
         <Form.Item
           label="Bộ phận"
           name="departments"

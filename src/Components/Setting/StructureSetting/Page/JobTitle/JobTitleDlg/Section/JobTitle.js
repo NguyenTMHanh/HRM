@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Input, Button, Row, Col, Form, Select } from "antd";
 import styled from "styled-components";
+
+const { Option } = Select;
 
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
@@ -43,155 +45,112 @@ const AddButton = styled(Button)`
 `;
 
 const JobTitle = ({ form }) => {
-  const [jobTitles, setJobTitles] = useState([]);
-
   const handleAddJobTitle = () => {
-    const newId = jobTitles.length + 1;
-    const updated = [
-      ...jobTitles,
-      { id: newId, jobTitleCode: "", title: "", rank: null, permissionGroup: null, description: "" }, // Add permissionGroup
-    ];
-    setJobTitles(updated);
-    form.setFieldsValue({ jobTitles: updated });
-  };
-
-  const handleJobTitleChange = (index, field, value) => {
-    const updated = [...jobTitles];
-    updated[index][field] = value;
-    setJobTitles(updated);
-    form.setFieldsValue({ jobTitles: updated });
+    const currentJobTitles = form.getFieldValue("jobTitles") || [];
+    const newId = currentJobTitles.length + 1;
+    form.setFieldsValue({
+      jobTitles: [
+        ...currentJobTitles,
+        {
+          id: newId,
+          jobTitleCode: `JT${newId.toString().padStart(3, "0")}`,
+          title: "",
+          rank: null,
+          permissionGroup: null,
+          description: "",
+        },
+      ],
+    });
   };
 
   const handleDeleteJobTitle = (index) => {
-    const updated = jobTitles
+    const currentJobTitles = form.getFieldValue("jobTitles") || [];
+    const updated = currentJobTitles
       .filter((_, i) => i !== index)
-      .map((job, i) => ({
-        ...job,
+      .map((title, i) => ({
+        ...title,
         id: i + 1,
+        jobTitleCode: `JT${(i + 1).toString().padStart(3, "0")}`,
       }));
-    setJobTitles(updated);
     form.setFieldsValue({ jobTitles: updated });
   };
 
-  useEffect(() => {
-    const initial = form.getFieldValue("jobTitles") || [];
-    setJobTitles(initial);
-  }, [form]);
-
-  // Danh sách cấp bậc mẫu
-  const ranks = [
-    { id: 1, name: "Cấp 1" },
-    { id: 2, name: "Cấp 2" },
-    { id: 3, name: "Cấp 3" },
-    { id: 4, name: "Cấp 4" },
-  ];
-
-  // Danh sách nhóm quyền mẫu (có thể thay bằng dữ liệu từ API)
-  const permissionGroups = [
-    { id: 1, name: "Quản trị viên" },
-    { id: 2, name: "Người dùng" },
-    { id: 3, name: "Khách" },
-  ];
-
   return (
-    <>
-      {jobTitles.map((job, index) => (
-        <Row gutter={[16, 16]} key={index}>
-          <Col xs={24} sm={4}>
-            <Form.Item
-              label="Mã chức vụ"
-              name={["jobTitles", index, "jobTitleCode"]}
-              rules={[{ required: true, message: "Vui lòng nhập mã chức vụ" }]}
-            >
-              <Input
-                value={job.jobTitleCode}
-                placeholder="Mã chức vụ"
-                disabled
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={4}>
-            <Form.Item
-              label="Tên chức vụ"
-              name={["jobTitles", index, "title"]}
-              rules={[{ required: true, message: "Vui lòng nhập tên chức vụ" }]}
-            >
-              <Input
-                value={job.title}
-                onChange={(e) => handleJobTitleChange(index, "title", e.target.value)}
-                placeholder="Tên chức vụ"
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={4}>
-            <Form.Item
-              label="Cấp bậc"
-              name={["jobTitles", index, "rank"]}
-              rules={[{ required: true, message: "Vui lòng chọn cấp bậc" }]}
-            >
-              <Select
-                value={job.rank}
-                onChange={(value) => handleJobTitleChange(index, "rank", value)}
-                placeholder="Chọn cấp bậc"
-              >
-                {ranks.map((rank) => (
-                  <Select.Option key={rank.id} value={rank.name}>
-                    {rank.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={4}>
-            <Form.Item
-              label="Nhóm quyền"
-              name={["jobTitles", index, "permissionGroup"]}
-              rules={[{ required: true, message: "Vui lòng chọn nhóm quyền" }]}
-            >
-              <Select
-                value={job.permissionGroup}
-                onChange={(value) => handleJobTitleChange(index, "permissionGroup", value)}
-                placeholder="Chọn nhóm quyền"
-              >
-                {permissionGroups.map((group) => (
-                  <Select.Option key={group.id} value={group.name}>
-                    {group.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={6}>
-            <Form.Item
-              label="Mô tả"
-              name={["jobTitles", index, "description"]}
-            >
-              <Input
-                value={job.description}
-                onChange={(e) => handleJobTitleChange(index, "description", e.target.value)}
-                placeholder="Mô tả"
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <DeleteButton onClick={() => handleDeleteJobTitle(index)}>
-              Xóa
-            </DeleteButton>
-          </Col>
-        </Row>
-      ))}
-
-      <Form.Item>
-        <AddButton onClick={handleAddJobTitle} block>
-          Thêm mới chức vụ
-        </AddButton>
-      </Form.Item>
-    </>
+    <Form.List name="jobTitles">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map(({ key, name, ...restField }, index) => (
+            <Row gutter={[16, 16]} key={key}>
+              <Col xs={24} sm={4}>
+                <Form.Item
+                  {...restField}
+                  label="Mã chức vụ"
+                  name={[name, "jobTitleCode"]}
+                  rules={[{ required: true, message: "Vui lòng nhập mã chức vụ" }]}
+                >
+                  <Input placeholder="Mã chức vụ" disabled />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={6}>
+                <Form.Item
+                  {...restField}
+                  label="Tên chức vụ"
+                  name={[name, "title"]}
+                  rules={[{ required: true, message: "Vui lòng nhập tên chức vụ" }]}
+                >
+                  <Input placeholder="Tên chức vụ" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={4}>
+                <Form.Item
+                  {...restField}
+                  label="Cấp bậc"
+                  name={[name, "rank"]}
+                  rules={[{ required: true, message: "Vui lòng chọn cấp bậc" }]}
+                >
+                  <Select placeholder="Chọn cấp bậc">
+                    <Option value="Cấp 1">Cấp 1</Option>
+                    <Option value="Cấp 2">Cấp 2</Option>
+                    <Option value="Cấp 3">Cấp 3</Option>
+                    <Option value="Cấp 4">Cấp 4</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={4}>
+                <Form.Item
+                  {...restField}
+                  label="Nhóm quyền"
+                  name={[name, "permissionGroup"]}
+                  rules={[{ required: true, message: "Vui lòng chọn nhóm quyền" }]}
+                >
+                  <Select placeholder="Chọn nhóm quyền">
+                    <Option value="Quản trị viên">Quản trị viên</Option>
+                    <Option value="Người dùng">Người dùng</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={4}>
+                <Form.Item
+                  {...restField}
+                  label="Mô tả"
+                  name={[name, "description"]}
+                >
+                  <Input placeholder="Mô tả" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DeleteButton onClick={() => handleDeleteJobTitle(index)}>Xóa</DeleteButton>
+              </Col>
+            </Row>
+          ))}
+          <Form.Item>
+            <AddButton onClick={handleAddJobTitle} block>
+              Thêm mới chức vụ
+            </AddButton>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };
 

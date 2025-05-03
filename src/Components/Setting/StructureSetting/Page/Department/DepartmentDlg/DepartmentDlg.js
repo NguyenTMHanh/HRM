@@ -4,28 +4,26 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Department from "./Section/Department";
 import FooterBar from "../../../../../Footer/Footer";
 
-const DepartmentDlg = ({ visible, onClose, onSubmit }) => {
-  const [formInstance] = Form.useForm();
-
+const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment }) => {
   const initialValues = {
     departments: [
       {
-        id: 1,
-        departmentCode: "D001",
-        name: "",
-        description: "",
+        id: selectedDepartment ? selectedDepartment.departmentCode : 1,
+        departmentCode: selectedDepartment ? selectedDepartment.departmentCode : `D${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+        name: selectedDepartment ? selectedDepartment.departmentName : "",
+        description: selectedDepartment ? selectedDepartment.description : "",
       },
     ],
   };
 
   useEffect(() => {
     if (visible) {
-      formInstance.setFieldsValue(initialValues);
+      form.setFieldsValue(initialValues);
     }
-  }, [visible, formInstance]);
+  }, [visible, form, selectedDepartment]);
 
   const handleSave = () => {
-    formInstance
+    form
       .validateFields()
       .then((values) => {
         const dataToSend = {
@@ -33,7 +31,7 @@ const DepartmentDlg = ({ visible, onClose, onSubmit }) => {
         };
         console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        message.success("Tạo bộ phận thành công!");
+        form.resetFields();
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -42,7 +40,10 @@ const DepartmentDlg = ({ visible, onClose, onSubmit }) => {
   };
 
   const handleCancel = () => {
-    formInstance.resetFields();
+    form.resetFields();
+  };
+
+  const handleClose = () => {
     onClose();
   };
 
@@ -58,16 +59,16 @@ const DepartmentDlg = ({ visible, onClose, onSubmit }) => {
           isModalFooter={true}
         />
       }
-      onCancel={handleCancel}
+      onCancel={handleClose}
       width={1000}
     >
-      <Form form={formInstance} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={initialValues}>
         <div className="collapse-container">
           <Collapse
             item={{
               key: "1",
-              header: "Cài đặt bộ phận",
-              children: <Department form={formInstance} />,
+              header: selectedDepartment ? "Chỉnh sửa bộ phận" : "Cài đặt bộ phận",
+              children: <Department form={form} />,
             }}
           />
         </div>

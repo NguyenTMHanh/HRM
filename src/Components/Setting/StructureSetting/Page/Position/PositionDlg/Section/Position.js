@@ -55,12 +55,7 @@ const Position = ({ form }) => {
     form.setFieldsValue({ positions: updated });
   };
 
-  const handlePositionChange = (index, field, value) => {
-    const updated = [...positions];
-    updated[index][field] = value;
-    setPositions(updated);
-    form.setFieldsValue({ positions: updated });
-  };
+  
 
   const handleDeletePosition = (index) => {
     const updated = positions
@@ -112,7 +107,6 @@ const Position = ({ form }) => {
             >
               <Input
                 value={position.name}
-                onChange={(e) => handlePositionChange(index, "name", e.target.value)}
                 placeholder="Tên vị trí"
               />
             </Form.Item>
@@ -126,7 +120,6 @@ const Position = ({ form }) => {
             >
               <Select
                 value={position.departmentId}
-                onChange={(value) => handlePositionChange(index, "departmentId", value)}
                 placeholder="Chọn bộ phận"
               >
                 {departments.map((dept) => (
@@ -145,7 +138,6 @@ const Position = ({ form }) => {
             >
               <Input
                 value={position.description}
-                onChange={(e) => handlePositionChange(index, "description", e.target.value)}
                 placeholder="Mô tả"
               />
             </Form.Item>

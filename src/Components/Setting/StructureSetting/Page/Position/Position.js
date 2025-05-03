@@ -9,6 +9,7 @@ const Position = () => {
   const navigate = useNavigate();
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
+  const [selectedPosition, setSelectedPosition] = useState(null);
   const [positionData, setPositionData] = useState([
     {
       positionCode: "POS001",
@@ -44,7 +45,8 @@ const Position = () => {
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing position: ${item.positionName}`);
+    setSelectedPosition(item);
+    setIsDialogVisible(true);
   };
 
   const handleDelete = (item) => {
@@ -52,16 +54,25 @@ const Position = () => {
   };
 
   const handleCreate = () => {
+    setSelectedPosition(null);
     setIsDialogVisible(true);
   };
 
   const handleDialogClose = () => {
     form.resetFields();
     setIsDialogVisible(false);
+    setSelectedPosition(null);
   };
 
   const handleDialogSubmit = (values) => {
+    if (selectedPosition) {
+      console.log("Call API edit");
+      message.success("Cập nhật vị trí thành công!");
+    } else {
+      message.success("Tạo vị trí thành công!");
+    }
     setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const filterData = (data, searchTerm) => {
@@ -94,6 +105,7 @@ const Position = () => {
         onClose={handleDialogClose}
         onSubmit={handleDialogSubmit}
         form={form}
+        selectedPosition={selectedPosition}
       />
     </div>
   );

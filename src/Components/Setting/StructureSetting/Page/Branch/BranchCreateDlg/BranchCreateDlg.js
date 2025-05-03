@@ -1,18 +1,32 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Modal, Form, message } from "antd";
 import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import BranchInfo from "./Section/BranchInfo";
 import FooterBar from "../../../../../Footer/Footer";
 
-const BranchCreateDlg = ({ visible, onClose, onSubmit }) => {
-  const [formInstance] = Form.useForm();
+const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch }) => {
+  const initialValues = {
+    branchCode: selectedBranch
+      ? selectedBranch.branchCode
+      : `BR${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+    branchName: selectedBranch ? selectedBranch.branchName : "",
+    address: selectedBranch ? selectedBranch.address : "",
+    status: selectedBranch ? selectedBranch.status : "active",
+    departments: selectedBranch ? selectedBranch.departments : [],
+  };
+
+  useEffect(() => {
+    if (visible) {
+      form.setFieldsValue(initialValues);
+    }
+  }, [visible, form, selectedBranch]);
 
   const handleSave = () => {
-    formInstance
+    form
       .validateFields()
       .then((values) => {
         const dataToSend = {
-          branchCode: values.branchCode, // Add branchCode
+          branchCode: values.branchCode,
           branchName: values.branchName,
           address: values.address,
           status: values.status,
@@ -20,8 +34,7 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit }) => {
         };
         console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        formInstance.resetFields();
-        message.success("Tạo chi nhánh thành công!");
+        form.resetFields();
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -30,7 +43,10 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit }) => {
   };
 
   const handleCancel = () => {
-    formInstance.resetFields();
+    form.resetFields();
+  };
+
+  const handleClose = () => {
     onClose();
   };
 
@@ -46,16 +62,16 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit }) => {
           isModalFooter={true}
         />
       }
-      onCancel={handleCancel}
+      onCancel={handleClose}
       width={1200}
     >
-      <Form form={formInstance} layout="vertical">
+      <Form form={form} layout="vertical" initialValues={initialValues}>
         <div className="collapse-container">
           <Collapse
             item={{
               key: "1",
-              header: "Cài đặt chi nhánh",
-              children: <BranchInfo form={formInstance} />,
+              header: selectedBranch ? "Chỉnh sửa chi nhánh" : "Cài đặt chi nhánh",
+              children: <BranchInfo form={form} />,
             }}
           />
         </div>

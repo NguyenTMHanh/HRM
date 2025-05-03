@@ -9,13 +9,14 @@ const JobTitle = () => {
   const navigate = useNavigate();
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
+  const [selectedJobTitle, setSelectedJobTitle] = useState(null);
   const [jobTitleData, setJobTitleData] = useState([
     {
       jobTitleCode: "JT001",
       jobTitleName: "Nhân viên Kế toán",
       rank: "Cấp 4",
       description: "Thực hiện các công việc kế toán cơ bản.",
-      permissionGroup: "Quản trị viên", // Add permission group
+      permissionGroup: "Quản trị viên",
     },
     {
       jobTitleCode: "JT002",
@@ -44,12 +45,13 @@ const JobTitle = () => {
     { label: "Mã chức vụ", key: "jobTitleCode" },
     { label: "Tên chức vụ", key: "jobTitleName" },
     { label: "Cấp bậc", key: "rank" },
-    { label: "Nhóm quyền", key: "permissionGroup" }, // Add permission group column
+    { label: "Nhóm quyền", key: "permissionGroup" },
     { label: "Mô tả", key: "description" },
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing job title: ${item.jobTitleName}`);
+    setSelectedJobTitle(item);
+    setIsDialogVisible(true);
   };
 
   const handleDelete = (item) => {
@@ -57,34 +59,32 @@ const JobTitle = () => {
   };
 
   const handleCreate = () => {
+    setSelectedJobTitle(null);
     setIsDialogVisible(true);
   };
 
   const handleDialogClose = () => {
     form.resetFields();
     setIsDialogVisible(false);
+    setSelectedJobTitle(null);
   };
 
   const handleDialogSubmit = (values) => {
-    const newJobTitles = values.jobTitles.map((jobTitle, index) => ({
-      jobTitleCode: `JT${(jobTitleData.length + index + 1).toString().padStart(3, "0")}`, // Generate new jobTitleCode
-      jobTitleName: jobTitle.title,
-      rank: jobTitle.rank,
-      permissionGroup: jobTitle.permissionGroup, // Include permission group
-      description: jobTitle.description,
-    }));
-    setJobTitleData([...jobTitleData, ...newJobTitles]);
+    if (selectedJobTitle) {
+      console.log("Call Api edit");
+      message.success("Cập nhật chức vụ thành công!");
+    } else {
+      message.success("Tạo chức vụ thành công!");
+    }
     setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const filterData = (data, searchTerm) => {
     return data.filter(
       (item) =>
         (item.jobTitleCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.jobTitleName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.rank || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.permissionGroup || "").toLowerCase().includes(searchTerm.toLowerCase()) || // Add permission group to search
-        (item.description || "").toLowerCase().includes(searchTerm.toLowerCase())
+        (item.jobTitleName || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
@@ -108,6 +108,7 @@ const JobTitle = () => {
         onClose={handleDialogClose}
         onSubmit={handleDialogSubmit}
         form={form}
+        selectedJobTitle={selectedJobTitle}
       />
     </div>
   );

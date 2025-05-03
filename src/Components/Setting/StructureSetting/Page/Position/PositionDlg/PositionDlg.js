@@ -4,14 +4,16 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Position from "./Section/Position";
 import FooterBar from "../../../../../Footer/Footer";
 
-const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
+const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition }) => {
   const initialValues = {
     positions: [
       {
-        positionCode: "POS001",
-        name: "",
-        departmentId: null,
-        description: "",
+        positionCode: selectedPosition
+          ? selectedPosition.positionCode
+          : `POS${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+        name: selectedPosition ? selectedPosition.positionName : "",
+        departmentId: selectedPosition ? selectedPosition.department : null,
+        description: selectedPosition ? selectedPosition.description : "",
       },
     ],
   };
@@ -20,7 +22,7 @@ const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
     if (visible) {
       form.setFieldsValue(initialValues);
     }
-  }, [visible, form]);
+  }, [visible, form, selectedPosition]);
 
   const handleSave = () => {
     form
@@ -32,7 +34,6 @@ const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
         console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
         form.resetFields();
-        message.success("Tạo vị trí thành công!");
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -42,6 +43,9 @@ const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
 
   const handleCancel = () => {
     form.resetFields();
+  };
+
+  const handleClose = () => {
     onClose();
   };
 
@@ -57,7 +61,7 @@ const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
           isModalFooter={true}
         />
       }
-      onCancel={handleCancel}
+      onCancel={handleClose}
       width={1000}
     >
       <Form form={form} layout="vertical" initialValues={initialValues}>
@@ -65,7 +69,7 @@ const PositionDlg = ({ visible, onClose, onSubmit, form }) => {
           <Collapse
             item={{
               key: "1",
-              header: "Cài đặt vị trí",
+              header: selectedPosition ? "Chỉnh sửa vị trí" : "Cài đặt vị trí",
               children: <Position form={form} />,
             }}
           />

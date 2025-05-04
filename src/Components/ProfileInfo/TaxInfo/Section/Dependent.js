@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table } from 'antd';
+import { Table, Button } from 'antd'; // Add Button to imports
 import moment from 'moment';
 import './styles.css';
 
@@ -37,21 +37,31 @@ const DependentInfo = ({ dependents = [] }) => {
       render: (text) => text || 'N/A',
     },
     {
-        title: 'Hồ sơ minh chứng',
-        dataIndex: 'proofFile',
-        key: 'proofFile',
-        render: (files) =>
-          files && files.length > 0 ? (
-            <a
-              href={`#`} 
-              download={files[0].name}
+      title: 'Hồ sơ minh chứng',
+      dataIndex: 'proofFile',
+      key: 'proofFile',
+      render: (files) =>
+        files && files.length > 0 ? (
+          <Button className="download-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#374151"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              {files[0].name}
-            </a>
-          ) : (
-            'N/A'
-          ),
-      }
+              <path d="M12 15V3m0 12l-4-4m4 4l4-4"></path>
+              <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+            </svg>
+          </Button>
+        ) : (
+          'N/A'
+        ),
+    },
   ];
 
   return (

@@ -194,6 +194,10 @@ const HRContract = () => {
     );
   };
 
+  const handleCreate = () => {
+    navigate('/create/personal'); 
+  };
+
   return (
     <TableComponent
       data={contractData}
@@ -203,6 +207,7 @@ const HRContract = () => {
       onAdd={handleAdd}
       filterData={filterData}
       groupBy={columnGroups}
+      onCreate={handleCreate}
     />
   );
 };

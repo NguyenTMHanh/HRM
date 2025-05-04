@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaFileAlt } from 'react-icons/fa'; 
+import { FaHistory } from 'react-icons/fa'; // Changed to FaHistory for a more thematic icon
 import './styles.css';
 
 const History = ({ historyItems }) => {
@@ -8,7 +8,7 @@ const History = ({ historyItems }) => {
       {historyItems.map((item, index) => (
         <div key={index} className="history-item">
           <div className="history-item-content">
-            <FaFileAlt className="history-icon" /> 
+            <FaHistory className="history-icon" /> {/* Updated icon */}
             <div className="history-text">
               <div className="item-title">{item.title}</div>
               <div className="item-source">

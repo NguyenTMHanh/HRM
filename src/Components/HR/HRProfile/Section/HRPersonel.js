@@ -243,6 +243,10 @@ const HRPersonal = () => {
     );
   };
 
+  const handleCreate = () => {
+    navigate('/create/personal'); 
+  };
+
   return (
     <TableComponent
       data={personelData}
@@ -252,6 +256,7 @@ const HRPersonal = () => {
       filterData={filterData}
       showAdd={false}
       groupBy={columnGroups} 
+      onCreate={handleCreate}
     />
   );
 };

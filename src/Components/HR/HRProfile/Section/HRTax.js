@@ -144,6 +144,10 @@ const HRTax = () => {
     );
   };
 
+  const handleCreate = () => {
+    navigate('/create/personal'); 
+  };
+
   return (
     <TableComponent
       data={taxData}
@@ -153,6 +157,7 @@ const HRTax = () => {
       onAdd={handleAdd}
       filterData={filterData}
       groupBy={columnGroups}
+      onCreate={handleCreate}
     />
   );
 };

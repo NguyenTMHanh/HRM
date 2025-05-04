@@ -205,6 +205,10 @@ const HRInsurance = () => {
     );
   };
 
+  const handleCreate = () => {
+    navigate('/create/personal'); 
+  };
+
   return (
     <TableComponent
       data={insuranceData}
@@ -214,6 +218,7 @@ const HRInsurance = () => {
       onAdd={handleAdd}
       filterData={filterData}
       groupBy={columnGroups}
+      onCreate={handleCreate}
     />
   );
 };

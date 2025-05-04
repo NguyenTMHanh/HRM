@@ -1,42 +1,58 @@
+/* Add styling for the download button */
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.download-btn:hover {
+  background: #f0f2f5; /* Match hover effect with table styling */
+}
+
+/* Existing styles remain unchanged */
 .info-display {
-    padding: 16px;
-    background: #fff;
-  }
-  
-  .info-row {
-    align-items: center;
-  }
-  
-  .info-label {
-    font-size: 1rem;
-    font-weight: 400;
-    color: #8c8c8c;
-  }
-  
-  .info-value {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #141414;
-  }
-  
-  .info-divider {
-    margin: 12px 0; 
-    background: #e8e8e8; 
-  }
-  .custom-dependent-table .ant-table-thead > tr > th {
-    background-color: #f0f2f5;
-    font-weight: bold;
-    text-align: left;
-    padding: 8px 16px; 
-  }
-  
-  .custom-dependent-table .ant-table-tbody > tr > td {
-    padding: 8px 16px; 
-    text-align: left; 
-  }
-  
-  
-  .custom-dependent-table .ant-table {
-    table-layout: fixed;
-    width: 100%;
-  }
+  padding: 16px;
+  background: #fff;
+}
+
+.info-row {
+  align-items: center;
+}
+
+.info-label {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #8c8c8c;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #141414;
+}
+
+.info-divider {
+  margin: 12px 0;
+  background: #e8e8e8;
+}
+
+.custom-dependent-table .ant-table-thead > tr > th {
+  background-color: #f0f2f5;
+  font-weight: bold;
+  text-align: left;
+  padding: 8px 16px;
+}
+
+.custom-dependent-table .ant-table-tbody > tr > td {
+  padding: 8px 16px;
+  text-align: left;
+}
+
+.custom-dependent-table .ant-table {
+  table-layout: fixed;
+  width: 100%;
+}

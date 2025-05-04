@@ -10,45 +10,44 @@ const RolePermission = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedRole, setSelectedRole] = useState(null);
-  const [isViewMode, setIsViewMode] = useState(false); 
+  const [isViewMode, setIsViewMode] = useState(false);
   const [roleData, setRoleData] = useState([
     {
       roleCode: "ROLE001",
       roleName: "Quản trị viên",
       description: "Có toàn quyền quản lý hệ thống",
       position: "Admin",
+      permissions: {
+        view_contract: true,
+        edit_contract: true,
+        delete_contract: true,
+      },
     },
     {
       roleCode: "ROLE002",
       roleName: "Nhân sự",
       description: "Quản lý thông tin nhân sự và lương",
       position: "HR Manager",
+      permissions: {
+        view_contract: true,
+        edit_contract: true,
+        delete_contract: false,
+      },
     },
     {
       roleCode: "ROLE003",
       roleName: "Kế toán",
       description: "Quản lý tài chính và báo cáo",
       position: "Accountant",
+      permissions: {
+        view_contract: true,
+        edit_contract: false,
+        delete_contract: false,
+      },
     },
-    {
-      roleCode: "ROLE004",
-      roleName: "Quản trị viên",
-      description: "Có toàn quyền quản lý hệ thống",
-      position: "Admin",
-    },
-    {
-      roleCode: "ROLE005",
-      roleName: "Nhân sự",
-      description: "Quản lý thông tin nhân sự và lương",
-      position: "HR Manager",
-    },
-    {
-      roleCode: "ROLE006",
-      roleName: "Kế toán",
-      description: "Quản lý tài chính và báo cáo",
-      position: "Accountant",
-    },
+    // Các role khác giữ nguyên hoặc thêm permissions tương tự
   ]);
+
   const columns = [
     { label: "Mã nhóm quyền", key: "roleCode" },
     { label: "Tên nhóm quyền", key: "roleName" },
@@ -62,7 +61,7 @@ const RolePermission = () => {
 
   const handleEdit = (item) => {
     setSelectedRole(item);
-    setIsViewMode(false); 
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -72,13 +71,13 @@ const RolePermission = () => {
 
   const handleCreate = () => {
     setSelectedRole(null);
-    setIsViewMode(false); 
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
   const handleView = (item) => {
     setSelectedRole(item);
-    setIsViewMode(true); 
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -86,14 +85,15 @@ const RolePermission = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedRole(null);
-    setIsViewMode(false); 
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
     if (selectedRole) {
-      console.log("Call Api edit");
+      console.log("Call Api edit:", values);
       message.success("Cập nhật nhóm quyền thành công!");
     } else {
+      console.log("Call Api create:", values);
       message.success("Tạo nhóm quyền thành công!");
     }
     setIsDialogVisible(false);
@@ -117,7 +117,7 @@ const RolePermission = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onView={handleView} 
+        onView={handleView}
         showAdd={false}
         showCreate={true}
         showView={true}
@@ -132,7 +132,7 @@ const RolePermission = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedRole={selectedRole}
-        isViewMode={isViewMode} 
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Modal, Form, message } from "antd";
 import Collapse from "../../../../Shared/Collapse/Collapse";
 import RolePermissionCreate from "./Section/RolePermissionCreate";
+import PermissionSelector from "./Section/PermissionSelector";
 import FooterBar from "../../../Footer/Footer";
 
 const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isViewMode }) => {
@@ -10,6 +11,7 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isV
     roleName: selectedRole ? selectedRole.roleName : "",
     description: selectedRole ? selectedRole.description : "",
     position: selectedRole ? selectedRole.position : "",
+    permissions: selectedRole ? selectedRole.permissions : {},
   };
 
   useEffect(() => {
@@ -19,7 +21,7 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isV
   }, [visible, form, selectedRole]);
 
   const handleSave = () => {
-    if (isViewMode) return; 
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -28,14 +30,13 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isV
           roleName: values.roleName,
           description: values.description,
           position: values.position,
+          permissions: values.permissions,
         };
-        console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
         form.resetFields();
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
-        console.log("Validation failed:", errorInfo);
       });
   };
 
@@ -51,7 +52,7 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isV
     <Modal
       open={visible}
       footer={
-        isViewMode ? null : ( 
+        isViewMode ? null : (
           <FooterBar
             onSave={handleSave}
             onCancel={handleCancel}
@@ -70,11 +71,25 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isV
             item={{
               key: "1",
               header: isViewMode
-                ? "Xem nhóm quyền"
+                ? "Thông tin nhóm quyền"
                 : selectedRole
-                ? "Chỉnh sửa nhóm quyền"
-                : "Cài đặt nhóm quyền",
+                ? "Chỉnh sửa thông tin nhóm quyền"
+                : "Cài đặt thông tin nhóm quyền",
               children: <RolePermissionCreate form={form} isViewMode={isViewMode} />,
+            }}
+          />
+        </div>
+
+        <div className="collapse-container">
+          <Collapse
+            item={{
+              key: "2",
+              header: isViewMode
+                ? "Quyền hạn"
+                : selectedRole
+                ? "Chỉnh sửa quyền hạn"
+                : "Cài đặt quyền hạn",
+              children: <PermissionSelector form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

@@ -11,6 +11,7 @@ const Branch = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [structureData, setStructureData] = useState([
     {
       branchCode: "HN001",
@@ -66,6 +67,7 @@ const Branch = () => {
 
   const handleEdit = (item) => {
     setSelectedBranch(item);
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -75,6 +77,13 @@ const Branch = () => {
 
   const handleCreate = () => {
     setSelectedBranch(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedBranch(item);
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -82,6 +91,7 @@ const Branch = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedBranch(null);
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
@@ -114,9 +124,10 @@ const Branch = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         showAdd={false}
         showCreate={true}
-        showView={false}
+        showView={true}
         onCreate={handleCreate}
         onBranchShow={false}
         onDepartmentShow={false}
@@ -128,6 +139,7 @@ const Branch = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedBranch={selectedBranch}
+        isViewMode={isViewMode}
       />
     </div>
   );

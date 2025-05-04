@@ -4,7 +4,7 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Rank from "./Section/Rank";
 import FooterBar from "../../../../../Footer/Footer";
 
-const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank }) => {
+const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode }) => {
   const initialValues = {
     ranks: [
       {
@@ -25,6 +25,7 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank }) => {
   }, [visible, form, selectedRank]);
 
   const handleSave = () => {
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -53,13 +54,15 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank }) => {
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : (
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1000}
@@ -69,8 +72,12 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank }) => {
           <Collapse
             item={{
               key: "1",
-              header: selectedRank ? "Chỉnh sửa cấp bậc" : "Cài đặt cấp bậc",
-              children: <Rank form={form} />,
+              header: isViewMode
+                ? "Xem cấp bậc"
+                : selectedRank
+                ? "Chỉnh sửa cấp bậc"
+                : "Cài đặt cấp bậc",
+              children: <Rank form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

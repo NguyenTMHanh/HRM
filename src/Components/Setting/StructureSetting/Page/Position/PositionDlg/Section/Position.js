@@ -42,20 +42,18 @@ const AddButton = styled(Button)`
   }
 `;
 
-const Position = ({ form }) => {
+const Position = ({ form, isViewMode }) => {
   const [positions, setPositions] = useState([]);
 
   const handleAddPosition = () => {
     const newId = positions.length + 1;
     const updated = [
       ...positions,
-      { positionCode: "", name: "", departmentId: null, description: "" }
+      { positionCode: `POS${newId.toString().padStart(3, "0")}`, name: "", departmentId: null, description: "" }
     ];
     setPositions(updated);
     form.setFieldsValue({ positions: updated });
   };
-
-  
 
   const handleDeletePosition = (index) => {
     const updated = positions
@@ -82,7 +80,43 @@ const Position = ({ form }) => {
   ];
 
   return (
-    <>
+    <div className={isViewMode ? "view-mode" : "edit-mode"}>
+      <style>
+        {`
+          /* Style for disabled Input */
+          .view-mode .ant-input-disabled {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; /* Normal text color */
+            cursor: not-allowed;
+          }
+
+          .edit-mode .ant-input-disabled {
+            background-color: #f5f5f5 !important; /* Grey background */
+            color: #C4C4C4 !important; /* Light grey text color */
+            cursor: not-allowed;
+          }
+
+          /* Style for disabled Select */
+          .view-mode .ant-select-disabled .ant-select-selector {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; /* Normal text color */
+            cursor: not-allowed;
+            border-color: #d9d9d9 !important; /* Match default Ant Design border */
+          }
+
+          .edit-mode .ant-select-disabled .ant-select-selector {
+            background-color: #f5f5f5 !important; /* Grey background */
+            color: #C4C4C4 !important; /* Light grey text color */
+            cursor: not-allowed;
+            border-color: #d9d9d9 !important; /* Match default Ant Design border */
+          }
+
+          /* Ensure the Select arrow is visible */
+          .ant-select-disabled .ant-select-arrow {
+            color: rgba(0, 0, 0, 0.85) !important; /* Match text color */
+          }
+        `}
+      </style>
       {positions.map((position, index) => (
         <Row gutter={[16, 16]} key={index}>
           <Col xs={24} sm={6}>
@@ -92,7 +126,6 @@ const Position = ({ form }) => {
               rules={[{ required: true, message: "Vui lòng nhập mã vị trí" }]}
             >
               <Input
-                value={position.positionCode}
                 placeholder="Mã vị trí"
                 disabled
               />
@@ -106,8 +139,8 @@ const Position = ({ form }) => {
               rules={[{ required: true, message: "Vui lòng nhập tên vị trí" }]}
             >
               <Input
-                value={position.name}
                 placeholder="Tên vị trí"
+                disabled={isViewMode}
               />
             </Form.Item>
           </Col>
@@ -119,8 +152,8 @@ const Position = ({ form }) => {
               rules={[{ required: true, message: "Vui lòng chọn bộ phận" }]}
             >
               <Select
-                value={position.departmentId}
                 placeholder="Chọn bộ phận"
+                disabled={isViewMode}
               >
                 {departments.map((dept) => (
                   <Select.Option key={dept.id} value={dept.id}>
@@ -137,26 +170,30 @@ const Position = ({ form }) => {
               name={["positions", index, "description"]}
             >
               <Input
-                value={position.description}
                 placeholder="Mô tả"
+                disabled={isViewMode}
               />
             </Form.Item>
           </Col>
 
           <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <DeleteButton onClick={() => handleDeletePosition(index)}>
-              Xóa
-            </DeleteButton>
+            {!isViewMode && (
+              <DeleteButton onClick={() => handleDeletePosition(index)}>
+                Xóa
+              </DeleteButton>
+            )}
           </Col>
         </Row>
       ))}
 
-      <Form.Item>
-        <AddButton onClick={handleAddPosition} block>
-          Thêm mới vị trí
-        </AddButton>
-      </Form.Item>
-    </>
+      {!isViewMode && (
+        <Form.Item>
+          <AddButton onClick={handleAddPosition} block>
+            Thêm mới vị trí
+          </AddButton>
+        </Form.Item>
+      )}
+    </div>
   );
 };
 

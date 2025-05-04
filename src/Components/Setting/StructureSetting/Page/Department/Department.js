@@ -10,6 +10,7 @@ const Department = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [departmentData, setDepartmentData] = useState([
     {
       departmentCode: "D001",
@@ -41,6 +42,7 @@ const Department = () => {
 
   const handleEdit = (item) => {
     setSelectedDepartment(item);
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -50,6 +52,13 @@ const Department = () => {
 
   const handleCreate = () => {
     setSelectedDepartment(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedDepartment(item);
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -57,6 +66,7 @@ const Department = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedDepartment(null);
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
@@ -86,8 +96,9 @@ const Department = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         showAdd={false}
-        showView={false}
+        showView={true}
         showCreate={true}
         onCreate={handleCreate}
         onBranchShow={false}
@@ -100,6 +111,7 @@ const Department = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedDepartment={selectedDepartment}
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -9,7 +9,8 @@ const RolePermission = () => {
   const navigate = useNavigate();
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
-  const [selectedRole, setSelectedRole] = useState(null); 
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false); 
   const [roleData, setRoleData] = useState([
     {
       roleCode: "ROLE001",
@@ -48,21 +49,21 @@ const RolePermission = () => {
       position: "Accountant",
     },
   ]);
-
   const columns = [
     { label: "Mã nhóm quyền", key: "roleCode" },
     { label: "Tên nhóm quyền", key: "roleName" },
     { label: "Mô tả", key: "description" },
     {
-    label: "Chức vụ",
+      label: "Chức vụ",
       key: "position",
       render: (position) => <div>{position}</div>,
     },
   ];
 
   const handleEdit = (item) => {
-    setSelectedRole(item); 
-    setIsDialogVisible(true); 
+    setSelectedRole(item);
+    setIsViewMode(false); 
+    setIsDialogVisible(true);
   };
 
   const handleDelete = (item) => {
@@ -70,14 +71,22 @@ const RolePermission = () => {
   };
 
   const handleCreate = () => {
-    setSelectedRole(null); 
+    setSelectedRole(null);
+    setIsViewMode(false); 
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedRole(item);
+    setIsViewMode(true); 
     setIsDialogVisible(true);
   };
 
   const handleDialogClose = () => {
     form.resetFields();
     setIsDialogVisible(false);
-    setSelectedRole(null); 
+    setSelectedRole(null);
+    setIsViewMode(false); 
   };
 
   const handleDialogSubmit = (values) => {
@@ -108,6 +117,7 @@ const RolePermission = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView} 
         showAdd={false}
         showCreate={true}
         showView={true}
@@ -122,6 +132,7 @@ const RolePermission = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedRole={selectedRole}
+        isViewMode={isViewMode} 
       />
     </div>
   );

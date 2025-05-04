@@ -10,6 +10,7 @@ const JobTitle = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedJobTitle, setSelectedJobTitle] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [jobTitleData, setJobTitleData] = useState([
     {
       jobTitleCode: "JT001",
@@ -51,6 +52,7 @@ const JobTitle = () => {
 
   const handleEdit = (item) => {
     setSelectedJobTitle(item);
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -60,6 +62,13 @@ const JobTitle = () => {
 
   const handleCreate = () => {
     setSelectedJobTitle(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedJobTitle(item);
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -67,6 +76,7 @@ const JobTitle = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedJobTitle(null);
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
@@ -95,9 +105,10 @@ const JobTitle = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         showAdd={false}
         showCreate={true}
-        showView={false}
+        showView={true}
         onCreate={handleCreate}
         onBranchShow={false}
         onDepartmentShow={false}
@@ -109,6 +120,7 @@ const JobTitle = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedJobTitle={selectedJobTitle}
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -3,7 +3,6 @@ import { Form, Input, Row, Col, Select } from 'antd';
 
 const { Option } = Select;
 
-
 const departmentOptions = [
   "Kế toán",
   "Nhân sự",
@@ -16,73 +15,110 @@ const departmentOptions = [
   "Quản lý chất lượng",
 ];
 
-const BranchInfo = ({ form }) => {
+const BranchInfo = ({ form, isViewMode }) => {
   return (
-    <Row gutter={[16, 16]}>
-      <Col xs={24} sm={4}>
-        <Form.Item
-          label="Mã chi nhánh"
-          name="branchCode"
-          rules={[{ required: true, message: 'Vui lòng nhập mã chi nhánh!' }]}
-        >
-          <Input placeholder="Nhập mã chi nhánh" disabled/>
-        </Form.Item>
-      </Col>
+    <div className={isViewMode ? "view-mode" : "edit-mode"}>
+      <style>
+        {`
+          .view-mode .ant-input-disabled {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important;
+            cursor: not-allowed;
+          }
 
-      <Col xs={24} sm={5}>
-        <Form.Item
-          label="Tên chi nhánh"
-          name="branchName"
-          rules={[{ required: true, message: 'Vui lòng nhập tên chi nhánh!' }]}
-        >
-          <Input placeholder="Nhập tên chi nhánh" />
-        </Form.Item>
-      </Col>
+          .edit-mode .ant-input-disabled {
+            background-color: #f5f5f5 !important; 
+            color: #C4C4C4 !important; 
+            cursor: not-allowed;
+          }
 
-      <Col xs={24} sm={5}>
-        <Form.Item
-          label="Địa chỉ"
-          name="address"
-          rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }]}
-        >
-          <Input placeholder="Nhập địa chỉ chi nhánh" />
-        </Form.Item>
-      </Col>
+          .view-mode .ant-select-disabled .ant-select-selector {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; 
+            cursor: not-allowed;
+            border-color: #d9d9d9 !important; 
+          }
 
-      <Col xs={24} sm={5}>
-        <Form.Item
-          label="Trạng thái"
-          name="status"
-          rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-        >
-          <Select placeholder="Chọn trạng thái">
-            <Option value="active">Đang hoạt động</Option>
-            <Option value="inactive">Ngừng hoạt động</Option>
-          </Select>
-        </Form.Item>
-      </Col>
+          .edit-mode .ant-select-disabled .ant-select-selector {
+            background-color: #f5f5f5 
+            color: #C4C4C4 !important; 
+            cursor: not-allowed;
+            border-color: #d9d9d9 !important; 
+          }
 
-      <Col xs={24} sm={5}>
-        <Form.Item
-          label="Bộ phận"
-          name="departments"
-          rules={[{ required: true, message: 'Vui lòng chọn ít nhất một bộ phận!' }]}
-        >
-          <Select
-            mode="multiple"
-            placeholder="Chọn các bộ phận"
-            allowClear
-            style={{ width: '100%' }}
+
+          .ant-select-disabled .ant-select-arrow {
+            color: rgba(0, 0, 0, 0.85) !important; 
+          }
+        `}
+      </style>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={4}>
+          <Form.Item
+            label="Mã chi nhánh"
+            name="branchCode"
+            rules={[{ required: true, message: 'Vui lòng nhập mã chi nhánh!' }]}
           >
-            {departmentOptions.map((dept) => (
-              <Option key={dept} value={dept}>
-                {dept}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </Col>
-    </Row>
+            <Input placeholder="Nhập mã chi nhánh" disabled />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={5}>
+          <Form.Item
+            label="Tên chi nhánh"
+            name="branchName"
+            rules={[{ required: true, message: 'Vui lòng nhập tên chi nhánh!' }]}
+          >
+            <Input placeholder="Nhập tên chi nhánh" disabled={isViewMode} />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={5}>
+          <Form.Item
+            label="Địa chỉ"
+            name="address"
+            rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }]}
+          >
+            <Input placeholder="Nhập địa chỉ chi nhánh" disabled={isViewMode} />
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={5}>
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+          >
+            <Select placeholder="Chọn trạng thái" disabled={isViewMode}>
+              <Option value="active">Đang hoạt động</Option>
+              <Option value="inactive">Ngừng hoạt động</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={5}>
+          <Form.Item
+            label="Bộ phận"
+            name="departments"
+            rules={[{ required: true, message: 'Vui lòng chọn ít nhất một bộ phận!' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Chọn các bộ phận"
+              allowClear
+              disabled={isViewMode}
+              style={{ width: '100%' }}
+            >
+              {departmentOptions.map((dept) => (
+                <Option key={dept} value={dept}>
+                  {dept}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

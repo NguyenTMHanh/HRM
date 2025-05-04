@@ -4,7 +4,7 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Position from "./Section/Position";
 import FooterBar from "../../../../../Footer/Footer";
 
-const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition }) => {
+const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isViewMode }) => {
   const initialValues = {
     positions: [
       {
@@ -25,6 +25,7 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition }) => 
   }, [visible, form, selectedPosition]);
 
   const handleSave = () => {
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -53,13 +54,15 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition }) => 
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : (
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1000}
@@ -69,8 +72,12 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition }) => 
           <Collapse
             item={{
               key: "1",
-              header: selectedPosition ? "Chỉnh sửa vị trí" : "Cài đặt vị trí",
-              children: <Position form={form} />,
+              header: isViewMode
+                ? "Xem vị trí"
+                : selectedPosition
+                ? "Chỉnh sửa vị trí"
+                : "Cài đặt vị trí",
+              children: <Position form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

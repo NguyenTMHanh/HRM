@@ -4,7 +4,7 @@ import Collapse from "../../../../Shared/Collapse/Collapse";
 import RolePermissionCreate from "./Section/RolePermissionCreate";
 import FooterBar from "../../../Footer/Footer";
 
-const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole }) => {
+const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole, isViewMode }) => {
   const initialValues = {
     roleCode: selectedRole ? selectedRole.roleCode : `ROLE${Math.floor(Math.random() * 1000)}`,
     roleName: selectedRole ? selectedRole.roleName : "",
@@ -19,6 +19,7 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole }) =
   }, [visible, form, selectedRole]);
 
   const handleSave = () => {
+    if (isViewMode) return; 
     form
       .validateFields()
       .then((values) => {
@@ -50,13 +51,15 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole }) =
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : ( 
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1000}
@@ -66,8 +69,12 @@ const RolePermissionDlg = ({ visible, onClose, onSubmit, form, selectedRole }) =
           <Collapse
             item={{
               key: "1",
-              header: selectedRole ? "Chỉnh sửa nhóm quyền" : "Cài đặt nhóm quyền",
-              children: <RolePermissionCreate form={form} />,
+              header: isViewMode
+                ? "Xem nhóm quyền"
+                : selectedRole
+                ? "Chỉnh sửa nhóm quyền"
+                : "Cài đặt nhóm quyền",
+              children: <RolePermissionCreate form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

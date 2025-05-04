@@ -10,6 +10,7 @@ const Position = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [positionData, setPositionData] = useState([
     {
       positionCode: "POS001",
@@ -46,6 +47,7 @@ const Position = () => {
 
   const handleEdit = (item) => {
     setSelectedPosition(item);
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -55,6 +57,13 @@ const Position = () => {
 
   const handleCreate = () => {
     setSelectedPosition(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedPosition(item);
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -62,6 +71,7 @@ const Position = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedPosition(null);
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
@@ -92,8 +102,9 @@ const Position = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         showAdd={false}
-        showView={false}
+        showView={true}
         showCreate={true}
         onCreate={handleCreate}
         onBranchShow={false}
@@ -106,6 +117,7 @@ const Position = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedPosition={selectedPosition}
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import Department from "./Section/Department";
 import FooterBar from "../../../../../Footer/Footer";
 
-const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment }) => {
+const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, isViewMode }) => {
   const initialValues = {
     departments: [
       {
@@ -23,6 +23,7 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment })
   }, [visible, form, selectedDepartment]);
 
   const handleSave = () => {
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -51,13 +52,15 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment })
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : (
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1000}
@@ -67,8 +70,12 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment })
           <Collapse
             item={{
               key: "1",
-              header: selectedDepartment ? "Chỉnh sửa bộ phận" : "Cài đặt bộ phận",
-              children: <Department form={form} />,
+              header: isViewMode
+                ? "Xem bộ phận"
+                : selectedDepartment
+                ? "Chỉnh sửa bộ phận"
+                : "Cài đặt bộ phận",
+              children: <Department form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

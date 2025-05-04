@@ -4,7 +4,7 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import BranchInfo from "./Section/BranchInfo";
 import FooterBar from "../../../../../Footer/Footer";
 
-const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch }) => {
+const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isViewMode }) => {
   const initialValues = {
     branchCode: selectedBranch
       ? selectedBranch.branchCode
@@ -22,6 +22,7 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch }) =
   }, [visible, form, selectedBranch]);
 
   const handleSave = () => {
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -54,13 +55,15 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch }) =
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : (
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1200}
@@ -70,8 +73,12 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch }) =
           <Collapse
             item={{
               key: "1",
-              header: selectedBranch ? "Chỉnh sửa chi nhánh" : "Cài đặt chi nhánh",
-              children: <BranchInfo form={form} />,
+              header: isViewMode
+                ? "Xem chi nhánh"
+                : selectedBranch
+                ? "Chỉnh sửa chi nhánh"
+                : "Cài đặt chi nhánh",
+              children: <BranchInfo form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

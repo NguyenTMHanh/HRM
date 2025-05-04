@@ -42,7 +42,7 @@ const AddButton = styled(Button)`
   }
 `;
 
-const Department = ({ form }) => {
+const Department = ({ form, isViewMode }) => {
   const handleAddDepartment = () => {
     const currentDepartments = form.getFieldValue("departments") || [];
     const newId = currentDepartments.length + 1;
@@ -66,59 +66,81 @@ const Department = ({ form }) => {
   };
 
   return (
-    <Form.List name="departments">
-      {(fields, { add, remove }) => (
-        <>
-          {fields.map(({ key, name, ...restField }, index) => (
-            <Row gutter={[16, 16]} key={key}>
-              <Col xs={24} sm={6}>
-                <Form.Item
-                  {...restField}
-                  label="Mã bộ phận"
-                  name={[name, "departmentCode"]}
-                  rules={[{ required: true, message: "Vui lòng nhập mã bộ phận" }]}
-                >
-                  <Input placeholder="Mã bộ phận" disabled />
-                </Form.Item>
-              </Col>
+    <div className={isViewMode ? "view-mode" : "edit-mode"}>
+      <style>
+        {`
+          /* Style for disabled Input */
+          .view-mode .ant-input-disabled {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important; /* Normal text color */
+            cursor: not-allowed;
+          }
 
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  {...restField}
-                  label="Tên bộ phận"
-                  name={[name, "name"]}
-                  rules={[{ required: true, message: "Vui lòng nhập tên bộ phận" }]}
-                >
-                  <Input placeholder="Tên bộ phận" />
-                </Form.Item>
-              </Col>
+          .edit-mode .ant-input-disabled {
+            background-color: #f5f5f5 !important; /* Grey background */
+            color: #C4C4C4 !important; /* Light grey text color */
+            cursor: not-allowed;
+          }
+        `}
+      </style>
+      <Form.List name="departments">
+        {(fields, { add, remove }) => (
+          <>
+            {fields.map(({ key, name, ...restField }, index) => (
+              <Row gutter={[16, 16]} key={key}>
+                <Col xs={24} sm={6}>
+                  <Form.Item
+                    {...restField}
+                    label="Mã bộ phận"
+                    name={[name, "departmentCode"]}
+                    rules={[{ required: true, message: "Vui lòng nhập mã bộ phận" }]}
+                  >
+                    <Input placeholder="Mã bộ phận" disabled />
+                  </Form.Item>
+                </Col>
 
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  {...restField}
-                  label="Mô tả"
-                  name={[name, "description"]}
-                >
-                  <Input placeholder="Mô tả" />
-                </Form.Item>
-              </Col>
+                <Col xs={24} sm={8}>
+                  <Form.Item
+                    {...restField}
+                    label="Tên bộ phận"
+                    name={[name, "name"]}
+                    rules={[{ required: true, message: "Vui lòng nhập tên bộ phận" }]}
+                  >
+                    <Input placeholder="Tên bộ phận" disabled={isViewMode} />
+                  </Form.Item>
+                </Col>
 
-              <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <DeleteButton onClick={() => handleDeleteDepartment(index)}>
-                  Xóa
-                </DeleteButton>
-              </Col>
-            </Row>
-          ))}
+                <Col xs={24} sm={8}>
+                  <Form.Item
+                    {...restField}
+                    label="Mô tả"
+                    name={[name, "description"]}
+                  >
+                    <Input placeholder="Mô tả" disabled={isViewMode} />
+                  </Form.Item>
+                </Col>
 
-          <Form.Item>
-            <AddButton onClick={handleAddDepartment} block>
-              Thêm mới bộ phận
-            </AddButton>
-          </Form.Item>
-        </>
-      )}
-    </Form.List>
+                <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {!isViewMode && (
+                    <DeleteButton onClick={() => handleDeleteDepartment(index)}>
+                      Xóa
+                    </DeleteButton>
+                  )}
+                </Col>
+              </Row>
+            ))}
+
+            {!isViewMode && (
+              <Form.Item>
+                <AddButton onClick={handleAddDepartment} block>
+                  Thêm mới bộ phận
+                </AddButton>
+              </Form.Item>
+            )}
+          </>
+        )}
+      </Form.List>
+    </div>
   );
 };
 

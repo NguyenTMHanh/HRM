@@ -10,6 +10,7 @@ const Rank = () => {
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [form] = Form.useForm();
   const [selectedRank, setSelectedRank] = useState(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [rankData, setRankData] = useState([
     {
       rankCode: "R004",
@@ -46,6 +47,7 @@ const Rank = () => {
 
   const handleEdit = (item) => {
     setSelectedRank(item);
+    setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
@@ -55,6 +57,13 @@ const Rank = () => {
 
   const handleCreate = () => {
     setSelectedRank(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    setSelectedRank(item);
+    setIsViewMode(true);
     setIsDialogVisible(true);
   };
 
@@ -62,6 +71,7 @@ const Rank = () => {
     form.resetFields();
     setIsDialogVisible(false);
     setSelectedRank(null);
+    setIsViewMode(false);
   };
 
   const handleDialogSubmit = (values) => {
@@ -92,8 +102,9 @@ const Rank = () => {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         showAdd={false}
-        showView={false}
+        showView={true}
         showCreate={true}
         onCreate={handleCreate}
         onBranchShow={false}
@@ -106,6 +117,7 @@ const Rank = () => {
         onSubmit={handleDialogSubmit}
         form={form}
         selectedRank={selectedRank}
+        isViewMode={isViewMode}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import JobTitle from "./Section/JobTitle";
 import FooterBar from "../../../../../Footer/Footer";
 
-const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => {
+const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isViewMode }) => {
   const initialValues = {
     jobTitles: [
       {
@@ -25,6 +25,7 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => 
   }, [visible, form, selectedJobTitle]);
 
   const handleSave = () => {
+    if (isViewMode) return;
     form
       .validateFields()
       .then((values) => {
@@ -53,13 +54,15 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => 
     <Modal
       open={visible}
       footer={
-        <FooterBar
-          onSave={handleSave}
-          onCancel={handleCancel}
-          showCancel={true}
-          showSave={true}
-          isModalFooter={true}
-        />
+        isViewMode ? null : (
+          <FooterBar
+            onSave={handleSave}
+            onCancel={handleCancel}
+            showCancel={true}
+            showSave={true}
+            isModalFooter={true}
+          />
+        )
       }
       onCancel={handleClose}
       width={1200}
@@ -69,8 +72,12 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle }) => 
           <Collapse
             item={{
               key: "1",
-              header: selectedJobTitle ? "Chỉnh sửa chức vụ" : "Cài đặt chức vụ",
-              children: <JobTitle form={form} />,
+              header: isViewMode
+                ? "Xem chức vụ"
+                : selectedJobTitle
+                ? "Chỉnh sửa chức vụ"
+                : "Cài đặt chức vụ",
+              children: <JobTitle form={form} isViewMode={isViewMode} />,
             }}
           />
         </div>

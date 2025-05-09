@@ -3,6 +3,7 @@ import { Layout } from 'antd';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './Components/SideBar/SideBar';
 import HeaderBar from './Components/Header/Header';
+import Login from './Components/Auth/Login';
 import Dashboard from './Components/Dashboard/Dashboad';
 import DailyCheckin from './Components/Checkin/DailyCheckin/DailyCheckin';
 import HistoryCheckin from './Components/Checkin/HistoryCheckin/HistoryCheckin';

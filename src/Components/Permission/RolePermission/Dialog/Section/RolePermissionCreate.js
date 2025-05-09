@@ -1,18 +1,5 @@
 import React from "react";
-import { Form, Input, Row, Col, Select } from "antd";
-
-const { Option } = Select;
-
-const positionOptions = [
-  "Quản lý",
-  "Nhân viên",
-  "Trưởng phòng",
-  "Phó phòng",
-  "Kế toán trưởng",
-  "Chuyên viên",
-  "Giám đốc",
-  "Phó giám đốc",
-];
+import { Form, Input, Row, Col } from "antd";
 
 const RolePermissionCreate = ({ form, isViewMode }) => {
   return (
@@ -51,7 +38,7 @@ const RolePermissionCreate = ({ form, isViewMode }) => {
         `}
       </style>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8}>
           <Form.Item
             label="Mã nhóm quyền"
             name="roleCode"
@@ -61,7 +48,7 @@ const RolePermissionCreate = ({ form, isViewMode }) => {
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8}>
           <Form.Item
             label="Tên nhóm quyền"
             name="roleName"
@@ -71,7 +58,7 @@ const RolePermissionCreate = ({ form, isViewMode }) => {
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8}>
           <Form.Item
             label="Mô tả"
             name="description"
@@ -81,26 +68,6 @@ const RolePermissionCreate = ({ form, isViewMode }) => {
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={6}>
-          <Form.Item
-            label="Chức vụ"
-            name="position"
-            rules={[{ required: true, message: "Vui lòng chọn chức vụ!" }]}
-          >
-            <Select
-              placeholder="Chọn chức vụ"
-              allowClear
-              style={{ width: "100%" }}
-              disabled={isViewMode}
-            >
-              {positionOptions.map((position) => (
-                <Option key={position} value={position}>
-                  {position}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
       </Row>
     </div>
   );

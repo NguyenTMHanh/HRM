@@ -16,7 +16,6 @@ const RolePermission = () => {
       roleCode: "ROLE001",
       roleName: "Quản trị viên",
       description: "Có toàn quyền quản lý hệ thống",
-      position: "Admin",
       permissions: {
         view_contract: true,
         edit_contract: true,
@@ -27,7 +26,6 @@ const RolePermission = () => {
       roleCode: "ROLE002",
       roleName: "Nhân sự",
       description: "Quản lý thông tin nhân sự và lương",
-      position: "HR Manager",
       permissions: {
         view_contract: true,
         edit_contract: true,
@@ -38,25 +36,18 @@ const RolePermission = () => {
       roleCode: "ROLE003",
       roleName: "Kế toán",
       description: "Quản lý tài chính và báo cáo",
-      position: "Accountant",
       permissions: {
         view_contract: true,
         edit_contract: false,
         delete_contract: false,
       },
     },
-    // Các role khác giữ nguyên hoặc thêm permissions tương tự
   ]);
 
   const columns = [
     { label: "Mã nhóm quyền", key: "roleCode" },
     { label: "Tên nhóm quyền", key: "roleName" },
     { label: "Mô tả", key: "description" },
-    {
-      label: "Chức vụ",
-      key: "position",
-      render: (position) => <div>{position}</div>,
-    },
   ];
 
   const handleEdit = (item) => {

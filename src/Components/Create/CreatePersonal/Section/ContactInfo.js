@@ -10,10 +10,16 @@ const ContactInfo = ({ setProvinceMap, setDistrictMap, setWardMap }) => {
   const [wards, setWards] = useState([]);
   const [selectedProvinceCode, setSelectedProvinceCode] = useState(null);
   const [selectedDistrictCode, setSelectedDistrictCode] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('https://provinces.open-api.vn/api/p?depth=1')
-      .then(response => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await axios.get('https://localhost:7239/proxy/api/provinces', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}` // Thêm token nếu endpoint yêu cầu xác thực
+          }
+        });
         setProvinces(response.data);
         // Tạo ánh xạ code -> name cho tỉnh
         const provinceMapping = response.data.reduce((map, province) => {
@@ -21,55 +27,73 @@ const ContactInfo = ({ setProvinceMap, setDistrictMap, setWardMap }) => {
           return map;
         }, {});
         setProvinceMap(provinceMapping); // Gửi ánh xạ lên parent
-      })
-      .catch(error => {
+        setError(null);
+      } catch (error) {
         console.error('Error fetching provinces:', error);
-      });
+        setError('Không thể tải danh sách tỉnh/thành phố. Vui lòng thử lại sau.');
+      }
+    };
+    fetchProvinces();
   }, [setProvinceMap]);
 
-  const handleProvinceChange = (name, option) => {
+  const handleProvinceChange = async (name, option) => {
     const code = option.key; // Lấy code từ key của Option
     setSelectedProvinceCode(code);
     setDistricts([]);
     setWards([]);
 
-    axios.get(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
-      .then(response => {
-        setDistricts(response.data.districts);
-        // Tạo ánh xạ code -> name cho quận
-        const districtMapping = response.data.districts.reduce((map, district) => {
-          map[district.code] = district.name;
-          return map;
-        }, {});
-        setDistrictMap(districtMapping); // Gửi ánh xạ lên parent
-      })
-      .catch(error => {
-        console.error('Error fetching districts:', error);
+    try {
+      const response = await axios.get(`https://localhost:7239/proxy/api/provinces/${code}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}` // Thêm token nếu cần
+        }
       });
+      setDistricts(response.data.districts);
+      // Tạo ánh xạ code -> name cho quận
+      const districtMapping = response.data.districts.reduce((map, district) => {
+        map[district.code] = district.name;
+        return map;
+      }, {});
+      setDistrictMap(districtMapping); // Gửi ánh xạ lên parent
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching districts:', error);
+      setError('Không thể tải danh sách quận/huyện. Vui lòng thử lại sau.');
+    }
   };
 
-  const handleDistrictChange = (name, option) => {
+  const handleDistrictChange = async (name, option) => {
     const code = option.key; // Lấy code từ key của Option
     setSelectedDistrictCode(code);
     setWards([]);
 
-    axios.get(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
-      .then(response => {
-        setWards(response.data.wards);
-        // Tạo ánh xạ code -> name cho phường
-        const wardMapping = response.data.wards.reduce((map, ward) => {
-          map[ward.code] = ward.name;
-          return map;
-        }, {});
-        setWardMap(wardMapping); // Gửi ánh xạ lên parent
-      })
-      .catch(error => {
-        console.error('Error fetching wards:', error);
+    try {
+      const response = await axios.get(`https://localhost:7239/proxy/api/districts/${code}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}` // Thêm token nếu cần
+        }
       });
+      setWards(response.data.wards);
+      // Tạo ánh xạ code -> name cho phường
+      const wardMapping = response.data.wards.reduce((map, ward) => {
+        map[ward.code] = ward.name;
+        return map;
+      }, {});
+      setWardMap(wardMapping); // Gửi ánh xạ lên parent
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching wards:', error);
+      setError('Không thể tải danh sách xã/phường. Vui lòng thử lại sau.');
+    }
   };
 
   return (
     <Row gutter={[16, 16]}>
+      {error && (
+        <Col xs={24}>
+          <p style={{ color: 'red' }}>{error}</p>
+        </Col>
+      )}
       <Col xs={24} sm={6}>
         <Form.Item label="Tỉnh/Thành phố" name="provinceContact">
           <Select

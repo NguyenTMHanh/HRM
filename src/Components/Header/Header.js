@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Dropdown } from 'antd';
+import { useNavigate } from 'react-router-dom'; 
 import { 
   MenuUnfoldOutlined, 
   MenuFoldOutlined, 
@@ -15,11 +16,12 @@ const { Header } = Layout;
 
 function HeaderBar({ collapsed, toggleCollapse }) {
   const [username, setUsername] = useState('');
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const fetchUsername = async () => {
       try {
-        const response = { data: { username: 'Nguyenthimyhanh' } };
+        const response = { data: { username: 'Nguyenthimyhanh' } }; 
         setUsername(response.data.username);
       } catch (error) {
         console.error('Error fetching username:', error);
@@ -29,7 +31,17 @@ function HeaderBar({ collapsed, toggleCollapse }) {
     fetchUsername();
   }, []);
 
-  // Định nghĩa menu dưới dạng mảng items
+
+  const handleMenuClick = ({ key }) => {
+    if (key === '1') {
+      navigate('/infomation/personal'); 
+    } else if (key === '2') {
+      console.log('Change Password clicked');
+    } else if (key === '3') {
+      navigate('/login'); 
+    }
+  };
+
   const userMenuItems = [
     {
       key: 'username',
@@ -38,7 +50,7 @@ function HeaderBar({ collapsed, toggleCollapse }) {
       className: 'username-item',
     },
     {
-      type: 'divider', // Tương ứng với Menu.Divider
+      type: 'divider', 
     },
     {
       key: '1',
@@ -66,7 +78,10 @@ function HeaderBar({ collapsed, toggleCollapse }) {
       <div className="header-right">
         <Button className="icon-btn"><BellOutlined /></Button>
         <Dropdown
-          menu={{ items: userMenuItems }} // Sử dụng menu thay vì overlay
+          menu={{ 
+            items: userMenuItems,
+            onClick: handleMenuClick // Add onClick handler
+          }} 
           trigger={["click"]}
         >
           <Button className="icon-btn"><UserOutlined /></Button>

@@ -43,6 +43,7 @@ import Rank from './Components/Setting/StructureSetting/Page/Rank/Rank';
 import Department from './Components/Setting/StructureSetting/Page/Department/Department';
 import JobTitle from './Components/Setting/StructureSetting/Page/JobTitle/JobTitle';
 import Position from './Components/Setting/StructureSetting/Page/Position/Position';
+import { Navigate } from 'react-router-dom'; 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -52,59 +53,66 @@ function App() {
 
   return (
     <Router>
-      <Layout style={{ minHeight: '100vh' }}>
-        <Sidebar collapsed={collapsed} />
-        <Layout>
-          <HeaderBar collapsed={collapsed} toggleCollapse={toggleCollapse} />
-          <Routes>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/checkin/daily" element={<DailyCheckin />} />
-            <Route path="/checkin/history" element={<HistoryCheckin />} />
-            <Route path="/hr/profile" element={<HRProfile />}>
-              <Route path="personel" element={<HRPersonel/>} />
-              <Route path="insurance" element={<HRInsurance/>} />
-              <Route path="contract" element={<HRContract />} />
-              <Route path="tax" element={<HRTax />} />
-            </Route>
-
-            <Route path="/hr/salary" element={<HRSalary />} />
-            <Route path="/hr/checkin/history" element={<HRHistoryCheckin />} />
-            <Route path="/infomation" element={<HumanResource />} >
-              <Route path="personal" element={<PersonalInfo />} />
-              <Route path="personel" element={<PersonelInfo />} />
-              <Route path="insurance" element={<InsuranceInfo />} />
-              <Route path="contract" element={<ContractInfo />} />
-              <Route path="tax" element={<TaxInfo />} />
-            </Route>
-            <Route path="/salary" element={<SalaryInfo />} />
-            <Route path="/letter/sent" element={<YourLetter />} />
-            <Route path="/letter/approved" element={<ApprovedLetter />} />
-            <Route path="/setting/checkin" element={<CheckinSetting />} />
-            <Route path="/setting/insurance" element={<InsuranceSetting />} />
-            <Route path="/setting/contract" element={<ContractSetting />} />
-            <Route path="/setting/structure" element={<StructureSetting />}>
-              <Route path="rank" element={<Rank />} />
-              <Route path="branch" element={<Branch />} />
-              <Route path="department" element={<Department />} />
-              <Route path="jobtitle" element={<JobTitle />} />
-              <Route path="position" element={<Position />} />
-              <Route path="view" element={<StructureView />} />
-            </Route>
-            <Route path="/setting/tax" element={<TaxSetting />} />
-            <Route path="/setting/salary" element={<SalarySetting />} />
-            <Route path="/permission/role" element={<RolePermission />} />
-            <Route path="/permission/detail" element={<DetailPermision />} />
-            <Route path="/create" element={<Create />} >
-              <Route path="personal" element={<CreatePersonal />} />
-              <Route path="personel" element={<CreatePersonel />} />
-              <Route path="insurance" element={<CreateInsurance />} />
-              <Route path="contract" element={<CreateContract />} />
-              <Route path="tax" element={<CreateTax />} />
-            </Route>
-            <Route path="/" element={<Dashboard />} />
-          </Routes>
-        </Layout>
-      </Layout>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="*"
+          element={
+            <Layout style={{ minHeight: '100vh' }}>
+              <Sidebar collapsed={collapsed} />
+              <Layout>
+                <HeaderBar collapsed={collapsed} toggleCollapse={toggleCollapse} />
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/checkin/daily" element={<DailyCheckin />} />
+                  <Route path="/checkin/history" element={<HistoryCheckin />} />
+                  <Route path="/hr/profile" element={<HRProfile />}>
+                    <Route path="personel" element={<HRPersonel />} />
+                    <Route path="insurance" element={<HRInsurance />} />
+                    <Route path="contract" element={<HRContract />} />
+                    <Route path="tax" element={<HRTax />} />
+                  </Route>
+                  <Route path="/hr/salary" element={<HRSalary />} />
+                  <Route path="/hr/checkin/history" element={<HRHistoryCheckin />} />
+                  <Route path="/infomation" element={<HumanResource />}>
+                    <Route path="personal" element={<PersonalInfo />} />
+                    <Route path="personel" element={<PersonelInfo />} />
+                    <Route path="insurance" element={<InsuranceInfo />} />
+                    <Route path="contract" element={<ContractInfo />} />
+                    <Route path="tax" element={<TaxInfo />} />
+                  </Route>
+                  <Route path="/salary" element={<SalaryInfo />} />
+                  <Route path="/letter/sent" element={<YourLetter />} />
+                  <Route path="/letter/approved" element={<ApprovedLetter />} />
+                  <Route path="/setting/checkin" element={<CheckinSetting />} />
+                  <Route path="/setting/insurance" element={<InsuranceSetting />} />
+                  <Route path="/setting/contract" element={<ContractSetting />} />
+                  <Route path="/setting/structure" element={<StructureSetting />}>
+                    <Route path="rank" element={<Rank />} />
+                    <Route path="branch" element={<Branch />} />
+                    <Route path="department" element={<Department />} />
+                    <Route path="jobtitle" element={<JobTitle />} />
+                    <Route path="position" element={<Position />} />
+                    <Route path="view" element={<StructureView />} />
+                  </Route>
+                  <Route path="/setting/tax" element={<TaxSetting />} />
+                  <Route path="/setting/salary" element={<SalarySetting />} />
+                  <Route path="/permission/role" element={<RolePermission />} />
+                  <Route path="/permission/detail" element={<DetailPermision />} />
+                  <Route path="/create" element={<Create />}>
+                    <Route path="personal" element={<CreatePersonal />} />
+                    <Route path="personel" element={<CreatePersonel />} />
+                    <Route path="insurance" element={<CreateInsurance />} />
+                    <Route path="contract" element={<CreateContract />} />
+                    <Route path="tax" element={<CreateTax />} />
+                  </Route>
+                  <Route path="/" element={<Navigate to="/login" />} />
+                </Routes>
+              </Layout>
+            </Layout>
+          }
+        />
+      </Routes>
     </Router>
   );
 }

@@ -1,9 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TableComponent from "../../../Shared/Table/Table";
 import { useNavigate } from "react-router-dom";
 import RolePermissionDlg from "./Dialog/RolePermissionDlg";
 import styles from "./styles.module.css";
 import { Form, message } from "antd";
+import axios from "axios";
+
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers["Content-Type"] = "application/json";
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const RolePermission = () => {
   const navigate = useNavigate();
@@ -11,44 +25,30 @@ const RolePermission = () => {
   const [form] = Form.useForm();
   const [selectedRole, setSelectedRole] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [roleData, setRoleData] = useState([
-    {
-      roleCode: "ROLE001",
-      roleName: "Quản trị viên",
-      description: "Có toàn quyền quản lý hệ thống",
-      permissions: {
-        view_contract: true,
-        edit_contract: true,
-        delete_contract: true,
-      },
-    },
-    {
-      roleCode: "ROLE002",
-      roleName: "Nhân sự",
-      description: "Quản lý thông tin nhân sự và lương",
-      permissions: {
-        view_contract: true,
-        edit_contract: true,
-        delete_contract: false,
-      },
-    },
-    {
-      roleCode: "ROLE003",
-      roleName: "Kế toán",
-      description: "Quản lý tài chính và báo cáo",
-      permissions: {
-        view_contract: true,
-        edit_contract: false,
-        delete_contract: false,
-      },
-    },
-  ]);
+  const [roleData, setRoleData] = useState([]);
 
-  const columns = [
-    { label: "Mã nhóm quyền", key: "roleCode" },
-    { label: "Tên nhóm quyền", key: "roleName" },
-    { label: "Mô tả", key: "description" },
-  ];
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get("/api/Role");
+      const roles = response.data.map((role) => ({
+        roleCode: role.id,
+        roleName: role.name,
+        description: role.description,
+        permissions: role.roleModuleActions.reduce((acc, action) => {
+          acc[`${action.moduleId}_${action.actionId}`] = true;
+          return acc;
+        }, {}),
+      }));
+      setRoleData(roles);
+    } catch (err) {
+      console.error("Error fetching roles:", err);
+      message.error("Không thể tải danh sách quyền.");
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   const handleEdit = (item) => {
     setSelectedRole(item);
@@ -56,8 +56,19 @@ const RolePermission = () => {
     setIsDialogVisible(true);
   };
 
-  const handleDelete = (item) => {
-    alert(`Deleting role: ${item.roleName}`);
+  const handleDelete = async (item) => {
+    try {
+      const response = await axios.delete(`/api/Role/${item.roleCode}`);
+      if (response.status === 200) {
+        message.success("Xóa nhóm quyền thành công!");
+        fetchRoles();
+      } else {
+        message.error("Xóa nhóm quyền thất bại!");
+      }
+    } catch (err) {
+      console.error("Error deleting role:", err);
+      message.error("Không thể xóa nhóm quyền!");
+    }
   };
 
   const handleCreate = () => {
@@ -79,14 +90,9 @@ const RolePermission = () => {
     setIsViewMode(false);
   };
 
-  const handleDialogSubmit = (values) => {
-    if (selectedRole) {
-      console.log("Call Api edit:", values);
-      message.success("Cập nhật nhóm quyền thành công!");
-    } else {
-      console.log("Call Api create:", values);
-      message.success("Tạo nhóm quyền thành công!");
-    }
+  const handleDialogSubmit = async (values) => {
+    // Chỉ cần làm mới danh sách sau khi tạo mới hoặc cập nhật
+    fetchRoles();
     setIsDialogVisible(false);
     form.resetFields();
   };
@@ -100,6 +106,12 @@ const RolePermission = () => {
       );
     });
   };
+
+  const columns = [
+    { label: "Mã nhóm quyền", key: "roleCode" },
+    { label: "Tên nhóm quyền", key: "roleName" },
+    { label: "Mô tả", key: "description" },
+  ];
 
   return (
     <div className={styles.tableContent}>

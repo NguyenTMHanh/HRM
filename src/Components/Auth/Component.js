@@ -180,3 +180,12 @@ export const LogoContainer = styled.div`
   font-size: 32px;
   font-weight: bold;
 `;
+
+export const PageWrapper = styled.div`
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f2f5;
+`;

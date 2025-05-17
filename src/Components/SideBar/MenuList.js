@@ -1,31 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   HomeOutlined,
+  CalendarOutlined,
   ScheduleOutlined,
+  HistoryOutlined,
   AppstoreAddOutlined,
   UserOutlined,
-  TeamOutlined,
-  DollarOutlined,
-  LockOutlined,
-  SettingOutlined,
-  SafetyCertificateOutlined,
   FileDoneOutlined,
-  AuditOutlined,
-  CalendarOutlined,
-  ApartmentOutlined,
+  DollarOutlined,
+  TeamOutlined,
   FileProtectOutlined,
   ProfileOutlined,
-  HistoryOutlined,
   SendOutlined,
   CheckCircleOutlined,
+  SettingOutlined,
+  ApartmentOutlined,
+  SafetyCertificateOutlined,
+  AuditOutlined,
+  LockOutlined,
 } from '@ant-design/icons';
 
 const MenuList = ({ darkTheme }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [permissions, setPermissions] = useState([]);
+  const [hasAllModule, setHasAllModule] = useState(false);
+  const [refresh, setRefresh] = useState(0); 
 
+
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];   
+    setPermissions(storedPermissions);
+    setHasAllModule(storedPermissions.some((p) => p?.moduleId === 'allModule'));
+    setRefresh((prev) => prev + 1); 
+  }, []);
+
+ 
   const getSelectedKey = () => {
     const path = location.pathname;
     if (path === '/dashboard') return ['dashboard'];
@@ -62,7 +74,7 @@ const MenuList = ({ darkTheme }) => {
         navigate('/checkin/history');
         break;
       case 'create':
-        navigate('/create/personal');
+        navigate('/create');
         break;
       case 'profile-info':
         navigate('/infomation/personal');
@@ -114,7 +126,66 @@ const MenuList = ({ darkTheme }) => {
     }
   };
 
-  // Định nghĩa mảng items cho Menu
+  const isAccessible = (key) => {
+    if (['dashboard', 'checkin-daily', 'checkin-history', 'profile-info', 'salary-info', 'your-letter'].includes(key)) {
+      return true;
+    }
+    if (hasAllModule) {
+      return true;
+    }
+    switch (key) {
+      case 'create':
+        const canCreate = permissions.some((p) => {
+          const moduleId = p?.moduleId || '';
+          const actionId = p?.actionId || '';
+          return moduleId.toLowerCase() === 'hrpersonel' && actionId.toLowerCase() === 'create';
+        });
+        return canCreate;
+      case 'hr-profile':
+        const canAccessHrProfile = permissions.some((p) => p?.moduleId === 'HrPersonel');
+        return canAccessHrProfile;
+      case 'hr-salary-table':
+        const canAccessHrSalary = permissions.some((p) => p?.moduleId === 'HrSalary');
+        return canAccessHrSalary;
+      case 'hr-checkin-history':
+        const canAccessHrCheckin = permissions.some((p) => p?.moduleId === 'HrHistoryCheckin');
+        return canAccessHrCheckin;
+      case 'approved-letter':
+        const canAccessApprovedLetter = permissions.some((p) => p?.moduleId === 'HrPersonel');
+        return canAccessApprovedLetter;
+      case 'setting-structure':
+      case 'setting-checkin':
+      case 'setting-insurance':
+      case 'setting-contract':
+      case 'setting-tax':
+      case 'setting-salary':
+        const canAccessSetting = permissions.some((p) => p?.moduleId === 'setting');
+        return canAccessSetting;
+      case 'permission-role':
+      case 'permission-detail':
+        const canAccessPermission = permissions.some((p) => p?.moduleId === 'permission');
+        return canAccessPermission;
+      default:
+        return false;
+    }
+  };
+
+  const filterMenuItems = (items) => {
+    return items
+      .map((item) => {
+        if (item.children) {
+          const filteredChildren = filterMenuItems(item.children);
+          return { ...item, children: filteredChildren };
+        } else {
+          return item;
+        }
+      })
+      .filter((item) => {
+        const isItemAccessible = item.children ? item.children.length > 0 : isAccessible(item.key);
+        return isItemAccessible;
+      });
+  };
+
   const menuItems = [
     {
       key: 'dashboard',
@@ -212,11 +283,6 @@ const MenuList = ({ darkTheme }) => {
           icon: <SafetyCertificateOutlined />,
           label: 'Bảo hiểm',
         },
-        // {
-        //   key: 'setting-contract',
-        //   icon: <FileDoneOutlined />,
-        //   label: 'Hợp đồng',
-        // },
         {
           key: 'setting-tax',
           icon: <AuditOutlined />,
@@ -239,14 +305,11 @@ const MenuList = ({ darkTheme }) => {
           icon: <TeamOutlined />,
           label: 'Nhóm quyền',
         },
-        // {
-        //   key: 'permission-detail',
-        //   icon: <ProfileOutlined />,
-        //   label: 'Chi tiết quyền',
-        // },
       ],
     },
   ];
+
+  const visibleMenuItems = filterMenuItems(menuItems);
 
   return (
     <Menu
@@ -255,7 +318,8 @@ const MenuList = ({ darkTheme }) => {
       selectedKeys={getSelectedKey()}
       className="menu-bar"
       onClick={handleMenuClick}
-      items={menuItems} // Sử dụng items thay vì các Menu.Item và Menu.SubMenu
+      items={visibleMenuItems}
+      key={refresh} 
     />
   );
 };

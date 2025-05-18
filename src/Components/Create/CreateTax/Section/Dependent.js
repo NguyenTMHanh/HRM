@@ -99,7 +99,7 @@ const Dependent = ({ form }) => {
         <>
           {fields.map(({ key, name, ...restField }, index) => (
             <Row gutter={[16, 16]} key={key}>
-              <Col xs={24} sm={3}>
+              <Col xs={24} sm={4}>
                 <Form.Item
                   {...restField}
                   label="Tình trạng đăng ký"
@@ -134,10 +134,6 @@ const Dependent = ({ form }) => {
                   name={[name, "fullName"]}
                   rules={[
                     { required: true, message: "Vui lòng nhập họ tên!" },
-                    {
-                      pattern: /^[a-zA-Z\s]+$/,
-                      message: "Chỉ được nhập chữ cái và khoảng trắng!",
-                    },
                   ]}
                 >
                   <Input placeholder="Nhập họ và tên" />
@@ -174,7 +170,7 @@ const Dependent = ({ form }) => {
                 </Form.Item>
               </Col>
 
-              <Col xs={24} sm={7}>
+              <Col xs={24} sm={6}>
                 <Form.Item
                   {...restField}
                   label="Hồ sơ minh chứng"

@@ -1,30 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { Modal, Spin } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
-import { Spin } from 'antd';
 import ContractInfo from './Section/ContractInfo';
-import { useNavigate } from "react-router-dom";
 import AllowanceInfo from './Section/AllowanceInfo';
 import History from '../../../Shared/History/History';
-import FooterBar from "../../Footer/Footer";
+import FooterBar from '../../Footer/Footer';
+import CreateContract from '../../Create/CreateContract/CreateContract'
+import { useNavigate } from 'react-router-dom';
 import './styles.css';
-
 
 function ContractInfoProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-const navigate = useNavigate();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const navigate = useNavigate();
 
-  const handleNext = () => {
-    navigate('/infomation/insurance');
-  };
-
-  const handleBack = () => {
-    navigate('/infomation/personel');
-  };
-
-  const handleEdit = () => {
-    navigate('/create/contract');
-  };
   useEffect(() => {
     const fetchMockData = async () => {
       try {
@@ -44,10 +35,9 @@ const navigate = useNavigate();
           allowances: [
             { name: 'Phụ cấp ăn trưa', amount: '1 000 000 VNĐ' },
             { name: 'Phụ cấp đi lại', amount: '2 000 000 VNĐ' },
-            { name: 'Phụ cấp điện thoại', amount: '3 000 000 VNĐ' }
-          ]
+            { name: 'Phụ cấp điện thoại', amount: '3 000 000 VNĐ' },
+          ],
         };
-
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setData(mockData);
@@ -61,6 +51,29 @@ const navigate = useNavigate();
     fetchMockData();
   }, []);
 
+  const handleNext = () => {
+    navigate('/infomation/insurance');
+  };
+
+  const handleBack = () => {
+    navigate('/infomation/personel');
+  };
+
+  const handleEdit = () => {
+    setIsModalVisible(true);
+    setFormKey(prev => prev + 1);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleSave = (updatedData) => {
+    if (updatedData) {
+      setData(updatedData);
+    }
+    setIsModalVisible(false);
+  };
 
   const historyItems = [
     {
@@ -88,10 +101,8 @@ const navigate = useNavigate();
     );
   }
 
-
   return (
     <div className="scroll-container">
-
       <div className="main-content">
         <div className="left-column">
           <div className="collapse-container">
@@ -106,7 +117,6 @@ const navigate = useNavigate();
             </div>
           </div>
 
-
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
               <Collapse
@@ -119,7 +129,6 @@ const navigate = useNavigate();
             </div>
           </div>
         </div>
-
 
         <div className="right-column">
           <div className="collapse-container">
@@ -134,18 +143,36 @@ const navigate = useNavigate();
             </div>
           </div>
         </div>
+      </div>
 
-        <FooterBar
-          showNext={true}
-          onNext={handleNext}
-          showEdit={true}
-          onEdit={handleEdit}
-          showBack={true}
-          onBack={handleBack}
-        />
+      <FooterBar
+        showNext={true}
+        onNext={handleNext}
+        showBack={true}
+        onBack={handleBack}
+        showEdit={true}
+        onEdit={handleEdit}
+      />
+
+      <div style={{ position: 'relative' }}>
+        <Modal
+          title="Chỉnh sửa thông tin hợp đồng"
+          open={isModalVisible}
+          onCancel={handleModalClose}
+          footer={null}
+          width={1000}
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <CreateContract
+            key={formKey}
+            initialData={data}
+            onSave={handleSave}
+            isModalFooter={true}
+          />
+        </Modal>
       </div>
     </div>
   );
-};
+}
 
 export default ContractInfoProfile;

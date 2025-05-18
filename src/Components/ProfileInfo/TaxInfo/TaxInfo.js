@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { Modal, Spin } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import TaxInfo from './Section/TaxInfo';
 import DependentInfo from './Section/Dependent';
 import History from '../../../Shared/History/History';
-import FooterBar from "../../Footer/Footer";
-import { useNavigate } from "react-router-dom";
-import { Spin } from 'antd';
+import FooterBar from '../../Footer/Footer';
+import CreateTax from '../../Create/CreateTax/CreateTax';
+import { useNavigate } from 'react-router-dom';
 import './styles.css';
 
 function TaxInfoProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-const navigate = useNavigate();
-  const handleBack = () => {
-    navigate('/infomation/insurance');
-  };
-
-  const handleEdit = () => {
-    navigate('/create/tax');
-  };
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMockData = async () => {
@@ -27,7 +22,7 @@ const navigate = useNavigate();
         setLoading(true);
         const mockData = {
           hasTax: true,
-          taxCode: 'TNCN-123456789',
+          taxCode: '123456789',
           dependents: [
             {
               registered: 'Đã đăng ký',
@@ -60,7 +55,6 @@ const navigate = useNavigate();
           ],
         };
 
-
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setData(mockData);
         setLoading(false);
@@ -72,6 +66,26 @@ const navigate = useNavigate();
 
     fetchMockData();
   }, []);
+
+  const handleBack = () => {
+    navigate('/infomation/insurance');
+  };
+
+  const handleEdit = () => {
+    setIsModalVisible(true);
+    setFormKey(prev => prev + 1);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleSave = (updatedData) => {
+    if (updatedData) {
+      setData(updatedData);
+    }
+    setIsModalVisible(false);
+  };
 
   const historyItems = [
     {
@@ -128,7 +142,6 @@ const navigate = useNavigate();
           </div>
         </div>
 
-
         <div className="right-column">
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
@@ -142,16 +155,34 @@ const navigate = useNavigate();
             </div>
           </div>
         </div>
+      </div>
 
-        <FooterBar
-          showEdit={true}
-          onEdit={handleEdit}
-          showBack={true}
-          onBack={handleBack}
-        />
+      <FooterBar
+        showBack={true}
+        onBack={handleBack}
+        showEdit={true}
+        onEdit={handleEdit}
+      />
+
+      <div style={{ position: 'relative' }}>
+        <Modal
+          title="Chỉnh sửa thông tin thuế"
+          open={isModalVisible}
+          onCancel={handleModalClose}
+          footer={null}
+          width={1100}
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <CreateTax
+            key={formKey}
+            initialData={data}
+            onSave={handleSave}
+            isModalFooter={true}
+          />
+        </Modal>
       </div>
     </div>
   );
-};
+}
 
 export default TaxInfoProfile;

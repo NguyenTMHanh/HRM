@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { Modal, Spin } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import BHYTInfo from './Section/BHYTInfo';
 import BHXHInfo from './Section/BHXHInfo';
 import BHTNInfo from './Section/BHTNInfo';
 import GeneralInfo from './Section/GeneralInfo';
 import History from '../../../Shared/History/History';
-import { useNavigate } from "react-router-dom";
-import FooterBar from "../../Footer/Footer";
-import { Spin } from 'antd';
+import FooterBar from '../../Footer/Footer';
+import CreateInsurance from '../../Create/CreateInsurance/CreateInsurance';
+import { useNavigate } from 'react-router-dom';
 import './styles.css';
 
 function InsuranceInfoProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
-
-  const handleNext = () => {
-    navigate('/infomation/tax');
-  };
-
-  const handleBack = () => {
-    navigate('/infomation/contract');
-  };
-
-  const handleEdit = () => {
-    navigate('/create/insurance');
-  };
 
   useEffect(() => {
     const fetchMockData = async () => {
@@ -44,7 +34,7 @@ function InsuranceInfoProfile() {
           bhtnRate: '1% NLĐ / 17% DN',
           bhtnStartDate: '3/2/2025',
           bhStatus: 'Đang tham gia',
-          bhEndDate: '1/1/2026'
+          bhEndDate: '1/1/2026',
         };
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -59,6 +49,29 @@ function InsuranceInfoProfile() {
     fetchMockData();
   }, []);
 
+  const handleNext = () => {
+    navigate('/infomation/tax');
+  };
+
+  const handleBack = () => {
+    navigate('/infomation/contract');
+  };
+
+  const handleEdit = () => {
+    setIsModalVisible(true);
+    setFormKey(prev => prev + 1);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleSave = (updatedData) => {
+    if (updatedData) {
+      setData(updatedData);
+    }
+    setIsModalVisible(false);
+  };
 
   const historyItems = [
     {
@@ -114,7 +127,6 @@ function InsuranceInfoProfile() {
             </div>
           </div>
 
-
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
               <Collapse
@@ -126,7 +138,6 @@ function InsuranceInfoProfile() {
               />
             </div>
           </div>
-
 
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
@@ -141,7 +152,6 @@ function InsuranceInfoProfile() {
           </div>
         </div>
 
-
         <div className="right-column">
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
@@ -155,18 +165,36 @@ function InsuranceInfoProfile() {
             </div>
           </div>
         </div>
+      </div>
 
-        <FooterBar
-          showNext={true}
-          onNext={handleNext}
-          showEdit={true}
-          onEdit={handleEdit}
-          showBack={true}
-          onBack={handleBack}
-        />
+      <FooterBar
+        showNext={true}
+        onNext={handleNext}
+        showBack={true}
+        onBack={handleBack}
+        showEdit={true}
+        onEdit={handleEdit}
+      />
+
+      <div style={{ position: 'relative' }}>
+        <Modal
+          title="Chỉnh sửa thông tin bảo hiểm"
+          open={isModalVisible}
+          onCancel={handleModalClose}
+          footer={null}
+          width={1000}
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <CreateInsurance
+            key={formKey}
+            initialData={data}
+            onSave={handleSave}
+            isModalFooter={true}
+          />
+        </Modal>
       </div>
     </div>
   );
-};
+}
 
 export default InsuranceInfoProfile;

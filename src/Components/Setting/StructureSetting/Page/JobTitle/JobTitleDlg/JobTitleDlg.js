@@ -5,22 +5,24 @@ import JobTitle from "./Section/JobTitle";
 import FooterBar from "../../../../../Footer/Footer";
 
 const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isViewMode }) => {
-  const initialValues = {
+  const getInitialValues = () => ({
     jobTitles: [
       {
-        id: selectedJobTitle ? selectedJobTitle.jobTitleCode : 1,
-        jobTitleCode: selectedJobTitle ? selectedJobTitle.jobTitleCode : `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+        jobTitleCode: selectedJobTitle
+          ? selectedJobTitle.jobTitleCode
+          : `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
         title: selectedJobTitle ? selectedJobTitle.jobTitleName : "",
         rank: selectedJobTitle ? selectedJobTitle.rank : null,
         permissionGroup: selectedJobTitle ? selectedJobTitle.permissionGroup : null,
         description: selectedJobTitle ? selectedJobTitle.description : "",
       },
     ],
-  };
+  });
 
   useEffect(() => {
     if (visible) {
-      form.setFieldsValue(initialValues);
+      form.resetFields();
+      form.setFieldsValue(getInitialValues());
     }
   }, [visible, form, selectedJobTitle]);
 
@@ -32,9 +34,9 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
         const dataToSend = {
           jobTitles: values.jobTitles || [],
         };
-        console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
         form.resetFields();
+        onClose();
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -43,10 +45,15 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
   };
 
   const handleCancel = () => {
+    const currentJobTitleCode = form.getFieldValue(["jobTitles", 0, "jobTitleCode"]);
     form.resetFields();
+    form.setFieldsValue({
+      jobTitles: [{ jobTitleCode: currentJobTitleCode }],
+    });
   };
 
   const handleClose = () => {
+    form.resetFields();
     onClose();
   };
 
@@ -65,9 +72,10 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
         )
       }
       onCancel={handleClose}
-      width={1200}
+      width={1000}
+      centered={true} // Center the modal
     >
-      <Form form={form} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={getInitialValues()}>
         <div className="collapse-container">
           <Collapse
             item={{

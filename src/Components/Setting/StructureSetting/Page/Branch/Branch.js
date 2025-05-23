@@ -88,21 +88,44 @@ const Branch = () => {
   };
 
   const handleDialogClose = () => {
-    form.resetFields();
-    setIsDialogVisible(false);
-    setSelectedBranch(null);
-    setIsViewMode(false);
+    setSelectedBranch(null); // Clear selectedBranch
+    setIsViewMode(false); // Reset view mode
+    setIsDialogVisible(false); // Close dialog
+    form.resetFields(); // Reset form after closing
   };
 
   const handleDialogSubmit = (values) => {
     if (selectedBranch) {
-      console.log("Call API edit");
+      // Update existing branch
+      setStructureData((prev) =>
+        prev.map((item) =>
+          item.branchCode === values.branchCode
+            ? {
+                ...item,
+                branchName: values.branchName,
+                address: values.address,
+                status: values.status,
+                departments: values.departments,
+              }
+            : item
+        )
+      );
       message.success("Cập nhật chi nhánh thành công!");
     } else {
+      // Add new branch
+      setStructureData((prev) => [
+        ...prev,
+        {
+          branchCode: values.branchCode,
+          branchName: values.branchName,
+          address: values.address,
+          status: values.status,
+          departments: values.departments,
+        },
+      ]);
       message.success("Tạo chi nhánh thành công!");
     }
-    setIsDialogVisible(false);
-    form.resetFields();
+    handleDialogClose(); // Close dialog and reset
   };
 
   const filterData = (data, searchTerm) => {

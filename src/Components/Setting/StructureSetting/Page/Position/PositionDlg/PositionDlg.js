@@ -5,7 +5,7 @@ import Position from "./Section/Position";
 import FooterBar from "../../../../../Footer/Footer";
 
 const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isViewMode }) => {
-  const initialValues = {
+  const getInitialValues = () => ({
     positions: [
       {
         positionCode: selectedPosition
@@ -16,11 +16,12 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
         description: selectedPosition ? selectedPosition.description : "",
       },
     ],
-  };
+  });
 
   useEffect(() => {
     if (visible) {
-      form.setFieldsValue(initialValues);
+      form.resetFields(); // Reset form trước
+      form.setFieldsValue(getInitialValues()); // Set giá trị mới
     }
   }, [visible, form, selectedPosition]);
 
@@ -32,9 +33,9 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
         const dataToSend = {
           positions: values.positions || [],
         };
-        console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        form.resetFields();
+        form.resetFields(); // Reset form sau khi submit
+        onClose(); // Đóng dialog
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -43,11 +44,16 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    const currentPositionCode = form.getFieldValue(["positions", 0, "positionCode"]);
+    form.resetFields(); // Reset form về trạng thái trống
+    form.setFieldsValue({
+      positions: [{ positionCode: currentPositionCode }], // Giữ lại positionCode
+    });
   };
 
   const handleClose = () => {
-    onClose();
+    form.resetFields(); // Reset form khi đóng
+    onClose(); // Gọi hàm onClose từ parent
   };
 
   return (
@@ -66,8 +72,9 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
       }
       onCancel={handleClose}
       width={1000}
+      centered={true}
     >
-      <Form form={form} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={getInitialValues()}>
         <div className="collapse-container">
           <Collapse
             item={{

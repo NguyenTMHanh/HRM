@@ -68,21 +68,42 @@ const Rank = () => {
   };
 
   const handleDialogClose = () => {
-    form.resetFields();
-    setIsDialogVisible(false);
-    setSelectedRank(null);
-    setIsViewMode(false);
+    setSelectedRank(null); // Xóa selectedRank trước
+    setIsViewMode(false); // Reset view mode
+    setIsDialogVisible(false); // Đóng dialog
+    form.resetFields(); // Reset form sau khi đóng
   };
 
   const handleDialogSubmit = (values) => {
     if (selectedRank) {
-      console.log("Call Api edit");
+      // Cập nhật danh sách rankData
+      setRankData((prev) =>
+        prev.map((item) =>
+          item.rankCode === values.ranks[0].rankCode
+            ? {
+                ...item,
+                rankName: values.ranks[0].name,
+                priority: values.ranks[0].priority,
+                description: values.ranks[0].description,
+              }
+            : item
+        )
+      );
       message.success("Cập nhật cấp bậc thành công!");
     } else {
+      // Thêm mới cấp bậc
+      setRankData((prev) => [
+        ...prev,
+        {
+          rankCode: values.ranks[0].rankCode,
+          rankName: values.ranks[0].name,
+          priority: values.ranks[0].priority,
+          description: values.ranks[0].description,
+        },
+      ]);
       message.success("Tạo cấp bậc thành công!");
     }
-    setIsDialogVisible(false);
-    form.resetFields();
+    handleDialogClose(); // Đóng dialog và reset
   };
 
   const filterData = (data, searchTerm) => {

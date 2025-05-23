@@ -5,20 +5,22 @@ import Department from "./Section/Department";
 import FooterBar from "../../../../../Footer/Footer";
 
 const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, isViewMode }) => {
-  const initialValues = {
+  const getInitialValues = () => ({
     departments: [
       {
-        id: selectedDepartment ? selectedDepartment.departmentCode : 1,
-        departmentCode: selectedDepartment ? selectedDepartment.departmentCode : `D${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+        departmentCode: selectedDepartment
+          ? selectedDepartment.departmentCode
+          : `D${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
         name: selectedDepartment ? selectedDepartment.departmentName : "",
         description: selectedDepartment ? selectedDepartment.description : "",
       },
     ],
-  };
+  });
 
   useEffect(() => {
     if (visible) {
-      form.setFieldsValue(initialValues);
+      form.resetFields(); // Reset form before setting new values
+      form.setFieldsValue(getInitialValues()); // Set initial values
     }
   }, [visible, form, selectedDepartment]);
 
@@ -30,9 +32,9 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
         const dataToSend = {
           departments: values.departments || [],
         };
-        console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        form.resetFields();
+        form.resetFields(); // Reset form after submit
+        onClose(); // Close dialog
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -41,11 +43,16 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    const currentDepartmentCode = form.getFieldValue(["departments", 0, "departmentCode"]);
+    form.resetFields(); // Reset form to empty state
+    form.setFieldsValue({
+      departments: [{ departmentCode: currentDepartmentCode }], // Preserve departmentCode
+    });
   };
 
   const handleClose = () => {
-    onClose();
+    form.resetFields(); // Reset form when closing
+    onClose(); // Call parent onClose
   };
 
   return (
@@ -64,8 +71,9 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
       }
       onCancel={handleClose}
       width={1000}
+      centered={true} // Center the dialog
     >
-      <Form form={form} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={getInitialValues()}>
         <div className="collapse-container">
           <Collapse
             item={{

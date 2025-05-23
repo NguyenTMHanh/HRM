@@ -1,80 +1,9 @@
 import React from "react";
-import { Input, Button, Row, Col, Form, Select } from "antd";
-import styled from "styled-components";
+import { Input, Row, Col, Form, Select } from "antd";
 
 const { Option } = Select;
 
-const DeleteButton = styled(Button)`
-  background-color: #f5222d;
-  border-color: #f5222d;
-  color: white;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #fff !important;
-    border-color: #d42a2a !important;
-    color: #d42a2a !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
-
-const AddButton = styled(Button)`
-  background-color: #001b45;
-  border-color: #001b45;
-  color: #fff;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #002d72 !important;
-    border-color: #002d72;
-    color: #fff !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
-
 const JobTitle = ({ form, isViewMode }) => {
-  const handleAddJobTitle = () => {
-    const currentJobTitles = form.getFieldValue("jobTitles") || [];
-    const newId = currentJobTitles.length + 1;
-    form.setFieldsValue({
-      jobTitles: [
-        ...currentJobTitles,
-        {
-          id: newId,
-          jobTitleCode: `JT${newId.toString().padStart(3, "0")}`,
-          title: "",
-          rank: null,
-          permissionGroup: null,
-          description: "",
-        },
-      ],
-    });
-  };
-
-  const handleDeleteJobTitle = (index) => {
-    const currentJobTitles = form.getFieldValue("jobTitles") || [];
-    const updated = currentJobTitles
-      .filter((_, i) => i !== index)
-      .map((title, i) => ({
-        ...title,
-        id: i + 1,
-        jobTitleCode: `JT${(i + 1).toString().padStart(3, "0")}`,
-      }));
-    form.setFieldsValue({ jobTitles: updated });
-  };
-
   return (
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
@@ -114,9 +43,9 @@ const JobTitle = ({ form, isViewMode }) => {
         `}
       </style>
       <Form.List name="jobTitles">
-        {(fields, { add, remove }) => (
+        {(fields) => (
           <>
-            {fields.map(({ key, name, ...restField }, index) => (
+            {fields.slice(0, 1).map(({ key, name, ...restField }) => (
               <Row gutter={[16, 16]} key={key}>
                 <Col xs={24} sm={4}>
                   <Form.Item
@@ -128,7 +57,7 @@ const JobTitle = ({ form, isViewMode }) => {
                     <Input placeholder="Mã chức vụ" disabled />
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={6}>
+                <Col xs={24} sm={5}>
                   <Form.Item
                     {...restField}
                     label="Tên chức vụ"
@@ -138,7 +67,7 @@ const JobTitle = ({ form, isViewMode }) => {
                     <Input placeholder="Tên chức vụ" disabled={isViewMode} />
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={4}>
+                <Col xs={24} sm={5}>
                   <Form.Item
                     {...restField}
                     label="Cấp bậc"
@@ -153,7 +82,7 @@ const JobTitle = ({ form, isViewMode }) => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={4}>
+                <Col xs={24} sm={5}>
                   <Form.Item
                     {...restField}
                     label="Nhóm quyền"
@@ -166,7 +95,7 @@ const JobTitle = ({ form, isViewMode }) => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={4}>
+                <Col xs={24} sm={5}>
                   <Form.Item
                     {...restField}
                     label="Mô tả"
@@ -175,20 +104,8 @@ const JobTitle = ({ form, isViewMode }) => {
                     <Input placeholder="Mô tả" disabled={isViewMode} />
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {!isViewMode && (
-                    <DeleteButton onClick={() => handleDeleteJobTitle(index)}>Xóa</DeleteButton>
-                  )}
-                </Col>
               </Row>
             ))}
-            {!isViewMode && (
-              <Form.Item>
-                <AddButton onClick={handleAddJobTitle} block>
-                  Thêm mới chức vụ
-                </AddButton>
-              </Form.Item>
-            )}
           </>
         )}
       </Form.List>

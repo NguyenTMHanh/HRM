@@ -81,13 +81,36 @@ const JobTitle = () => {
 
   const handleDialogSubmit = (values) => {
     if (selectedJobTitle) {
-      console.log("Call Api edit");
+      // Update existing job title
+      setJobTitleData((prev) =>
+        prev.map((item) =>
+          item.jobTitleCode === values.jobTitles[0].jobTitleCode
+            ? {
+                ...item,
+                jobTitleName: values.jobTitles[0].title,
+                rank: values.jobTitles[0].rank,
+                permissionGroup: values.jobTitles[0].permissionGroup,
+                description: values.jobTitles[0].description,
+              }
+            : item
+        )
+      );
       message.success("Cập nhật chức vụ thành công!");
     } else {
+      // Add new job title
+      setJobTitleData((prev) => [
+        ...prev,
+        {
+          jobTitleCode: values.jobTitles[0].jobTitleCode,
+          jobTitleName: values.jobTitles[0].title,
+          rank: values.jobTitles[0].rank,
+          permissionGroup: values.jobTitles[0].permissionGroup,
+          description: values.jobTitles[0].description,
+        },
+      ]);
       message.success("Tạo chức vụ thành công!");
     }
-    setIsDialogVisible(false);
-    form.resetFields();
+    handleDialogClose();
   };
 
   const filterData = (data, searchTerm) => {

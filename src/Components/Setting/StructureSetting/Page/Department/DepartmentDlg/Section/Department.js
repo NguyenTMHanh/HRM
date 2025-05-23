@@ -1,70 +1,7 @@
 import React from "react";
-import { Input, Button, Row, Col, Form } from "antd";
-import styled from "styled-components";
-
-const DeleteButton = styled(Button)`
-  background-color: #f5222d;
-  border-color: #f5222d;
-  color: white;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #fff !important;
-    border-color: #d42a2a !important;
-    color: #d42a2a !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
-
-const AddButton = styled(Button)`
-  background-color: #001b45;
-  border-color: #001b45;
-  color: #fff;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #002d72 !important;
-    border-color: #002d72;
-    color: #fff !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
+import { Input, Row, Col, Form } from "antd";
 
 const Department = ({ form, isViewMode }) => {
-  const handleAddDepartment = () => {
-    const currentDepartments = form.getFieldValue("departments") || [];
-    const newId = currentDepartments.length + 1;
-    const updated = [
-      ...currentDepartments,
-      { id: newId, departmentCode: `D${newId.toString().padStart(3, "0")}`, name: "", description: "" },
-    ];
-    form.setFieldsValue({ departments: updated });
-  };
-
-  const handleDeleteDepartment = (index) => {
-    const currentDepartments = form.getFieldValue("departments") || [];
-    const updated = currentDepartments
-      .filter((_, i) => i !== index)
-      .map((dept, i) => ({
-        ...dept,
-        id: i + 1,
-        departmentCode: `D${(i + 1).toString().padStart(3, "0")}`,
-      }));
-    form.setFieldsValue({ departments: updated });
-  };
-
   return (
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
@@ -84,9 +21,9 @@ const Department = ({ form, isViewMode }) => {
         `}
       </style>
       <Form.List name="departments">
-        {(fields, { add, remove }) => (
+        {(fields) => (
           <>
-            {fields.map(({ key, name, ...restField }, index) => (
+            {fields.slice(0, 1).map(({ key, name, ...restField }) => (
               <Row gutter={[16, 16]} key={key}>
                 <Col xs={24} sm={6}>
                   <Form.Item
@@ -119,24 +56,8 @@ const Department = ({ form, isViewMode }) => {
                     <Input placeholder="Mô tả" disabled={isViewMode} />
                   </Form.Item>
                 </Col>
-
-                <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {!isViewMode && (
-                    <DeleteButton onClick={() => handleDeleteDepartment(index)}>
-                      Xóa
-                    </DeleteButton>
-                  )}
-                </Col>
               </Row>
             ))}
-
-            {!isViewMode && (
-              <Form.Item>
-                <AddButton onClick={handleAddDepartment} block>
-                  Thêm mới bộ phận
-                </AddButton>
-              </Form.Item>
-            )}
           </>
         )}
       </Form.List>

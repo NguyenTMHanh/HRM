@@ -63,29 +63,49 @@ const Department = () => {
   };
 
   const handleDialogClose = () => {
-    form.resetFields();
-    setIsDialogVisible(false);
     setSelectedDepartment(null);
     setIsViewMode(false);
+    setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const handleDialogSubmit = (values) => {
     if (selectedDepartment) {
-      console.log("Call Api edit");
+      // Update existing department
+      setDepartmentData((prev) =>
+        prev.map((item) =>
+          item.departmentCode === values.departments[0].departmentCode
+            ? {
+                ...item,
+                departmentName: values.departments[0].name,
+                description: values.departments[0].description,
+              }
+            : item
+        )
+      );
       message.success("Cập nhật bộ phận thành công!");
     } else {
+      // Add new department
+      setDepartmentData((prev) => [
+        ...prev,
+        {
+          departmentCode: values.departments[0].departmentCode,
+          departmentName: values.departments[0].name,
+          description: values.departments[0].description,
+        },
+      ]);
       message.success("Tạo bộ phận thành công!");
     }
-    setIsDialogVisible(false);
-    form.resetFields();
+    handleDialogClose();
   };
 
   const filterData = (data, searchTerm) => {
-    return data.filter(
-      (item) =>
-        item.departmentCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.departmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return data.filter((item) =>
+      (
+        item.departmentCode.toLowerCase() +
+        item.departmentName.toLowerCase() +
+        item.description.toLowerCase()
+      ).includes(searchTerm.toLowerCase())
     );
   };
 

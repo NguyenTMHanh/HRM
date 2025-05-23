@@ -1,70 +1,7 @@
 import React from "react";
-import { Input, Button, Row, Col, Form } from "antd";
-import styled from "styled-components";
-
-const DeleteButton = styled(Button)`
-  background-color: #f5222d;
-  border-color: #f5222d;
-  color: white;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #fff !important;
-    border-color: #d42a2a !important;
-    color: #d42a2a !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
-
-const AddButton = styled(Button)`
-  background-color: #001b45;
-  border-color: #001b45;
-  color: #fff;
-  border-radius: 4px;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #002d72 !important;
-    border-color: #002d72;
-    color: #fff !important;
-    cursor: pointer;
-  }
-
-  &:focus {
-    outline: none;
-  }
-`;
+import { Input, Row, Col, Form } from "antd";
 
 const Rank = ({ form, isViewMode }) => {
-  const handleAddRank = () => {
-    const currentRanks = form.getFieldValue("ranks") || [];
-    const newPriority = currentRanks.length + 1;
-    const updated = [
-      ...currentRanks,
-      { rankCode: `R${String(newPriority).padStart(3, "0")}`, priority: newPriority, name: "", description: "" },
-    ];
-    form.setFieldsValue({ ranks: updated });
-  };
-
-  const handleDeleteRank = (index) => {
-    const currentRanks = form.getFieldValue("ranks") || [];
-    const updated = currentRanks
-      .filter((_, i) => i !== index)
-      .map((rank, i) => ({
-        ...rank,
-        priority: i + 1,
-        rankCode: `R${String(i + 1).padStart(3, "0")}`,
-      }));
-    form.setFieldsValue({ ranks: updated });
-  };
-
   return (
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
@@ -84,9 +21,9 @@ const Rank = ({ form, isViewMode }) => {
         `}
       </style>
       <Form.List name="ranks">
-        {(fields, { add, remove }) => (
+        {(fields) => (
           <>
-            {fields.map(({ key, name, ...restField }, index) => (
+            {fields.slice(0, 1).map(({ key, name, ...restField }, index) => (
               <Row gutter={[16, 16]} key={key}>
                 <Col xs={24} sm={6}>
                   <Form.Item
@@ -99,7 +36,7 @@ const Rank = ({ form, isViewMode }) => {
                   </Form.Item>
                 </Col>
 
-                <Col xs={24} sm={4}>
+                <Col xs={24} sm={6}>
                   <Form.Item
                     {...restField}
                     label="Mức độ ưu tiên"
@@ -130,22 +67,8 @@ const Rank = ({ form, isViewMode }) => {
                     <Input placeholder="Mô tả" disabled={isViewMode} />
                   </Form.Item>
                 </Col>
-
-                <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {!isViewMode && (
-                    <DeleteButton onClick={() => handleDeleteRank(index)}>Xóa</DeleteButton>
-                  )}
-                </Col>
               </Row>
             ))}
-
-            {!isViewMode && (
-              <Form.Item>
-                <AddButton onClick={handleAddRank} block>
-                  Thêm mới cấp bậc
-                </AddButton>
-              </Form.Item>
-            )}
           </>
         )}
       </Form.List>

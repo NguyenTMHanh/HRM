@@ -5,7 +5,7 @@ import BranchInfo from "./Section/BranchInfo";
 import FooterBar from "../../../../../Footer/Footer";
 
 const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isViewMode }) => {
-  const initialValues = {
+  const getInitialValues = () => ({
     branchCode: selectedBranch
       ? selectedBranch.branchCode
       : `BR${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
@@ -13,11 +13,12 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isV
     address: selectedBranch ? selectedBranch.address : "",
     status: selectedBranch ? selectedBranch.status : "active",
     departments: selectedBranch ? selectedBranch.departments : [],
-  };
+  });
 
   useEffect(() => {
     if (visible) {
-      form.setFieldsValue(initialValues);
+      form.resetFields(); // Reset form before setting new values
+      form.setFieldsValue(getInitialValues()); // Set initial values
     }
   }, [visible, form, selectedBranch]);
 
@@ -33,9 +34,9 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isV
           status: values.status,
           departments: values.departments,
         };
-        console.log("Form Data:", dataToSend);
         onSubmit(dataToSend);
-        form.resetFields();
+        form.resetFields(); // Reset form after submission
+        onClose(); // Close dialog
       })
       .catch((errorInfo) => {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -44,11 +45,21 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isV
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    if (isViewMode) return;
+    const currentBranchCode = form.getFieldValue("branchCode");
+    form.resetFields(); // Reset form to clear all fields
+    form.setFieldsValue({
+      branchCode: currentBranchCode, // Preserve branchCode
+      branchName: "",
+      address: "",
+      status: "active",
+      departments: [],
+    }); // Reset to empty/default values, keeping branchCode
   };
 
   const handleClose = () => {
-    onClose();
+    form.resetFields(); // Reset form when closing
+    onClose(); // Call parent onClose
   };
 
   return (
@@ -67,8 +78,9 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isV
       }
       onCancel={handleClose}
       width={1200}
+      centered={true}
     >
-      <Form form={form} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" initialValues={getInitialValues()}>
         <div className="collapse-container">
           <Collapse
             item={{

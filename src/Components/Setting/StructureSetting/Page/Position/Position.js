@@ -68,21 +68,42 @@ const Position = () => {
   };
 
   const handleDialogClose = () => {
-    form.resetFields();
-    setIsDialogVisible(false);
-    setSelectedPosition(null);
-    setIsViewMode(false);
+    setSelectedPosition(null); // Xóa selectedPosition trước
+    setIsViewMode(false); // Reset view mode
+    setIsDialogVisible(false); // Đóng dialog
+    form.resetFields(); // Reset form sau khi đóng
   };
 
   const handleDialogSubmit = (values) => {
     if (selectedPosition) {
-      console.log("Call API edit");
+      // Cập nhật danh sách positionData
+      setPositionData((prev) =>
+        prev.map((item) =>
+          item.positionCode === values.positions[0].positionCode
+            ? {
+                ...item,
+                positionName: values.positions[0].name,
+                department: values.positions[0].departmentId,
+                description: values.positions[0].description,
+              }
+            : item
+        )
+      );
       message.success("Cập nhật vị trí thành công!");
     } else {
+      // Thêm mới vị trí
+      setPositionData((prev) => [
+        ...prev,
+        {
+          positionCode: values.positions[0].positionCode,
+          positionName: values.positions[0].name,
+          department: values.positions[0].departmentId,
+          description: values.positions[0].description,
+        },
+      ]);
       message.success("Tạo vị trí thành công!");
     }
-    setIsDialogVisible(false);
-    form.resetFields();
+    handleDialogClose(); // Đóng dialog và reset
   };
 
   const filterData = (data, searchTerm) => {

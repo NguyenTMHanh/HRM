@@ -9,7 +9,7 @@ import * as Components from './Component';
 axios.defaults.baseURL = 'https://localhost:7239';
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -17,6 +17,49 @@ axios.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor for handling token expiration
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; // Prevent infinite retry loop
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          message.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+          localStorage.clear();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        // Call refresh token endpoint
+        const response = await axios.post('/api/account/refresh-token', { refreshToken });
+        const { code, data } = response.data;
+
+        if (code === 0 && data?.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          if (data.refreshToken) {
+            localStorage.setItem('refreshToken', data.refreshToken); // Update refresh token if provided
+          }
+          // Retry the original request with the new access token
+          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+          return axios(originalRequest);
+        } else {
+          throw new Error('Không thể làm mới token.');
+        }
+      } catch (refreshError) {
+        console.error("Refresh token error:", refreshError);
+        message.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+        localStorage.clear();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 function Login() {
@@ -37,14 +80,15 @@ function Login() {
 
       if (code === 0 && data) {
         message.success('Đăng nhập thành công!');
-        const { token, userId } = data;
-        if (!token || !userId) {
-          message.error('Không thể lấy token hoặc userId, vui lòng đăng nhập lại.');
+        const { accessToken, userId, refreshToken } = data;
+        if (!accessToken || !userId || !refreshToken) {
+          message.error('Không thể lấy token, userId hoặc refreshToken, vui lòng đăng nhập lại.');
           setLoading(false);
           return;
         }
-        localStorage.setItem('token', token);
+        localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('userId', userId);
+        localStorage.setItem('refreshToken', refreshToken);
 
         try {
           const roleResponse = await axios.get(`/api/Role/RoleUser/${userId}`);
@@ -66,10 +110,8 @@ function Login() {
             status: roleError.response?.status,
           });
           if (roleError.response?.status === 401) {
-            message.error('Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.');
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
-            navigate('/login');
+            // Token refresh will be handled by the interceptor
+            return;
           } else {
             // Allow access to default modules
             localStorage.setItem('permissions', JSON.stringify([]));

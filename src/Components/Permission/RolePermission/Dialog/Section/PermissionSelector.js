@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Checkbox, Row, Col, Typography, Switch, Divider } from "antd";
 
 const { Text } = Typography;
@@ -42,12 +42,36 @@ const PermissionSelector = ({ form, isViewMode }) => {
   const isFullAuthority =
     Form.useWatch(["permissions", `${allModule.id}_${fullAuthorityAction.key}`], form) || false;
 
+  useEffect(() => {
+    if (!isViewMode) {
+      const currentValues = form.getFieldValue("permissions") || {};
+      const updatedPermissions = { ...currentValues };
+
+      modules.forEach((module) => {
+        const moduleActions = limitedModules.includes(module.id)
+          ? limitedActions
+          : allActions;
+
+        const allChecked = moduleActions.every(
+          (action) => currentValues[`${module.id}_${action.key}`] === true
+        );
+
+        updatedPermissions[`${module.id}_selectAll`] = allChecked;
+      });
+
+      form.setFieldsValue({
+        permissions: updatedPermissions,
+      });
+    }
+  }, [isViewMode, form]); // Giữ dependency như cũ, nhưng đảm bảo chạy khi form thay đổi
+
   const handleToggleAllModules = (checked) => {
     const updatedPermissions = {};
     modules.forEach((module) => {
       const moduleActions = limitedModules.includes(module.id)
         ? limitedActions
         : allActions;
+
       moduleActions.forEach((action) => {
         updatedPermissions[`${module.id}_${action.key}`] = checked;
       });
@@ -85,12 +109,10 @@ const PermissionSelector = ({ form, isViewMode }) => {
       ? limitedActions
       : allActions;
 
-    // Check if all actions for the module are selected
     const allChecked = moduleActions.every(
       (action) => currentValues[`${moduleId}_${action.key}`] === true
     );
 
-    // Update the "Chọn tất cả" switch based on whether all checkboxes are checked
     form.setFieldsValue({
       permissions: {
         ...currentValues,
@@ -103,58 +125,44 @@ const PermissionSelector = ({ form, isViewMode }) => {
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
         {`
-          /* Style cho view-mode: checkbox không bị xám */
           .view-mode .custom-checkbox .ant-checkbox-inner {
             background-color: white !important;
             border-color: #d9d9d9 !important;
           }
-
           .view-mode .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
             background-color: #1890ff !important;
             border-color: #1890ff !important;
           }
-
           .view-mode .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
             border-color: white !important;
           }
-
           .view-mode .custom-checkbox .ant-checkbox + span {
             color: rgba(0, 0, 0, 0.85) !important;
             cursor: not-allowed !important;
           }
-
-          /* Style cho edit-mode: áp dụng màu xám khi disabled */
           .edit-mode .ant-checkbox-wrapper .ant-checkbox-disabled .ant-checkbox-inner {
             background-color: #f5f5f5 !important;
             border-color: #d9d9d9 !important;
           }
-
           .edit-mode .ant-checkbox-wrapper .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner {
             background-color: #f5f5f5 !important;
             border-color: #d9d9d9 !important;
           }
-
           .edit-mode .ant-checkbox-wrapper .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner::after {
             border-color: #C4C4C4 !important;
           }
-
           .edit-mode .ant-checkbox-wrapper .ant-checkbox-disabled + span {
             color: #C4C4C4 !important;
           }
-
-          /* Style cho switch trong view-mode */
           .view-mode .ant-switch {
             cursor: not-allowed !important;
           }
-
           .view-mode .ant-switch.ant-switch-checked {
             background-color: #1890ff !important;
           }
-
           .view-mode .ant-switch:not(.ant-switch-checked) {
             background-color: #f5f5f5 !important;
           }
-
           .view-mode .ant-switch .ant-switch-handle::before {
             background-color: #fff !important;
           }

@@ -9,7 +9,7 @@ import axios from "axios";
 axios.defaults.baseURL = "https://localhost:7239";
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,7 +26,15 @@ const RolePermission = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [roleData, setRoleData] = useState([]);
+  const [permissions, setPermissions] = useState([]);
 
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Fetch roles from API
   const fetchRoles = async () => {
     try {
       const response = await axios.get("/api/Role");
@@ -50,13 +58,37 @@ const RolePermission = () => {
     fetchRoles();
   }, []);
 
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "permission" && p.actionId === "create"
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "permission" && p.actionId === "update"
+  );
+  const canDelete = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "permission" && p.actionId === "delete"
+  );
+  const canView = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "permission" && p.actionId === "view"
+  );
+
   const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error("Bạn không có quyền chỉnh sửa nhóm quyền.");
+      return;
+    }
     setSelectedRole(item);
     setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
   const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error("Bạn không có quyền xóa nhóm quyền.");
+      return;
+    }
     try {
       const response = await axios.delete(`/api/Role/${item.roleCode}`);
       if (response.status === 200) {
@@ -72,12 +104,20 @@ const RolePermission = () => {
   };
 
   const handleCreate = () => {
+    if (!canCreate) {
+      message.error("Bạn không có quyền tạo mới nhóm quyền.");
+      return;
+    }
     setSelectedRole(null);
     setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
   const handleView = (item) => {
+    if (!canView) {
+      message.error("Bạn không có quyền xem chi tiết nhóm quyền.");
+      return;
+    }
     setSelectedRole(item);
     setIsViewMode(true);
     setIsDialogVisible(true);
@@ -91,7 +131,6 @@ const RolePermission = () => {
   };
 
   const handleDialogSubmit = async (values) => {
-    // Chỉ cần làm mới danh sách sau khi tạo mới hoặc cập nhật
     fetchRoles();
     setIsDialogVisible(false);
     form.resetFields();
@@ -122,8 +161,10 @@ const RolePermission = () => {
         onDelete={handleDelete}
         onView={handleView}
         showAdd={false}
-        showCreate={true}
+        showCreate={true} 
+        disableCreate={!canCreate} 
         showView={true}
+        disableView = {!canView}
         onCreate={handleCreate}
         onBranchShow={false}
         onDepartmentShow={false}
@@ -136,6 +177,8 @@ const RolePermission = () => {
         form={form}
         selectedRole={selectedRole}
         isViewMode={isViewMode}
+        canUpdate={canUpdate}
+        canCreate={canCreate}
       />
     </div>
   );

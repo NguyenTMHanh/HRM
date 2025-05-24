@@ -1,10 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Form, message } from "antd";
 import Collapse from "../../../../../../Shared/Collapse/Collapse";
 import JobTitle from "./Section/JobTitle";
 import FooterBar from "../../../../../Footer/Footer";
+import axios from "axios";
 
-const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isViewMode }) => {
+const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isViewMode, ranks, roles }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const getInitialValues = () => ({
     jobTitles: [
       {
@@ -20,14 +23,51 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
   });
 
   useEffect(() => {
-    if (visible) {
-      form.resetFields();
+    let isMounted = true;
+
+    if (visible && !isViewMode && !selectedJobTitle) {
+      const fetchJobTitleCode = async () => {
+        try {
+          setIsLoading(true);
+          const response = await axios.get("/api/JobTitle/GetCodeJobTitle");
+          const { code, data, errors } = response.data;
+
+          if (isMounted && code === 0 && data) {
+            form.setFieldsValue({ jobTitles: [{ jobTitleCode: data, title: "", rank: null, permissionGroup: null, description: "" }] });
+          } else {
+            throw new Error(errors?.[0] || "Failed to fetch job title code");
+          }
+        } catch (err) {
+          console.error("Fetch job title code error:", {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status,
+          });
+          const errorMessage =
+            err.response?.data?.errors?.[0] ||
+            err.response?.data?.message ||
+            err.message ||
+            "An error occurred while fetching job title code";
+          message.error(errorMessage);
+          if (isMounted) form.setFieldsValue({ jobTitles: [{ jobTitleCode: `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, title: "", rank: null, permissionGroup: null, description: "" }] });
+        } finally {
+          if (isMounted) setIsLoading(false);
+        }
+      };
+
+      fetchJobTitleCode();
+    } else if (visible) {
       form.setFieldsValue(getInitialValues());
     }
-  }, [visible, form, selectedJobTitle]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [visible, form, selectedJobTitle, isViewMode]);
 
   const handleSave = () => {
-    if (isViewMode) return;
+    if (isViewMode || isLoading) return;
+
     form
       .validateFields()
       .then((values) => {
@@ -68,12 +108,13 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
             showCancel={true}
             showSave={true}
             isModalFooter={true}
+            loading={isLoading}
           />
         )
       }
       onCancel={handleClose}
       width={1000}
-      centered={true} // Center the modal
+      centered={true}
     >
       <Form form={form} layout="vertical" initialValues={getInitialValues()}>
         <div className="collapse-container">
@@ -85,7 +126,7 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
                 : selectedJobTitle
                 ? "Chỉnh sửa chức vụ"
                 : "Cài đặt chức vụ",
-              children: <JobTitle form={form} isViewMode={isViewMode} />,
+              children: <JobTitle form={form} isViewMode={isViewMode} ranks={ranks} roles={roles} />,
             }}
           />
         </div>

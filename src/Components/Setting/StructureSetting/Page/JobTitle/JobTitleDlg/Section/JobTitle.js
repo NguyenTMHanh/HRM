@@ -3,7 +3,7 @@ import { Input, Row, Col, Form, Select } from "antd";
 
 const { Option } = Select;
 
-const JobTitle = ({ form, isViewMode }) => {
+const JobTitle = ({ form, isViewMode, ranks, roles }) => {
   return (
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
@@ -75,10 +75,11 @@ const JobTitle = ({ form, isViewMode }) => {
                     rules={[{ required: true, message: "Vui lòng chọn cấp bậc" }]}
                   >
                     <Select placeholder="Chọn cấp bậc" disabled={isViewMode}>
-                      <Option value="Cấp 1">Cấp 1</Option>
-                      <Option value="Cấp 2">Cấp 2</Option>
-                      <Option value="Cấp 3">Cấp 3</Option>
-                      <Option value="Cấp 4">Cấp 4</Option>
+                      {ranks.map((rank) => (
+                        <Option key={rank.id} value={rank.rankName}>
+                          {rank.rankName}
+                        </Option>
+                      ))}
                     </Select>
                   </Form.Item>
                 </Col>
@@ -90,8 +91,11 @@ const JobTitle = ({ form, isViewMode }) => {
                     rules={[{ required: true, message: "Vui lòng chọn nhóm quyền" }]}
                   >
                     <Select placeholder="Chọn nhóm quyền" disabled={isViewMode}>
-                      <Option value="Quản trị viên">Quản trị viên</Option>
-                      <Option value="Người dùng">Người dùng</Option>
+                      {roles.map((role) => (
+                        <Option key={role.id} value={role.name}>
+                          {role.name}
+                        </Option>
+                      ))}
                     </Select>
                   </Form.Item>
                 </Col>

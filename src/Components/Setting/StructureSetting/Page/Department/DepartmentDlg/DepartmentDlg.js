@@ -129,7 +129,7 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
         const errorMsg = errors?.[0] || "Không thể xử lý yêu cầu.";
         message.error(
           status === 400
-            ? code === 1006
+            ? code === 1011
               ? "Bộ phận đã tồn tại, không thể tạo."
               : errorMsg
             : status === 401

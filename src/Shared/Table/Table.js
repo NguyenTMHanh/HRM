@@ -17,12 +17,18 @@ const TableComponent = ({
   groupBy,
   onBranchShow = true,
   onDepartmentShow = true,
+  sortField,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+  canView = true,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState('All');
+  const [sortOrder, setSortOrder] = useState('asc'); // State for sort order: 'asc' or 'desc'
 
   // Get unique branches
   const uniqueBranches = [...new Set(data.map(item => item.branch))];
@@ -45,9 +51,28 @@ const TableComponent = ({
   // Apply search filter
   const filteredData = filterData ? filterData(departmentFilteredData, searchTerm) : departmentFilteredData;
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Sort data based on sortField and sortOrder
+  const sortedData = sortField
+    ? [...filteredData].sort((a, b) => {
+        const valueA = a[sortField];
+        const valueB = b[sortField];
+
+        // Handle different data types for sorting
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          return sortOrder === 'asc'
+            ? valueA.localeCompare(valueB)
+            : valueB.localeCompare(valueA);
+        } else {
+          return sortOrder === 'asc'
+            ? valueA - valueB || 0
+            : valueB - valueA || 0;
+        }
+      })
+    : filteredData;
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const currentData = sortedData.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page) => setCurrentPage(page);
   const handleItemsPerPageChange = (e) => {
@@ -62,11 +87,17 @@ const TableComponent = ({
     setCurrentPage(1); // Reset to first page
   };
 
+  // Handle sort order change
+  const handleSortChange = (e) => {
+    setSortOrder(e.target.value);
+    setCurrentPage(1); // Reset to first page when sort changes
+  };
+
   return (
     <div className="table-wrapper">
       <div className="controls-container">
         <div className="left-controls">
-          <div className="search-container">
+          <div className="search-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="text"
               placeholder="Tìm kiếm..."
@@ -115,7 +146,7 @@ const TableComponent = ({
             </div>
           )}
 
-          <div className="items-per-page">
+          <div className="items-per-page" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <label>Số hàng hiển thị:</label>
             <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
               <option value={5}>5</option>
@@ -124,9 +155,33 @@ const TableComponent = ({
               <option value={50}>50</option>
             </select>
           </div>
+
+          {/* Sort Combobox - Moved after items-per-page */}
+          {sortField && (
+            <div className="sort-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="sort-select" style={{ fontSize: '14px' }}>Sắp xếp: </label>
+              <select
+                id="sort-select"
+                value={sortOrder}
+                onChange={handleSortChange}
+                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="asc">Cao → Thấp</option>
+                <option value="desc">Thấp → Cao</option>
+              </select>
+            </div>
+          )}
         </div>
         {showCreate && (
-          <button className="create-new-btn" onClick={onCreate}>
+          <button
+            className="create-new-btn"
+            onClick={onCreate}
+            disabled={!canCreate}
+            style={{
+              opacity: canCreate ? 1 : 0.5,
+              cursor: canCreate ? 'pointer' : 'not-allowed',
+            }}
+          >
             <FaPlus size={14} />
             Tạo mới
           </button>
@@ -164,29 +219,61 @@ const TableComponent = ({
                         checked={item[column.key] || false}
                         readOnly
                       />
-                    ) : column.render ? ( // Check for render function
-                      column.render(item[column.key], item) // Use render if it exists
+                    ) : column.render ? (
+                      column.render(item[column.key], item)
                     ) : (
-                      item[column.key] // Fallback to raw value
+                      item[column.key]
                     )}
                   </td>
                 ))}
                 <td>
                   <div className="action-buttons">
                     {showView && (
-                      <button onClick={() => onView(item)} className="btn btn-view">
+                      <button
+                        onClick={() => onView(item)}
+                        className="btn btn-view"
+                        disabled={!canView}
+                        style={{
+                          opacity: canView ? 1 : 0.5,
+                          cursor: canView ? 'pointer' : 'not-allowed',
+                        }}
+                      >
                         <FaEye />
                       </button>
                     )}
                     {showAdd && (
-                      <button onClick={() => onAdd(item)} className="btn btn-add">
+                      <button
+                        onClick={() => onAdd(item)}
+                        className="btn btn-add"
+                        disabled={!canCreate} // Assuming "Add" requires create permission
+                        style={{
+                          opacity: canCreate ? 1 : 0.5,
+                          cursor: canCreate ? 'pointer' : 'not-allowed',
+                        }}
+                      >
                         <FaPlus />
                       </button>
                     )}
-                    <button onClick={() => onEdit(item)} className="btn btn-edit">
+                    <button
+                      onClick={() => onEdit(item)}
+                      className="btn btn-edit"
+                      disabled={!canUpdate}
+                      style={{
+                        opacity: canUpdate ? 1 : 0.5,
+                        cursor: canUpdate ? 'pointer' : 'not-allowed',
+                      }}
+                    >
                       <FaEdit />
                     </button>
-                    <button onClick={() => onDelete(item)} className="btn btn-delete">
+                    <button
+                      onClick={() => onDelete(item)}
+                      className="btn btn-delete"
+                      disabled={!canDelete}
+                      style={{
+                        opacity: canDelete ? 1 : 0.5,
+                        cursor: canDelete ? 'pointer' : 'not-allowed',
+                      }}
+                    >
                       <FaTrash />
                     </button>
                   </div>

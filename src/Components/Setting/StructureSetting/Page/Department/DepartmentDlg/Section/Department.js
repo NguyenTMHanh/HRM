@@ -25,7 +25,7 @@ const Department = ({ form, isViewMode }) => {
           <>
             {fields.slice(0, 1).map(({ key, name, ...restField }) => (
               <Row gutter={[16, 16]} key={key}>
-                <Col xs={24} sm={6}>
+                <Col xs={24} sm={8}>
                   <Form.Item
                     {...restField}
                     label="Mã bộ phận"

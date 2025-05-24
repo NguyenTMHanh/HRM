@@ -40,10 +40,29 @@ const Rank = ({ form, isViewMode }) => {
                   <Form.Item
                     {...restField}
                     label="Mức độ ưu tiên"
-                    name={[name, "priority"]}
-                    rules={[{ required: true, message: "Vui lòng nhập mức độ ưu tiên" }]}
+                    name={[name, "priorityLevel"]}
+                    rules={[
+                      { required: true, message: "Vui lòng nhập mức độ ưu tiên" },
+                      {
+                        validator: (_, value) => {
+                          if (!value) {
+                            return Promise.reject("Mức độ ưu tiên là bắt buộc");
+                          }
+                          const numValue = parseInt(value, 10);
+                          if (isNaN(numValue) || numValue < 1) {
+                            return Promise.reject("Mức độ ưu tiên phải là số nguyên lớn hơn hoặc bằng 1");
+                          }
+                          return Promise.resolve();
+                        },
+                      },
+                    ]}
                   >
-                    <Input type="number" placeholder="Mức độ ưu tiên" min={1} disabled={isViewMode} />
+                    <Input
+                      type="number"
+                      placeholder="Mức độ ưu tiên"
+                      min={1}
+                      disabled={isViewMode}
+                    />
                   </Form.Item>
                 </Col>
 

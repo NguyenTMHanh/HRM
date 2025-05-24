@@ -169,6 +169,10 @@ const RolePermission = () => {
         onBranchShow={false}
         onDepartmentShow={false}
         filterData={filterData}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
       />
       <RolePermissionDlg
         visible={isDialogVisible}

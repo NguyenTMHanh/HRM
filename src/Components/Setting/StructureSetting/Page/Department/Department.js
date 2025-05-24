@@ -1,9 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TableComponent from "../../../../../Shared/Table/Table";
 import { useNavigate } from "react-router-dom";
 import DepartmentDlg from "./DepartmentDlg/DepartmentDlg";
 import { Form, message } from "antd";
 import styles from "./styles.module.css";
+import axios from "axios";
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers["Content-Type"] = "application/json";
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const Department = () => {
   const navigate = useNavigate();
@@ -11,52 +26,96 @@ const Department = () => {
   const [form] = Form.useForm();
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [departmentData, setDepartmentData] = useState([
-    {
-      departmentCode: "D001",
-      departmentName: "Bộ phận Kế toán",
-      description: "Quản lý tài chính và kế toán của công ty.",
-    },
-    {
-      departmentCode: "D002",
-      departmentName: "Bộ phận Nhân sự",
-      description: "Chịu trách nhiệm tuyển dụng và quản lý nhân sự.",
-    },
-    {
-      departmentCode: "D003",
-      departmentName: "Bộ phận Marketing",
-      description: "Phát triển chiến lược quảng bá thương hiệu.",
-    },
-    {
-      departmentCode: "D004",
-      departmentName: "Bộ phận Công nghệ",
-      description: "Quản lý hệ thống CNTT và phát triển phần mềm.",
-    },
-  ]);
+  const [departmentData, setDepartmentData] = useState([]);
+  const [permissions, setPermissions] = useState([]);
 
-  const columns = [
-    { label: "Mã bộ phận", key: "departmentCode" },
-    { label: "Tên bộ phận", key: "departmentName" },
-    { label: "Mô tả", key: "description" },
-  ];
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get("/api/Department");
+      const departments = response.data.map((department) => ({
+        departmentCode: department.id,
+        departmentName: department.departmentName,
+        description: department.description,
+      }));
+      setDepartmentData(departments);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      message.error("Không thể tải danh sách bộ phận.");
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  // Permission checks
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "create"
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "update"
+  );
+  const canDelete = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "delete"
+  );
+  const canView = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "view"
+  );
 
   const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error("Bạn không có quyền chỉnh sửa bộ phận.");
+      return;
+    }
     setSelectedDepartment(item);
     setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
-  const handleDelete = (item) => {
-    alert(`Deleting department: ${item.departmentName}`);
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error("Bạn không có quyền xóa bộ phận.");
+      return;
+    }
+    try {
+      const response = await axios.delete(`/api/Department/${item.departmentCode}`);
+      if (response.status === 200) {
+        message.success("Xóa bộ phận thành công!");
+        fetchDepartments();
+      } else {
+        message.error("Xóa bộ phận thất bại!");
+      }
+    } catch (err) {
+      console.error("Error deleting department:", err);
+      message.error("Không thể xóa bộ phận!");
+    }
   };
 
   const handleCreate = () => {
+    if (!canCreate) {
+      message.error("Bạn không có quyền tạo mới bộ phận.");
+      return;
+    }
     setSelectedDepartment(null);
     setIsViewMode(false);
     setIsDialogVisible(true);
   };
 
   const handleView = (item) => {
+    if (!canView) {
+      message.error("Bạn không có quyền xem chi tiết bộ phận.");
+      return;
+    }
     setSelectedDepartment(item);
     setIsViewMode(true);
     setIsDialogVisible(true);
@@ -69,45 +128,27 @@ const Department = () => {
     form.resetFields();
   };
 
-  const handleDialogSubmit = (values) => {
-    if (selectedDepartment) {
-      // Update existing department
-      setDepartmentData((prev) =>
-        prev.map((item) =>
-          item.departmentCode === values.departments[0].departmentCode
-            ? {
-                ...item,
-                departmentName: values.departments[0].name,
-                description: values.departments[0].description,
-              }
-            : item
-        )
-      );
-      message.success("Cập nhật bộ phận thành công!");
-    } else {
-      // Add new department
-      setDepartmentData((prev) => [
-        ...prev,
-        {
-          departmentCode: values.departments[0].departmentCode,
-          departmentName: values.departments[0].name,
-          description: values.departments[0].description,
-        },
-      ]);
-      message.success("Tạo bộ phận thành công!");
-    }
+  const handleDialogSubmit = () => {
+    fetchDepartments();
     handleDialogClose();
   };
 
   const filterData = (data, searchTerm) => {
-    return data.filter((item) =>
-      (
-        item.departmentCode.toLowerCase() +
-        item.departmentName.toLowerCase() +
-        item.description.toLowerCase()
-      ).includes(searchTerm.toLowerCase())
-    );
+    return data.filter((item) => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (item.departmentCode || "").toLowerCase().includes(search) ||
+        (item.departmentName || "").toLowerCase().includes(search) ||
+        (item.description || "").toLowerCase().includes(search)
+      );
+    });
   };
+
+  const columns = [
+    { label: "Mã bộ phận", key: "departmentCode" },
+    { label: "Tên bộ phận", key: "departmentName" },
+    { label: "Mô tả", key: "description" },
+  ];
 
   return (
     <div className={styles.tableContent}>
@@ -124,6 +165,10 @@ const Department = () => {
         onBranchShow={false}
         onDepartmentShow={false}
         filterData={filterData}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
       />
       <DepartmentDlg
         visible={isDialogVisible}
@@ -132,6 +177,8 @@ const Department = () => {
         form={form}
         selectedDepartment={selectedDepartment}
         isViewMode={isViewMode}
+        canUpdate={canUpdate}
+        canCreate={canCreate}
       />
     </div>
   );

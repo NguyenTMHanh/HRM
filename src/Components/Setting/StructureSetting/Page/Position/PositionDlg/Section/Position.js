@@ -1,15 +1,9 @@
 import React from "react";
 import { Input, Row, Col, Form, Select } from "antd";
 
-const Position = ({ form, isViewMode }) => {
-  // Sample department list (replace with API data if needed)
-  const departments = [
-    { id: 1, name: "Bộ phận Kế toán" },
-    { id: 2, name: "Bộ phận Nhân sự" },
-    { id: 3, name: "Bộ phận Marketing" },
-    { id: 4, name: "Bộ phận Công nghệ" },
-  ];
+const { Option } = Select;
 
+const Position = ({ form, isViewMode, departments }) => {
   return (
     <div className={isViewMode ? "view-mode" : "edit-mode"}>
       <style>
@@ -84,9 +78,9 @@ const Position = ({ form, isViewMode }) => {
                   >
                     <Select placeholder="Chọn bộ phận" disabled={isViewMode}>
                       {departments.map((dept) => (
-                        <Select.Option key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </Select.Option>
+                        <Option key={dept.id} value={dept.departmentName}>
+                          {dept.departmentName}
+                        </Option>
                       ))}
                     </Select>
                   </Form.Item>

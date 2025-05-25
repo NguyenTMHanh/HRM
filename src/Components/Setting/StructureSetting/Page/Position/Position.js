@@ -1,9 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TableComponent from "../../../../../Shared/Table/Table";
 import { useNavigate } from "react-router-dom";
 import PositionDlg from "./PositionDlg/PositionDlg";
 import { Form, message } from "antd";
 import styles from "./styles.module.css";
+import axios from "axios";
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers["Content-Type"] = "application/json";
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const Position = () => {
   const navigate = useNavigate();
@@ -11,32 +26,139 @@ const Position = () => {
   const [form] = Form.useForm();
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [positionData, setPositionData] = useState([
-    {
-      positionCode: "POS001",
-      positionName: "Nhân viên Kế toán",
-      department: "Bộ phận Kế toán",
-      description: "Thực hiện các công việc kế toán cơ bản.",
-    },
-    {
-      positionCode: "POS002",
-      positionName: "Chuyên viên Nhân sự",
-      department: "Bộ phận Nhân sự",
-      description: "Quản lý hồ sơ nhân sự và tuyển dụng.",
-    },
-    {
-      positionCode: "POS003",
-      positionName: "Nhân viên Marketing",
-      department: "Bộ phận Marketing",
-      description: "Hỗ trợ xây dựng chiến lược quảng bá.",
-    },
-    {
-      positionCode: "POS004",
-      positionName: "Kỹ sư Phần mềm",
-      department: "Bộ phận Công nghệ",
-      description: "Phát triển và bảo trì phần mềm.",
-    },
-  ]);
+  const [positionData, setPositionData] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [departments, setDepartments] = useState([]);
+
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Fetch positions from API
+  const fetchPositions = async () => {
+    try {
+      const response = await axios.get("/api/Position");
+      const positions = response.data.map((pos) => ({
+        positionCode: pos.id || "",
+        positionName: pos.positionName || "",
+        department: pos.departmentName || "",
+        description: pos.description || "",
+      }));
+      setPositionData(positions);
+    } catch (err) {
+      console.error("Error fetching positions:", err);
+      message.error("Không thể tải danh sách vị trí.");
+    }
+  };
+
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get("/api/Department");
+      setDepartments(response.data);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      message.error("Không thể tải danh sách bộ phận.");
+    }
+  };
+
+  useEffect(() => {
+    fetchPositions();
+    fetchDepartments();
+  }, []);
+
+  // Permission checks
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "create"
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "update"
+  );
+  const canDelete = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "delete"
+  );
+  const canView = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "setting" && p.actionId === "view"
+  );
+
+  const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error("Bạn không có quyền chỉnh sửa vị trí.");
+      return;
+    }
+    setSelectedPosition(item);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error("Bạn không có quyền xóa vị trí.");
+      return;
+    }
+    try {
+      const response = await axios.delete(`/api/Position/${item.positionCode}`);
+      if (response.status === 200) {
+        message.success("Xóa vị trí thành công!");
+        fetchPositions();
+      } else {
+        message.error("Xóa vị trí thất bại!");
+      }
+    } catch (err) {
+      console.error("Error deleting position:", err);
+      message.error("Không thể xóa vị trí!");
+    }
+  };
+
+  const handleCreate = () => {
+    if (!canCreate) {
+      message.error("Bạn không có quyền tạo mới vị trí.");
+      return;
+    }
+    setSelectedPosition(null);
+    setIsViewMode(false);
+    setIsDialogVisible(true);
+  };
+
+  const handleView = (item) => {
+    if (!canView) {
+      message.error("Bạn không có quyền xem chi tiết vị trí.");
+      return;
+    }
+    setSelectedPosition(item);
+    setIsViewMode(true);
+    setIsDialogVisible(true);
+  };
+
+  const handleDialogClose = () => {
+    form.resetFields();
+    setIsDialogVisible(false);
+    setSelectedPosition(null);
+    setIsViewMode(false);
+  };
+
+  const handleDialogSubmit = async (values) => {
+    fetchPositions();
+    setIsDialogVisible(false);
+    form.resetFields();
+  };
+
+  const filterData = (data, searchTerm) => {
+    return data.filter((item) => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (item.positionCode || "").toLowerCase().includes(search) ||
+        (item.positionName || "").toLowerCase().includes(search) ||
+        (item.department || "").toLowerCase().includes(search) ||
+        (item.description || "").toLowerCase().includes(search)
+      );
+    });
+  };
 
   const columns = [
     { label: "Mã vị trí", key: "positionCode" },
@@ -44,77 +166,6 @@ const Position = () => {
     { label: "Bộ phận", key: "department" },
     { label: "Mô tả", key: "description" },
   ];
-
-  const handleEdit = (item) => {
-    setSelectedPosition(item);
-    setIsViewMode(false);
-    setIsDialogVisible(true);
-  };
-
-  const handleDelete = (item) => {
-    alert(`Deleting position: ${item.positionName}`);
-  };
-
-  const handleCreate = () => {
-    setSelectedPosition(null);
-    setIsViewMode(false);
-    setIsDialogVisible(true);
-  };
-
-  const handleView = (item) => {
-    setSelectedPosition(item);
-    setIsViewMode(true);
-    setIsDialogVisible(true);
-  };
-
-  const handleDialogClose = () => {
-    setSelectedPosition(null); // Xóa selectedPosition trước
-    setIsViewMode(false); // Reset view mode
-    setIsDialogVisible(false); // Đóng dialog
-    form.resetFields(); // Reset form sau khi đóng
-  };
-
-  const handleDialogSubmit = (values) => {
-    if (selectedPosition) {
-      // Cập nhật danh sách positionData
-      setPositionData((prev) =>
-        prev.map((item) =>
-          item.positionCode === values.positions[0].positionCode
-            ? {
-                ...item,
-                positionName: values.positions[0].name,
-                department: values.positions[0].departmentId,
-                description: values.positions[0].description,
-              }
-            : item
-        )
-      );
-      message.success("Cập nhật vị trí thành công!");
-    } else {
-      // Thêm mới vị trí
-      setPositionData((prev) => [
-        ...prev,
-        {
-          positionCode: values.positions[0].positionCode,
-          positionName: values.positions[0].name,
-          department: values.positions[0].departmentId,
-          description: values.positions[0].description,
-        },
-      ]);
-      message.success("Tạo vị trí thành công!");
-    }
-    handleDialogClose(); // Đóng dialog và reset
-  };
-
-  const filterData = (data, searchTerm) => {
-    return data.filter(
-      (item) =>
-        item.positionCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.positionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
 
   return (
     <div className={styles.tableContent}>
@@ -125,12 +176,16 @@ const Position = () => {
         onDelete={handleDelete}
         onView={handleView}
         showAdd={false}
-        showView={true}
         showCreate={true}
+        showView={true}
         onCreate={handleCreate}
         onBranchShow={false}
         onDepartmentShow={false}
         filterData={filterData}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
       />
       <PositionDlg
         visible={isDialogVisible}
@@ -139,6 +194,9 @@ const Position = () => {
         form={form}
         selectedPosition={selectedPosition}
         isViewMode={isViewMode}
+        departments={departments}
+        canUpdate={canUpdate}
+        canCreate={canCreate}
       />
     </div>
   );

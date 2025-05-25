@@ -42,11 +42,11 @@ const JobTitle = () => {
     try {
       const response = await axios.get("/api/JobTitle");
       const jobTitles = response.data.map((job) => ({
-        jobTitleCode: job.id || "", // Corrected to lowercase "id"
-        jobTitleName: job.jobtitleName || "", // Corrected to lowercase "jobtitleName"
-        rank: job.rankName || "", // Corrected to lowercase "rankName"
-        permissionGroup: job.roleName || "", // Corrected to lowercase "roleName"
-        description: job.description || "", // Corrected to lowercase "description"
+        jobTitleCode: job.id || "",
+        jobTitleName: job.jobtitleName || "",
+        rank: job.rankName || "",
+        permissionGroup: job.roleName || "",
+        description: job.description || "",
       }));
       setJobTitleData(jobTitles);
     } catch (err) {
@@ -157,34 +157,9 @@ const JobTitle = () => {
   };
 
   const handleDialogSubmit = async (values) => {
-    const jobTitleData = values.jobTitles[0];
-    const dataToSend = {
-      Id: jobTitleData.jobTitleCode,
-      JobtitleName: jobTitleData.title,
-      Description: jobTitleData.description,
-      RankName: jobTitleData.rank,
-      RoleName: jobTitleData.permissionGroup,
-    };
-
-    try {
-      if (selectedJobTitle) {
-        const response = await axios.put(`/api/JobTitle/${jobTitleData.jobTitleCode}`, dataToSend);
-        if (response.status === 200) {
-          message.success("Cập nhật chức vụ thành công!");
-          fetchJobTitles();
-        }
-      } else {
-        const response = await axios.post("/api/JobTitle", dataToSend);
-        if (response.status === 200) {
-          message.success("Tạo chức vụ thành công!");
-          fetchJobTitles();
-        }
-      }
-    } catch (err) {
-      console.error("Error submitting job title:", err);
-      message.error("Không thể xử lý yêu cầu!");
-    }
-    handleDialogClose();
+    fetchJobTitles();
+    setIsDialogVisible(false);
+    form.resetFields();
   };
 
   const filterData = (data, searchTerm) => {
@@ -192,7 +167,10 @@ const JobTitle = () => {
       const search = searchTerm.toLowerCase();
       return (
         (item.jobTitleCode || "").toLowerCase().includes(search) ||
-        (item.jobTitleName || "").toLowerCase().includes(search)
+        (item.jobTitleName || "").toLowerCase().includes(search) ||
+        (item.rank || "").toLowerCase().includes(search) ||
+        (item.permissionGroup || "").toLowerCase().includes(search) ||
+        (item.description || "").toLowerCase().includes(search)
       );
     });
   };
@@ -234,6 +212,8 @@ const JobTitle = () => {
         isViewMode={isViewMode}
         ranks={ranks}
         roles={roles}
+        canUpdate={canUpdate}
+        canCreate={canCreate}
       />
     </div>
   );

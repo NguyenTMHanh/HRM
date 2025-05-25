@@ -33,7 +33,7 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
           const { code, data, errors } = response.data;
 
           if (isMounted && code === 0 && data) {
-            form.setFieldsValue({ departments: [{ departmentCode: data }] });
+            form.setFieldsValue({ departments: [{ departmentCode: data, name: "", description: "" }] });
           } else {
             throw new Error(errors?.[0] || "Failed to fetch department code");
           }
@@ -49,12 +49,13 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
             err.message ||
             "An error occurred while fetching department code";
           message.error(errorMessage);
-          if (isMounted)
+          if (isMounted) {
             form.setFieldsValue({
               departments: [
-                { departmentCode: `D${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}` },
+                { departmentCode: `D${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, name: "", description: "" },
               ],
             });
+          }
         } finally {
           if (isMounted) setIsLoading(false);
         }
@@ -95,6 +96,7 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
     setIsLoading(true);
 
     try {
+      // Validate all fields
       const values = await form.validateFields();
       const departmentData = values.departments[0];
 
@@ -122,6 +124,13 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
         message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
       }
     } catch (err) {
+      // Handle validation errors
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      // Handle API errors
       console.error("Department operation error:", err);
       if (err.response) {
         const { status, data } = err.response;
@@ -147,12 +156,14 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
   };
 
   const handleCancel = () => {
+    if (isViewMode) return;
     const currentDepartmentCode = form.getFieldValue(["departments", 0, "departmentCode"]);
     form.resetFields();
-    form.setFieldsValue({ departments: [{ departmentCode: currentDepartmentCode }] });
+    form.setFieldsValue({ departments: [{ departmentCode: currentDepartmentCode, name: "", description: "" }] });
   };
 
   const handleClose = () => {
+    form.resetFields();
     onClose();
   };
 

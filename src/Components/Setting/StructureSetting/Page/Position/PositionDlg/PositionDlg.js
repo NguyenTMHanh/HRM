@@ -48,7 +48,11 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
             err.message ||
             "An error occurred while fetching position code";
           message.error(errorMessage);
-          if (isMounted) form.setFieldsValue({ positions: [{ positionCode: `POS${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, name: "", departmentId: null, description: "" }] });
+          if (isMounted) {
+            form.setFieldsValue({
+              positions: [{ positionCode: `POS${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, name: "", departmentId: null, description: "" }],
+            });
+          }
         } finally {
           if (isMounted) setIsLoading(false);
         }
@@ -90,6 +94,7 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
     setIsLoading(true);
 
     try {
+      // Validate all fields
       const values = await form.validateFields();
       const positionData = values.positions[0];
 
@@ -118,6 +123,13 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
         message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
       }
     } catch (err) {
+      // Handle validation errors
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      // Handle API errors
       console.error("Position operation error:", err);
       if (err.response) {
         const { status, data } = err.response;
@@ -143,12 +155,14 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
   };
 
   const handleCancel = () => {
+    if (isViewMode) return;
     const currentPositionCode = form.getFieldValue(["positions", 0, "positionCode"]);
     form.resetFields();
     form.setFieldsValue({ positions: [{ positionCode: currentPositionCode, name: "", departmentId: null, description: "" }] });
   };
 
   const handleClose = () => {
+    form.resetFields();
     onClose();
   };
 

@@ -32,7 +32,7 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
           const { code, data, errors } = response.data;
 
           if (isMounted && code === 0 && data) {
-            form.setFieldsValue({ ranks: [{ rankCode: data, priorityLevel: 1 }] }); // Renamed to priorityLevel
+            form.setFieldsValue({ ranks: [{ rankCode: data, priorityLevel: 1, name: "", description: "" }] });
           } else {
             throw new Error(errors?.[0] || "Failed to fetch rank code");
           }
@@ -48,7 +48,11 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
             err.message ||
             "An error occurred while fetching rank code";
           message.error(errorMessage);
-          if (isMounted) form.setFieldsValue({ ranks: [{ rankCode: `R${Math.floor(Math.random() * 1000).toString().padStart(4, "0")}`, priorityLevel: 1 }] }); // Renamed to priorityLevel
+          if (isMounted) {
+            form.setFieldsValue({
+              ranks: [{ rankCode: `R${Math.floor(Math.random() * 1000).toString().padStart(4, "0")}`, priorityLevel: 1, name: "", description: "" }],
+            });
+          }
         } finally {
           if (isMounted) setIsLoading(false);
         }
@@ -60,7 +64,7 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
         ranks: [
           {
             rankCode: selectedRank ? selectedRank.rankCode : `R${Math.floor(Math.random() * 1000).toString().padStart(4, "0")}`,
-            priorityLevel: selectedRank ? parseInt(selectedRank.priorityLevel, 10) : 1, // Renamed to priorityLevel
+            priorityLevel: selectedRank ? parseInt(selectedRank.priorityLevel, 10) : 1,
             name: selectedRank ? selectedRank.rankName : "",
             description: selectedRank ? selectedRank.description : "",
           },
@@ -88,16 +92,18 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
     setIsLoading(true);
 
     try {
+      // Validate all fields
       const values = await form.validateFields();
       const rankData = values.ranks[0];
-      const priorityLevelValue = parseInt(rankData.priorityLevel, 10); // Renamed to priorityLevel
+      const priorityLevelValue = parseInt(rankData.priorityLevel, 10);
+
       if (isNaN(priorityLevelValue)) {
         throw new Error("Mức độ ưu tiên phải là một số nguyên hợp lệ.");
       }
 
       const dataToSend = {
         id: rankData.rankCode,
-        priorityLevel: priorityLevelValue, // Renamed to priorityLevel
+        priorityLevel: priorityLevelValue,
         rankName: rankData.name,
         description: rankData.description || "",
       };
@@ -120,6 +126,13 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
         message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
       }
     } catch (err) {
+      // Handle validation errors
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      // Handle API errors
       console.error("Rank operation error:", err);
       if (err.response) {
         const { status, data } = err.response;
@@ -145,12 +158,14 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
   };
 
   const handleCancel = () => {
+    if (isViewMode) return;
     const currentRankCode = form.getFieldValue(["ranks", 0, "rankCode"]);
     form.resetFields();
-    form.setFieldsValue({ ranks: [{ rankCode: currentRankCode, priorityLevel: 1 }] }); // Renamed to priorityLevel
+    form.setFieldsValue({ ranks: [{ rankCode: currentRankCode, priorityLevel: 1, name: "", description: "" }] });
   };
 
   const handleClose = () => {
+    form.resetFields();
     onClose();
   };
 

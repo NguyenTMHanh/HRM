@@ -48,7 +48,11 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
             err.message ||
             "An error occurred while fetching job title code";
           message.error(errorMessage);
-          if (isMounted) form.setFieldsValue({ jobTitles: [{ jobTitleCode: `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, title: "", rank: null, permissionGroup: null, description: "" }] });
+          if (isMounted) {
+            form.setFieldsValue({
+              jobTitles: [{ jobTitleCode: `JT${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`, title: "", rank: null, permissionGroup: null, description: "" }],
+            });
+          }
         } finally {
           if (isMounted) setIsLoading(false);
         }
@@ -91,6 +95,7 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
     setIsLoading(true);
 
     try {
+      // Validate all fields
       const values = await form.validateFields();
       const jobTitleData = values.jobTitles[0];
 
@@ -120,6 +125,13 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
         message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
       }
     } catch (err) {
+      // Handle validation errors
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      // Handle API errors
       console.error("JobTitle operation error:", err);
       if (err.response) {
         const { status, data } = err.response;
@@ -145,12 +157,14 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
   };
 
   const handleCancel = () => {
+    if (isViewMode) return;
     const currentJobTitleCode = form.getFieldValue(["jobTitles", 0, "jobTitleCode"]);
     form.resetFields();
     form.setFieldsValue({ jobTitles: [{ jobTitleCode: currentJobTitleCode, title: "", rank: null, permissionGroup: null, description: "" }] });
   };
 
   const handleClose = () => {
+    form.resetFields();
     onClose();
   };
 

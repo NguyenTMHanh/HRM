@@ -3,6 +3,21 @@ import { Form, Row, Col, Input, DatePicker, message, Button } from 'antd';
 import FooterBar from '../../../Footer/Footer';
 import styled from 'styled-components';
 import moment from 'moment';
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
@@ -48,21 +63,63 @@ const Holiday = () => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [holidays, setHolidays] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const initialHoliday = {
-    holidayName: 'Tết Nguyên Đán', // Default holiday name
-    startDate: moment('2025-01-29'), // Default start date (Tết 2025)
-    endDate: moment('2025-02-03'), // Default end date (Tết 2025)
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission checks
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'create'
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'update'
+  );
+
+  // Fetch holidays from API
+  const fetchHolidays = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get('/api/Holiday');
+      const holidaysData = response.data.map((holiday) => ({
+        id: holiday.id,
+        holidayName: holiday.holidayName,
+        startDate: moment(holiday.fromDate),
+        endDate: moment(holiday.toDate),
+      }));
+      setHolidays(holidaysData);
+      form.setFieldsValue({ holidays: holidaysData });
+    } catch (err) {
+      console.error('Error fetching holidays:', err);
+      message.error('Không thể tải danh sách ngày lễ.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    const initial = form.getFieldValue('holidays') || [initialHoliday];
-    setHolidays(initial);
-    form.setFieldsValue({ holidays: initial });
-  }, [form]);
+    fetchHolidays();
+  }, []);
 
   const handleAddHoliday = () => {
-    const updated = [...holidays, { holidayName: '', startDate: null, endDate: null }];
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới ngày lễ.');
+      return;
+    }
+    const newHoliday = {
+      id: `H${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
+      holidayName: '',
+      startDate: null,
+      endDate: null,
+    };
+    const updated = [...holidays, newHoliday];
     setHolidays(updated);
     form.setFieldsValue({ holidays: updated });
   };
@@ -75,122 +132,209 @@ const Holiday = () => {
   };
 
   const handleDeleteHoliday = (index) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền xóa ngày lễ.');
+      return;
+    }
     const updated = holidays.filter((_, i) => i !== index);
     setHolidays(updated);
     form.setFieldsValue({ holidays: updated });
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa ngày lễ.');
+      return;
+    }
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     form.resetFields();
+    fetchHolidays(); // Reload original data
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
+    if (!isEditing || isLoading) return;
+    if (!canUpdate) {
+      message.error('Bạn không có quyền cập nhật ngày lễ.');
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const values = await form.validateFields();
 
       const formattedValues = values.holidays.map((holiday) => ({
-        holidayName: holiday.holidayName || null,
-        startDate: holiday.startDate ? holiday.startDate.format('DD/MM/YYYY') : null,
-        endDate: holiday.endDate ? holiday.endDate.format('DD/MM/YYYY') : null,
+        id: holiday.id,
+        holidayName: holiday.holidayName,
+        fromDate: holiday.startDate ? holiday.startDate.toISOString() : null,
+        toDate: holiday.endDate ? holiday.endDate.toISOString() : null,
       }));
 
-      console.log('Saved values:', formattedValues);
-      setIsEditing(false);
-      message.success('Lưu dữ liệu thành công!');
-    } catch (error) {
-      console.log('Validation failed:', error);
-      message.error('Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.');
+      const response = await axios.put('/api/Holiday', formattedValues);
+
+      if (response.status === 200) {
+        message.success('Cập nhật ngày lễ thành công!');
+        setIsEditing(false);
+        fetchHolidays(); // Refresh data
+      } else {
+        message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        return;
+      }
+      console.error('Holiday operation error:', err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { errors } = data || {};
+        const errorMsg = errors?.[0] || 'Không thể xử lý yêu cầu.';
+        message.error(
+          status === 400
+            ? errorMsg
+            : status === 401
+            ? 'Bạn không có quyền thực hiện hành động này.'
+            : status === 500
+            ? 'Lỗi server. Vui lòng thử lại sau.'
+            : `Lỗi không xác định với mã trạng thái: ${status}`
+        );
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ position: 'relative' }}>
+      <style>
+        {`
+          /* Style for disabled Input */
+          .ant-input-disabled {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important;
+            cursor: not-allowed;
+          }
+
+          /* Style for disabled DatePicker */
+          .ant-picker-disabled .ant-picker-input > input {
+            background-color: white !important;
+            color: rgba(0, 0, 0, 0.85) !important;
+            cursor: not-allowed;
+          }
+
+          .ant-picker-disabled {
+            background-color: white !important;
+          }
+        `}
+      </style>
       <Form form={form} layout="vertical">
-        {holidays.map((holiday, index) => (
-          <Row gutter={[16, 16]} key={index} align="middle">
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label="Tên ngày lễ"
-                name={['holidays', index, 'holidayName']}
-                rules={[{ required: true, message: 'Vui lòng nhập tên ngày lễ!' }]}
-              >
-                <Input
-                  placeholder="Nhập tên ngày lễ"
-                  style={{ width: '100%' }}
-                  disabled={!isEditing}
-                  onChange={(e) => handleHolidayChange(index, 'holidayName', e.target.value)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={10}>
-              <Form.Item
-                label="Thời gian nghỉ"
-                required
-              >
-                <Row gutter={[8, 8]} style={{ flexWrap: 'nowrap' }} justify="start">
-                  <Col xs={24} sm={12} style={{ display: 'flex', alignItems: 'center' }}>
+        <Form.List name="holidays">
+          {(fields) => (
+            <>
+              {fields.map(({ key, name, ...restField }, index) => (
+                <Row gutter={[16, 16]} key={key} align="middle">
+                  <Col xs={24} sm={12}>
                     <Form.Item
-                      name={['holidays', index, 'startDate']}
-                      rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
-                      noStyle
+                      {...restField}
+                      label="Tên ngày lễ"
+                      name={[name, 'holidayName']}
+                      rules={[{ required: true, message: 'Vui lòng nhập tên ngày lễ!' }]}
                     >
-                      <DatePicker
-                        placeholder="Ngày bắt đầu"
-                        disabled={!isEditing}
+                      <Input
+                        placeholder="Nhập tên ngày lễ"
                         style={{ width: '100%' }}
-                        onChange={(date) => handleHolidayChange(index, 'startDate', date)}
-                        format="DD/MM/YYYY"
+                        disabled={!isEditing}
+                        onChange={(e) => handleHolidayChange(index, 'holidayName', e.target.value)}
                       />
                     </Form.Item>
                   </Col>
-                  <Col xs={24} sm={12} style={{ display: 'flex', alignItems: 'center' }}>
+                  <Col xs={24} sm={10}>
                     <Form.Item
-                      name={['holidays', index, 'endDate']}
-                      rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc!' }]}
-                      noStyle
+                      label="Thời gian nghỉ"
+                      required
                     >
-                      <DatePicker
-                        placeholder="Ngày kết thúc"
-                        disabled={!isEditing}
-                        style={{ width: '100%' }}
-                        onChange={(date) => handleHolidayChange(index, 'endDate', date)}
-                        format="DD/MM/YYYY"
-                      />
+                      <Row gutter={[8, 8]} style={{ flexWrap: 'nowrap' }} justify="start">
+                        <Col xs={24} sm={12} style={{ display: 'flex', alignItems: 'center' }}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'startDate']}
+                            rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
+                            noStyle
+                          >
+                            <DatePicker
+                              placeholder="Ngày bắt đầu"
+                              disabled={!isEditing}
+                              style={{ width: '100%' }}
+                              onChange={(date) => handleHolidayChange(index, 'startDate', date)}
+                              format="DD/MM/YYYY"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} style={{ display: 'flex', alignItems: 'center' }}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'endDate']}
+                            rules={[
+                              { required: true, message: 'Vui lòng chọn ngày kết thúc!' },
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const startDate = getFieldValue(['holidays', name, 'startDate']);
+                                  if (!startDate || !value || moment(value).isSameOrAfter(startDate)) {
+                                    return Promise.resolve();
+                                  }
+                                  return Promise.reject(new Error('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!'));
+                                },
+                              }),
+                            ]}
+                            noStyle
+                          >
+                            <DatePicker
+                              placeholder="Ngày kết thúc"
+                              disabled={!isEditing}
+                              style={{ width: '100%' }}
+                              onChange={(date) => handleHolidayChange(index, 'endDate', date)}
+                              format="DD/MM/YYYY"
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
                     </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {isEditing && (
+                      <DeleteButton onClick={() => handleDeleteHoliday(index)}>
+                        Xóa
+                      </DeleteButton>
+                    )}
                   </Col>
                 </Row>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ))}
               {isEditing && (
-                <DeleteButton onClick={() => handleDeleteHoliday(index)}>
-                  Xóa
-                </DeleteButton>
+                <Form.Item>
+                  <AddButton onClick={handleAddHoliday} block>
+                    Thêm mới ngày lễ
+                  </AddButton>
+                </Form.Item>
               )}
-            </Col>
-          </Row>
-        ))}
-        {isEditing && (
-          <Form.Item>
-            <AddButton onClick={handleAddHoliday} block>
-              Thêm mới ngày lễ
-            </AddButton>
-          </Form.Item>
-        )}
+            </>
+          )}
+        </Form.List>
       </Form>
       <FooterBar
         isModalFooter={true}
-        showEdit={!isEditing}
+        showEdit={!isEditing && canUpdate} // Only show Edit button if user has update permission
         onEdit={handleEdit}
         onCancel={handleCancel}
         onSave={handleSave}
         isEditing={isEditing}
-        showSave={isEditing}
+        showSave={isEditing && canUpdate}
         showCancel={isEditing}
+        loading={isLoading}
       />
     </div>
   );

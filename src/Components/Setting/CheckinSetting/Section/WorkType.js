@@ -258,7 +258,7 @@ const WorkType = () => {
                       required
                     >
                       <Row gutter={[8, 8]} style={{ flexWrap: 'nowrap' }} justify="start">
-                        <Col xs={24} sm={12} style={{ display: 'flex', alignItems: 'center' }}>
+                        <Col xs={24} sm={12} style={{ display: 'flex', alignliwy: 'center' }}>
                           <Form.Item
                             {...restField}
                             name={[name, 'minWorkHours']}
@@ -319,13 +319,14 @@ const WorkType = () => {
       </Form>
       <FooterBar
         isModalFooter={true}
-        showEdit={!isEditing}
+        showEdit={!isEditing && canUpdate} // Only show Edit button if user has update permission
         onEdit={handleEdit}
         onCancel={handleCancel}
         onSave={handleSave}
         isEditing={isEditing}
-        showSave={isEditing}
+        showSave={isEditing && canUpdate}
         showCancel={isEditing}
+        loading={isLoading}
       />
     </div>
   );

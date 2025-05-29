@@ -150,7 +150,6 @@ const Holiday = () => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
     fetchHolidays(); // Reload original data
     setIsEditing(false);
   };

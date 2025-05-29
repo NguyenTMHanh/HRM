@@ -149,8 +149,7 @@ const WorkType = () => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
-    fetchWorkTypes(); // Reload original data
+    fetchWorkTypes(); 
     setIsEditing(false);
   };
 

@@ -1,62 +1,156 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, InputNumber, message } from 'antd';
 import FooterBar from '../../../Footer/Footer';
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const RateBHYT = () => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [permissions, setPermissions] = useState([]);
+  const [currentData, setCurrentData] = useState(null);
 
-  const initialData = {
-    companyRateBHYT: 3, 
-    employeeRateBHYT: 1.5,
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission checks
+  const canView = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'view'
+  );
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'update'
+  );
+
+  // Fetch rate insurance settings
+  const fetchRateInsuranceSettings = async () => {
+    if (!canView) {
+      message.error('Bạn không có quyền xem cài đặt tỷ lệ đóng BHYT.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await axios.get('/api/RateInsurance/GetRateInsurance');
+      const { code, data, errors } = response.data;
+      if (code === 0 && data) {
+        setCurrentData(data); // Store full data for updates
+        form.setFieldsValue({
+          companyRateBHYT: data.bhytBusinessRate,
+          employeeRateBHYT: data.bhytEmpRate,
+        });
+      } else {
+        throw new Error(errors?.[0] || 'Không thể tải cài đặt tỷ lệ đóng BHYT.');
+      }
+    } catch (err) {
+      console.error('Error fetching rate insurance settings:', err);
+      const errorMessage =
+        err.response?.data?.errors?.[0] ||
+        err.response?.data?.message ||
+        err.message ||
+        'Không thể tải cài đặt tỷ lệ đóng BHYT.';
+      message.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    form.setFieldsValue({
-      companyRateBHYT: initialData.companyRateBHYT,
-      employeeRateBHYT: initialData.employeeRateBHYT,
-    });
-  }, [form]);
+    if (canView) {
+      fetchRateInsuranceSettings();
+    }
+  }, [permissions]);
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa cài đặt tỷ lệ đóng BHYT.');
+      return;
+    }
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    fetchRateInsuranceSettings();
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền cập nhật cài đặt tỷ lệ đóng BHYT.');
+      return;
+    }
+    if (!isEditing || isLoading) return;
+
     try {
+      setIsLoading(true);
+
+
       const values = await form.validateFields();
-
-      const formattedValues = {
-        companyRateBHYT: values.companyRateBHYT || 0,
-        employeeRateBHYT: values.employeeRateBHYT || 0,
+      const dataToSend = {
+        id: currentData?.id || '',
+        bhytBusinessRate: values.companyRateBHYT || 0,
+        bhytEmpRate: values.employeeRateBHYT || 0,
+        bhxhBusinessRate: currentData?.bhxhBusinessRate || 0,
+        bhxhEmpRate: currentData?.bhxhEmpRate || 0,
+        bhtnBusinessRate: currentData?.bhtnBusinessRate || 0,
+        bhtnEmpRate: currentData?.bhtnEmpRate || 0,
       };
+      const response = await axios.put('/api/RateInsurance/UpdateBHYTRate', dataToSend);
+      const { code, errors } = response.data;
 
-      console.log('Saved values:', formattedValues);
-      setIsEditing(false);
-      message.success("Lưu dữ liệu thành công!");
-    } catch (error) {
-      console.log('Validation failed:', error);
-      message.error("Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.");
+      if (code === 0) {
+        message.success('Cập nhật tỷ lệ đóng BHYT thành công!');
+        setIsEditing(false);
+        fetchRateInsuranceSettings();
+      } else {
+        throw new Error(errors?.[0] || 'Cập nhật tỷ lệ đóng BHYT thất bại.');
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        setIsLoading(false);
+        return;
+      }
+      console.error('Error updating BHYT rate:', err);
+      const errorMessage =
+        err.response?.data?.errors?.[0] ||
+        err.response?.data?.message ||
+        err.message ||
+        'Không thể cập nhật cài đặt tỷ lệ đóng BHYT.';
+      message.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Add custom styles for disabled InputNumber */}
       <style>
         {`
-          /* Style for disabled InputNumber */
           .ant-input-number-disabled .ant-input-number-input {
             background-color: white !important;
-            color: rgba(0, 0, 0, 0.85) !important; /* Keep text color normal */
+            color: rgba(0, 0, 0, 0.85) !important;
             cursor: not-allowed;
           }
-
-          /* Ensure the InputNumber container retains its border */
           .ant-input-number-disabled {
             background-color: white !important;
           }
@@ -78,7 +172,7 @@ const RateBHYT = () => {
                 formatter={(value) => `${value}%`}
                 parser={(value) => value.replace('%', '')}
                 style={{ width: '100%' }}
-                disabled={!isEditing}
+                disabled={!isEditing || isLoading}
               />
             </Form.Item>
           </Col>
@@ -96,7 +190,7 @@ const RateBHYT = () => {
                 formatter={(value) => `${value}%`}
                 parser={(value) => value.replace('%', '')}
                 style={{ width: '100%' }}
-                disabled={!isEditing}
+                disabled={!isEditing || isLoading}
               />
             </Form.Item>
           </Col>
@@ -104,13 +198,14 @@ const RateBHYT = () => {
       </Form>
       <FooterBar
         isModalFooter={true}
-        showEdit={!isEditing}
+        showEdit={!isEditing && canUpdate}
         onEdit={handleEdit}
         onCancel={handleCancel}
         onSave={handleSave}
         isEditing={isEditing}
-        showSave={isEditing}
+        showSave={isEditing && canUpdate}
         showCancel={isEditing}
+        loading={isLoading}
       />
     </div>
   );

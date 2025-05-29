@@ -74,7 +74,7 @@ const Checkin = () => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    fetchCheckInOutSettings();
     setIsEditing(false);
   };
 
@@ -92,18 +92,22 @@ const Checkin = () => {
         checkin: values.checkIn ? values.checkIn.format('HH:mm:ss') : '00:00:00',
         checkout: values.checkOut ? values.checkOut.format('HH:mm:ss') : '00:00:00',
       };
-
       const response = await axios.put('/api/CheckInOutSetting/UpdateCheckInOutTime', dataToSend);
       const { code, errors } = response.data;
 
       if (code === 0) {
         message.success('Cập nhật cài đặt check-in/check-out thành công!');
         setIsEditing(false);
-        fetchCheckInOutSettings(); // Refresh data
+        fetchCheckInOutSettings();
       } else {
         throw new Error(errors?.[0] || 'Cập nhật cài đặt thất bại.');
       }
     } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        setIsLoading(false);
+        return;
+      }
       console.error('Error updating check-in/check-out settings:', err);
       const errorMessage =
         err.response?.data?.errors?.[0] ||

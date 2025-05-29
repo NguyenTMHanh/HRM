@@ -73,7 +73,7 @@ const BreakLunch = () => {
   };
 
   const handleCancel = () => {
-    form.resetFields();
+    fetchBreakTimeSettings();
     setIsEditing(false);
   };
 
@@ -91,18 +91,22 @@ const BreakLunch = () => {
         breakHour: values.breakHours || 0,
         breakMinute: values.breakMinutes || 0,
       };
-
       const response = await axios.put('/api/CheckInOutSetting/UpdateBreakTime', dataToSend);
       const { code, errors } = response.data;
 
       if (code === 0) {
         message.success('Cập nhật cài đặt thời gian nghỉ trưa thành công!');
         setIsEditing(false);
-        fetchBreakTimeSettings(); // Refresh data
+        fetchBreakTimeSettings();
       } else {
         throw new Error(errors?.[0] || 'Cập nhật cài đặt thất bại.');
       }
     } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        setIsLoading(false);
+        return;
+      }
       console.error('Error updating break time settings:', err);
       const errorMessage =
         err.response?.data?.errors?.[0] ||

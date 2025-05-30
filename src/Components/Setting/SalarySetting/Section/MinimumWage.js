@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Input, InputNumber, message, Button } from 'antd';
 import FooterBar from '../../../Footer/Footer';
 import styled from 'styled-components';
+import axios from 'axios';
+
+// Axios configuration (assuming it's already set up globally)
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
@@ -47,20 +62,67 @@ const MinimumWage = () => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [minimumWages, setMinimumWages] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const initialMinimumWage = {
+    id: `MW${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
     region: 'Vùng I', // Default region name as text
     wagePerHour: 23400, // Default minimum wage per hour (e.g., 23,400 VND/hour for Region I as of 2025)
   };
 
+  // Fetch permissions from localStorage
   useEffect(() => {
-    const initial = form.getFieldValue('minimumWages') || [initialMinimumWage];
-    setMinimumWages(initial);
-    form.setFieldsValue({ minimumWages: initial });
-  }, [form]);
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission checks
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'create'
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'update'
+  );
+
+  // Fetch minimum wages from API
+  const fetchMinimumWages = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get('/api/MinimumWageArea');
+      const minimumWagesData = response.data.map((minimumWage) => ({
+        id: minimumWage.id,
+        region: minimumWage.nameArea,
+        wagePerHour: minimumWage.moneyMinimumWageArea,
+      }));
+      setMinimumWages(minimumWagesData);
+      form.setFieldsValue({ minimumWages: minimumWagesData });
+    } catch (err) {
+      console.error('Error fetching minimum wages:', err);
+      message.error('Không thể tải danh sách mức lương vùng.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMinimumWages();
+  }, []);
 
   const handleAddMinimumWage = () => {
-    const updated = [...minimumWages, { region: '', wagePerHour: 0 }];
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới mức lương vùng.');
+      return;
+    }
+    const newMinimumWage = {
+      id: `MW${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
+      region: '',
+      wagePerHour: 0,
+    };
+    const updated = [...minimumWages, newMinimumWage];
     setMinimumWages(updated);
     form.setFieldsValue({ minimumWages: updated });
   };
@@ -73,37 +135,78 @@ const MinimumWage = () => {
   };
 
   const handleDeleteMinimumWage = (index) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền xóa mức lương vùng.');
+      return;
+    }
     const updated = minimumWages.filter((_, i) => i !== index);
     setMinimumWages(updated);
     form.setFieldsValue({ minimumWages: updated });
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa mức lương vùng.');
+      return;
+    }
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    form.resetFields();
-    const initial = [initialMinimumWage];
-    setMinimumWages(initial);
-    form.setFieldsValue({ minimumWages: initial });
+    fetchMinimumWages(); // Reload original data
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
+    if (!isEditing || isLoading) return;
+    if (!canUpdate) {
+      message.error('Bạn không có quyền cập nhật mức lương vùng.');
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const values = await form.validateFields();
 
       const formattedValues = values.minimumWages.map((minimumWage) => ({
-        region: minimumWage.region || '',
-        wagePerHour: minimumWage.wagePerHour || 0,
+        id: minimumWage.id,
+        nameArea: minimumWage.region || '',
+        moneyMinimumWageArea: minimumWage.wagePerHour || 0,
       }));
 
-      console.log('Saved values:', formattedValues);
-      setIsEditing(false);
-      message.success('Lưu dữ liệu thành công!');
-    } catch (error) {
-      console.log('Validation failed:', error);
-      message.error('Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.');
+      const response = await axios.put('/api/MinimumWageArea', formattedValues);
+
+      if (response.status === 200) {
+        message.success('Cập nhật mức lương vùng thành công!');
+        setIsEditing(false);
+        fetchMinimumWages(); // Refresh data
+      } else {
+        message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        return;
+      }
+      console.error('Minimum wage operation error:', err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { errors } = data || {};
+        const errorMsg = errors?.[0] || 'Không thể xử lý yêu cầu.';
+        message.error(
+          status === 400
+            ? errorMsg
+            : status === 401
+            ? 'Bạn không có quyền thực hiện hành động này.'
+            : status === 500
+            ? 'Lỗi server. Vui lòng thử lại sau.'
+            : `Lỗi không xác định với mã trạng thái: ${status}`
+        );
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,66 +236,75 @@ const MinimumWage = () => {
         `}
       </style>
       <Form form={form} layout="vertical">
-        {minimumWages.map((minimumWage, index) => (
-          <Row gutter={[16, 16]} key={index} align="middle">
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label="Tên vùng"
-                name={['minimumWages', index, 'region']}
-                rules={[{ required: true, message: 'Vui lòng nhập tên vùng!' }]}
-              >
-                <Input
-                  placeholder="Nhập tên vùng"
-                  style={{ width: '100%' }}
-                  disabled={!isEditing}
-                  onChange={(e) => handleMinimumWageChange(index, 'region', e.target.value)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={10}>
-              <Form.Item
-                label="Mức lương vùng (tối thiểu / giờ)"
-                name={['minimumWages', index, 'wagePerHour']}
-                rules={[{ required: true, message: 'Vui lòng nhập mức lương tối thiểu theo giờ!' }]}
-              >
-                <InputNumber
-                  placeholder="Nhập mức lương tối thiểu theo giờ"
-                  min={0}
-                  step={100}
-                  formatter={(value) => value ? `${Number(value).toLocaleString('fr-FR')} VNĐ` : ''}
-                  parser={(value) => value.replace(/[^0-9]/g, '')}
-                  style={{ width: '100%' }}
-                  disabled={!isEditing}
-                  onChange={(value) => handleMinimumWageChange(index, 'wagePerHour', value)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Form.List name="minimumWages">
+          {(fields) => (
+            <>
+              {fields.map(({ key, name, ...restField }, index) => (
+                <Row gutter={[16, 16]} key={key} align="middle">
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      {...restField}
+                      label="Tên vùng"
+                      name={[name, 'region']}
+                      rules={[{ required: true, message: 'Vui lòng nhập tên vùng!' }]}
+                    >
+                      <Input
+                        placeholder="Nhập tên vùng"
+                        style={{ width: '100%' }}
+                        disabled={!isEditing}
+                        onChange={(e) => handleMinimumWageChange(index, 'region', e.target.value)}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={10}>
+                    <Form.Item
+                      {...restField}
+                      label="Mức lương vùng (tối thiểu / giờ)"
+                      name={[name, 'wagePerHour']}
+                      rules={[{ required: true, message: 'Vui lòng nhập mức lương tối thiểu theo giờ!' }]}
+                    >
+                      <InputNumber
+                        placeholder="Nhập mức lương tối thiểu theo giờ"
+                        min={0}
+                        step={100}
+                        formatter={(value) => (value ? `${Number(value).toLocaleString('fr-FR')} VNĐ` : '')}
+                        parser={(value) => value.replace(/[^0-9]/g, '')}
+                        style={{ width: '100%' }}
+                        disabled={!isEditing}
+                        onChange={(value) => handleMinimumWageChange(index, 'wagePerHour', value)}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {isEditing && (
+                      <DeleteButton onClick={() => handleDeleteMinimumWage(index)}>
+                        Xóa
+                      </DeleteButton>
+                    )}
+                  </Col>
+                </Row>
+              ))}
               {isEditing && (
-                <DeleteButton onClick={() => handleDeleteMinimumWage(index)}>
-                  Xóa
-                </DeleteButton>
+                <Form.Item>
+                  <AddButton onClick={handleAddMinimumWage} block>
+                    Thêm mới mức lương vùng
+                  </AddButton>
+                </Form.Item>
               )}
-            </Col>
-          </Row>
-        ))}
-        {isEditing && (
-          <Form.Item>
-            <AddButton onClick={handleAddMinimumWage} block>
-              Thêm mới mức lương vùng
-            </AddButton>
-          </Form.Item>
-        )}
+            </>
+          )}
+        </Form.List>
       </Form>
       <FooterBar
         isModalFooter={true}
-        showEdit={!isEditing}
+        showEdit={!isEditing && canUpdate} // Only show Edit button if user has update permission
         onEdit={handleEdit}
         onCancel={handleCancel}
         onSave={handleSave}
         isEditing={isEditing}
-        showSave={isEditing}
+        showSave={isEditing && canUpdate}
         showCancel={isEditing}
+        loading={isLoading}
       />
     </div>
   );

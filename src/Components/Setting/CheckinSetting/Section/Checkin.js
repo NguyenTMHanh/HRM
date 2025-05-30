@@ -30,10 +30,6 @@ const Checkin = () => {
 
   // Fetch check-in/check-out settings
   const fetchCheckInOutSettings = async () => {
-    if (!canView) {
-      message.error('Bạn không có quyền xem cài đặt check-in/check-out.');
-      return;
-    }
     try {
       setIsLoading(true);
       const response = await axios.get('/api/CheckInOutSetting/GetCheckInOutTime');
@@ -60,9 +56,7 @@ const Checkin = () => {
   };
 
   useEffect(() => {
-    if (canView) {
       fetchCheckInOutSettings();
-    }
   }, [permissions]);
 
   const handleEdit = () => {

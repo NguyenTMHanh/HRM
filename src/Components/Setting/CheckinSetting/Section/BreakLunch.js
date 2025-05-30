@@ -29,10 +29,6 @@ const BreakLunch = () => {
 
   // Fetch break time settings
   const fetchBreakTimeSettings = async () => {
-    if (!canView) {
-      message.error('Bạn không có quyền xem cài đặt thời gian nghỉ trưa.');
-      return;
-    }
     try {
       setIsLoading(true);
       const response = await axios.get('/api/CheckInOutSetting/GetBreakTime');
@@ -59,9 +55,7 @@ const BreakLunch = () => {
   };
 
   useEffect(() => {
-    if (canView) {
-      fetchBreakTimeSettings();
-    }
+    fetchBreakTimeSettings();
   }, [permissions]);
 
   const handleEdit = () => {

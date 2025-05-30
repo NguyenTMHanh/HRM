@@ -44,10 +44,6 @@ const RateBHYT = () => {
 
   // Fetch rate insurance settings
   const fetchRateInsuranceSettings = async () => {
-    if (!canView) {
-      message.error('Bạn không có quyền xem cài đặt tỷ lệ đóng BHYT.');
-      return;
-    }
     try {
       setIsLoading(true);
       const response = await axios.get('/api/RateInsurance/GetRateInsurance');
@@ -75,9 +71,7 @@ const RateBHYT = () => {
   };
 
   useEffect(() => {
-    if (canView) {
-      fetchRateInsuranceSettings();
-    }
+    fetchRateInsuranceSettings();
   }, [permissions]);
 
   const handleEdit = () => {

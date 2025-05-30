@@ -81,9 +81,6 @@ const MinimumWage = () => {
   const hasAllModuleAuthority = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   );
-  const canCreate = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'setting' && p.actionId === 'create'
-  );
   const canUpdate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'setting' && p.actionId === 'update'
   );
@@ -113,10 +110,6 @@ const MinimumWage = () => {
   }, []);
 
   const handleAddMinimumWage = () => {
-    if (!canCreate) {
-      message.error('Bạn không có quyền tạo mới mức lương vùng.');
-      return;
-    }
     const newMinimumWage = {
       id: `MW${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
       region: '',

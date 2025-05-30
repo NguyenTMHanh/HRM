@@ -73,14 +73,6 @@ const AllowanceSetting = () => {
     { value: 'non_mandatory', label: 'Phụ cấp không bắt buộc đóng BH' },
   ];
 
-  const initialAllowance = {
-    id: `A${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
-    allowanceName: 'Phụ cấp đi lại', // Default allowance name
-    allowanceType: 'non_mandatory', // Default allowance type
-    allowanceAmount: 1000000, // Default allowance amount (e.g., 1,000,000 VND)
-    taxExemptAmount: 500000, // Default tax-exempt amount (e.g., 500,000 VND)
-  };
-
   // Fetch permissions from localStorage
   useEffect(() => {
     const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
@@ -90,9 +82,6 @@ const AllowanceSetting = () => {
   // Permission checks
   const hasAllModuleAuthority = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
-  );
-  const canCreate = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'setting' && p.actionId === 'create'
   );
   const canUpdate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'setting' && p.actionId === 'update'
@@ -125,10 +114,6 @@ const AllowanceSetting = () => {
   }, []);
 
   const handleAddAllowance = () => {
-    if (!canCreate) {
-      message.error('Bạn không có quyền tạo mới phụ cấp.');
-      return;
-    }
     const newAllowance = {
       id: `A${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
       allowanceName: '',

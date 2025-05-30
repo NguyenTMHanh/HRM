@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, InputNumber, message, Button, Select } from 'antd';
 import FooterBar from '../../../Footer/Footer';
 import styled from 'styled-components';
+import axios from 'axios';
 
 const { Option } = Select;
 
@@ -49,28 +50,74 @@ const SalaryCoefficient = () => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [salaryCoefficients, setSalaryCoefficients] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sample positions for the combobox
-  const positions = [
-    { value: 'developer', label: 'Lập trình viên' },
-    { value: 'manager', label: 'Quản lý' },
-    { value: 'designer', label: 'Thiết kế' },
-    { value: 'tester', label: 'Kiểm thử' },
-  ];
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
 
-  const initialSalaryCoefficient = {
-    position: 'developer', // Default position
-    coefficient: 1.5, // Default salary coefficient
+  // Permission checks
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'create'
+  );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'setting' && p.actionId === 'update'
+  );
+
+  // Fetch positions from API (assumed endpoint: /api/Position)
+  const fetchPositions = async () => {
+    try {
+      const response = await axios.get('/api/Position');
+      setPositions(response.data);
+    } catch (err) {
+      console.error('Error fetching positions:', err);
+      message.error('Không thể tải danh sách vị trí.');
+    }
+  };
+
+  // Fetch salary coefficients from API
+  const fetchSalaryCoefficients = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get('/api/SalaryCoefficient');
+      const coefficientsData = response.data.map((item) => ({
+        id: item.id,
+        positionName: item.positionName,
+        coefficient: item.salaryCoefficient,
+      }));
+      setSalaryCoefficients(coefficientsData);
+      form.setFieldsValue({ salaryCoefficients: coefficientsData });
+    } catch (err) {
+      console.error('Error fetching salary coefficients:', err);
+      message.error('Không thể tải danh sách hệ số lương.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    const initial = form.getFieldValue('salaryCoefficients') || [initialSalaryCoefficient];
-    setSalaryCoefficients(initial);
-    form.setFieldsValue({ salaryCoefficients: initial });
-  }, [form]);
+    fetchPositions();
+    fetchSalaryCoefficients();
+  }, []);
 
   const handleAddSalaryCoefficient = () => {
-    const updated = [...salaryCoefficients, { position: '', coefficient: 0 }];
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới hệ số lương.');
+      return;
+    }
+    const newCoefficient = {
+      id: `SC${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Temporary ID
+      positionName: '',
+      coefficient: 0,
+    };
+    const updated = [...salaryCoefficients, newCoefficient];
     setSalaryCoefficients(updated);
     form.setFieldsValue({ salaryCoefficients: updated });
   };
@@ -83,43 +130,83 @@ const SalaryCoefficient = () => {
   };
 
   const handleDeleteSalaryCoefficient = (index) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền xóa hệ số lương.');
+      return;
+    }
     const updated = salaryCoefficients.filter((_, i) => i !== index);
     setSalaryCoefficients(updated);
     form.setFieldsValue({ salaryCoefficients: updated });
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa hệ số lương.');
+      return;
+    }
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    form.resetFields();
-    const initial = [initialSalaryCoefficient];
-    setSalaryCoefficients(initial);
-    form.setFieldsValue({ salaryCoefficients: initial });
+    fetchSalaryCoefficients(); // Reload original data
+    setIsEditing(false);
   };
 
   const handleSave = async () => {
+    if (!isEditing || isLoading) return;
+    if (!canUpdate) {
+      message.error('Bạn không có quyền cập nhật hệ số lương.');
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const values = await form.validateFields();
 
-      const formattedValues = values.salaryCoefficients.map((salaryCoefficient) => ({
-        position: salaryCoefficient.position || '',
-        coefficient: salaryCoefficient.coefficient || 0,
+      const formattedValues = values.salaryCoefficients.map((item) => ({
+        id: item.id,
+        salaryCoefficient: item.coefficient || 0,
+        positionName: item.positionName || '',
       }));
 
-      console.log('Saved values:', formattedValues);
-      setIsEditing(false);
-      message.success('Lưu dữ liệu thành công!');
-    } catch (error) {
-      console.log('Validation failed:', error);
-      message.error('Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.');
+      const response = await axios.put('/api/SalaryCoefficient', formattedValues);
+
+      if (response.status === 200) {
+        message.success('Cập nhật hệ số lương thành công!');
+        setIsEditing(false);
+        fetchSalaryCoefficients(); // Refresh data
+      } else {
+        message.error(`Yêu cầu không thành công với mã trạng thái: ${response.status}`);
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        return;
+      }
+      console.error('Salary coefficient operation error:', err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { errors } = data || {};
+        const errorMsg = errors?.[0] || 'Không thể xử lý yêu cầu.';
+        message.error(
+          status === 400
+            ? errorMsg
+            : status === 401
+            ? 'Bạn không có quyền thực hiện hành động này.'
+            : status === 500
+            ? 'Lỗi server. Vui lòng thử lại sau.'
+            : `Lỗi không xác định với mã trạng thái: ${status}`
+        );
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Add custom styles for disabled InputNumber and Select */}
       <style>
         {`
           /* Style for disabled InputNumber */
@@ -143,70 +230,79 @@ const SalaryCoefficient = () => {
         `}
       </style>
       <Form form={form} layout="vertical">
-        {salaryCoefficients.map((salaryCoefficient, index) => (
-          <Row gutter={[16, 16]} key={index} align="middle">
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label="Vị trí"
-                name={['salaryCoefficients', index, 'position']}
-                rules={[{ required: true, message: 'Vui lòng chọn vị trí!' }]}
-              >
-                <Select
-                  placeholder="Chọn vị trí"
-                  style={{ width: '100%' }}
-                  disabled={!isEditing}
-                  onChange={(value) => handleSalaryCoefficientChange(index, 'position', value)}
-                >
-                  {positions.map((position) => (
-                    <Option key={position.value} value={position.value}>
-                      {position.label}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={10}>
-              <Form.Item
-                label="Hệ số lương"
-                name={['salaryCoefficients', index, 'coefficient']}
-                rules={[{ required: true, message: 'Vui lòng nhập hệ số lương!' }]}
-              >
-                <InputNumber
-                  placeholder="Nhập hệ số lương"
-                  min={0}
-                  step={0.1}
-                  style={{ width: '100%' }}
-                  disabled={!isEditing}
-                  onChange={(value) => handleSalaryCoefficientChange(index, 'coefficient', value)}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Form.List name="salaryCoefficients">
+          {(fields) => (
+            <>
+              {fields.map(({ key, name, ...restField }, index) => (
+                <Row gutter={[16, 16]} key={key} align="middle">
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      {...restField}
+                      label="Vị trí"
+                      name={[name, 'positionName']}
+                      rules={[{ required: true, message: 'Vui lòng chọn vị trí!' }]}
+                    >
+                      <Select
+                        placeholder="Chọn vị trí"
+                        style={{ width: '100%' }}
+                        disabled={!isEditing}
+                        onChange={(value) => handleSalaryCoefficientChange(index, 'positionName', value)}
+                      >
+                        {positions.map((pos) => (
+                          <Option key={pos.id} value={pos.positionName}>
+                            {pos.positionName}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={10}>
+                    <Form.Item
+                      {...restField}
+                      label="Hệ số lương"
+                      name={[name, 'coefficient']}
+                      rules={[{ required: true, message: 'Vui lòng nhập hệ số lương!' }]}
+                    >
+                      <InputNumber
+                        placeholder="Nhập hệ số lương"
+                        min={0}
+                        step={0.1}
+                        style={{ width: '100%' }}
+                        disabled={!isEditing}
+                        onChange={(value) => handleSalaryCoefficientChange(index, 'coefficient', value)}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {isEditing && (
+                      <DeleteButton onClick={() => handleDeleteSalaryCoefficient(index)}>
+                        Xóa
+                      </DeleteButton>
+                    )}
+                  </Col>
+                </Row>
+              ))}
               {isEditing && (
-                <DeleteButton onClick={() => handleDeleteSalaryCoefficient(index)}>
-                  Xóa
-                </DeleteButton>
+                <Form.Item>
+                  <AddButton onClick={handleAddSalaryCoefficient} block>
+                    Thêm mới hệ số lương
+                  </AddButton>
+                </Form.Item>
               )}
-            </Col>
-          </Row>
-        ))}
-        {isEditing && (
-          <Form.Item>
-            <AddButton onClick={handleAddSalaryCoefficient} block>
-              Thêm mới hệ số lương
-            </AddButton>
-          </Form.Item>
-        )}
+            </>
+          )}
+        </Form.List>
       </Form>
       <FooterBar
         isModalFooter={true}
-        showEdit={!isEditing}
+        showEdit={!isEditing && canUpdate}
         onEdit={handleEdit}
         onCancel={handleCancel}
         onSave={handleSave}
         isEditing={isEditing}
-        showSave={isEditing}
+        showSave={isEditing && canUpdate}
         showCancel={isEditing}
+        loading={isLoading}
       />
     </div>
   );

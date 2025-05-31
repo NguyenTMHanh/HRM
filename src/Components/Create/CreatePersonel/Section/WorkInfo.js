@@ -284,8 +284,9 @@ const WorkInfo = ({ form, initialData }) => {
               label="Giờ nghỉ trưa"
               name="lunchBreak"
               rules={[{ required: true, message: 'Vui lòng chọn giờ nghỉ trưa!' }]}
+              initialValue={breakTime} // Set initial value from API
             >
-              <Input disabled value={form.getFieldValue('lunchBreak')} />
+              <Input disabled value={breakTime} />
             </Form.Item>
           </Col>
         </Row>

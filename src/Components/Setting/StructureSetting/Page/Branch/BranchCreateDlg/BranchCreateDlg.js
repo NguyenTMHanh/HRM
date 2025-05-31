@@ -150,22 +150,13 @@ const BranchCreateDlg = ({ visible, onClose, onSubmit, form, selectedBranch, isV
   };
 
   const handleCancel = () => {
-    if (isViewMode) return;
-    const currentBranchCode = form.getFieldValue("branchCode");
-    form.resetFields();
-    form.setFieldsValue({
-      branchCode: currentBranchCode,
-      branchName: "",
-      address: "",
-      status: "Active",
-      departmentName: [],
-    });
+    onClose();
   };
 
   const handleClose = () => {
-    form.resetFields();
     onClose();
   };
+
 
   return (
     <Modal

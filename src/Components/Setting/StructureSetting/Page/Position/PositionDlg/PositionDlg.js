@@ -155,16 +155,13 @@ const PositionDlg = ({ visible, onClose, onSubmit, form, selectedPosition, isVie
   };
 
   const handleCancel = () => {
-    if (isViewMode) return;
-    const currentPositionCode = form.getFieldValue(["positions", 0, "positionCode"]);
-    form.resetFields();
-    form.setFieldsValue({ positions: [{ positionCode: currentPositionCode, name: "", departmentId: null, description: "" }] });
+    onClose();
   };
 
   const handleClose = () => {
-    form.resetFields();
     onClose();
   };
+
 
   return (
     <div style={{ position: "relative" }}>

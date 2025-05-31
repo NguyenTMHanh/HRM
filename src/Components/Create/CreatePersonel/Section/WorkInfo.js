@@ -1,22 +1,107 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Select, DatePicker, Row, Col } from 'antd';
+import { Form, Input, Select, DatePicker, Row, Col, message } from 'antd';
 import moment from 'moment';
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const WorkInfo = ({ form, ...data }) => {
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [ranks, setRanks] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [workModes, setWorkModes] = useState([]);
   const [lunchBreaks, setLunchBreaks] = useState([]);
   const [managers, setManagers] = useState([]);
 
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get('/api/Department');
+      setDepartments(response.data);
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      message.error('Không thể tải danh sách bộ phận.');
+    }
+  };
+
+  // Fetch positions from API
+  const fetchPositions = async () => {
+    try {
+      const response = await axios.get('/api/Position');
+      setPositions(response.data);
+    } catch (err) {
+      console.error('Error fetching positions:', err);
+      message.error('Không thể tải danh sách vị trí.');
+    }
+  };
+
+  // Fetch job titles from API
+  const fetchJobTitles = async () => {
+    try {
+      const response = await axios.get('/api/JobTitle');
+      setJobTitles(response.data);
+    } catch (err) {
+      console.error('Error fetching job titles:', err);
+      message.error('Không thể tải danh sách chức vụ.');
+    }
+  };
+
+  // Fetch branches from API
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get('/api/Branch');
+      setBranches(response.data);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      message.error('Không thể tải danh sách chi nhánh.');
+    }
+  };
+
+  // Fetch ranks from API
+  const fetchRanks = async () => {
+    try {
+      const response = await axios.get('/api/Rank');
+      setRanks(response.data);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      message.error('Không thể tải danh sách cấp bậc.');
+    }
+  };
+
+
+    // Fetch ranks from API
+  const fetchWorkModes = async () => {
+    try {
+      const response = await axios.get('/api/JobType');
+      setWorkModes(response.data);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      message.error('Không thể tải danh sách hình thức làm việc.');
+    }
+  };
+
+
   useEffect(() => {
-    setDepartments(['Bộ phận nhân sự', 'Bộ phận IT', 'Bộ phận Kinh doanh']);
-    setPositions(['Nhân viên', 'Trưởng phòng', 'Giám đốc']);
-    setLevels(['Cấp 1', 'Cấp 2', 'Cấp 3']);
-    setLocations(['Prima solutions', 'Văn phòng Hà Nội', 'Văn phòng TP.HCM']);
-    setWorkModes(['Full-time', 'Part-time', 'Remote']);
+    fetchDepartments();
+    fetchPositions();
+    fetchJobTitles();
+    fetchRanks();
+    fetchBranches();
+    fetchWorkModes();
     setLunchBreaks(['30 phút', '1h', '1.5h']);
     setManagers(['Lê Tiến Triển (CEO)', 'Nguyễn Văn B (Trưởng phòng)', 'Trần Văn C (Quản lý)']);
   }, []);
@@ -24,8 +109,8 @@ const WorkInfo = ({ form, ...data }) => {
   // Helper function to format dates for display
   const formatDate = (date) => {
     if (!date) return '';
-    if (typeof date === 'string') return date; // Already formatted as string (e.g., "01/01/2002")
-    if (moment.isMoment(date)) return date.format('DD/MM/YYYY'); // Moment object
+    if (typeof date === 'string') return date;
+    if (moment.isMoment(date)) return date.format('DD/MM/YYYY');
     console.warn('Unexpected date format:', date);
     return '';
   };
@@ -33,7 +118,6 @@ const WorkInfo = ({ form, ...data }) => {
   return (
     <div>
       {form ? (
-        // Edit/Create mode with form
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={6}>
             <Form.Item label="Họ và tên" name="fullName">
@@ -79,9 +163,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn cơ sở làm việc!' }]}
             >
               <Select placeholder="Chọn cơ sở làm việc">
-                {locations.map(loc => (
-                  <Select.Option key={loc} value={loc}>
-                    {loc}
+                {branches.map((branch) => (
+                  <Select.Option key={branch.id} value={branch.branchName}>
+                    {branch.branchName}
                   </Select.Option>
                 ))}
               </Select>
@@ -95,9 +179,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn bộ phận!' }]}
             >
               <Select placeholder="Chọn bộ phận">
-                {departments.map(dep => (
-                  <Select.Option key={dep} value={dep}>
-                    {dep}
+                {departments.map((dept) => (
+                  <Select.Option key={dept.id} value={dept.departmentName}>
+                    {dept.departmentName}
                   </Select.Option>
                 ))}
               </Select>
@@ -111,9 +195,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn chức vụ!' }]}
             >
               <Select placeholder="Chọn chức vụ">
-                {positions.map(pos => (
-                  <Select.Option key={pos} value={pos}>
-                    {pos}
+                {jobTitles.map((job) => (
+                  <Select.Option key={job.id} value={job.jobtitleName}>
+                    {job.jobtitleName}
                   </Select.Option>
                 ))}
               </Select>
@@ -127,9 +211,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn cấp bậc!' }]}
             >
               <Select placeholder="Chọn cấp bậc">
-                {levels.map(level => (
-                  <Select.Option key={level} value={level}>
-                    {level}
+                {ranks.map((rank) => (
+                  <Select.Option key={rank.id} value={rank.rankName}>
+                    {rank.rankName}
                   </Select.Option>
                 ))}
               </Select>
@@ -143,9 +227,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn vị trí!' }]}
             >
               <Select placeholder="Chọn vị trí">
-                {locations.map(loc => (
-                  <Select.Option key={loc} value={loc}>
-                    {loc}
+                {positions.map((pos) => (
+                  <Select.Option key={pos.id} value={pos.positionName}>
+                    {pos.positionName}
                   </Select.Option>
                 ))}
               </Select>
@@ -159,8 +243,8 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn người quản lý!' }]}
             >
               <Select placeholder="Chọn người quản lý">
-                {managers.map(manager => (
-                  <Select.Option key={manager} value={manager}>
+                {managers.map((manager, index) => (
+                  <Select.Option key={index} value={manager}>
                     {manager}
                   </Select.Option>
                 ))}
@@ -175,9 +259,9 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn hình thức làm việc!' }]}
             >
               <Select placeholder="Chọn hình thức làm việc">
-                {workModes.map(mode => (
-                  <Select.Option key={mode} value={mode}>
-                    {mode}
+                {workModes.map((workMode) => (
+                  <Select.Option key={workMode.id} value={workMode.nameJobType}>
+                    {workMode.nameJobType}
                   </Select.Option>
                 ))}
               </Select>
@@ -191,8 +275,8 @@ const WorkInfo = ({ form, ...data }) => {
               rules={[{ required: true, message: 'Vui lòng chọn giờ nghỉ trưa!' }]}
             >
               <Select placeholder="Chọn giờ nghỉ trưa">
-                {lunchBreaks.map(lunch => (
-                  <Select.Option key={lunch} value={lunch}>
+                {lunchBreaks.map((lunch, index) => (
+                  <Select.Option key={index} value={lunch}>
                     {lunch}
                   </Select.Option>
                 ))}
@@ -201,7 +285,6 @@ const WorkInfo = ({ form, ...data }) => {
           </Col>
         </Row>
       ) : (
-        // Display mode
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={6}>
             <p><strong>Họ và tên:</strong> {data.fullName || 'N/A'}</p>

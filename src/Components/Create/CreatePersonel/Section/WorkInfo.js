@@ -17,7 +17,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-const WorkInfo = ({ form, initialData }) => {
+const WorkInfo = ({ form, initialData, breakTime }) => { // Add breakTime as a prop
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
@@ -25,7 +25,6 @@ const WorkInfo = ({ form, initialData }) => {
   const [branches, setBranches] = useState([]);
   const [workModes, setWorkModes] = useState([]);
   const [managers, setManagers] = useState([]);
-  const [breakTime, setBreakTime] = useState(''); // State for break time
 
   // Fetch departments from API
   const fetchDepartments = async () => {
@@ -93,19 +92,6 @@ const WorkInfo = ({ form, initialData }) => {
     }
   };
 
-  // Fetch break time from API
-  const fetchBreakTime = async () => {
-    try {
-      const response = await axios.get('/api/CheckInOutSetting/GetBreakTime');
-      if (response.data.code === 0) {
-        setBreakTime(`${response.data.data.breakMinute} phút`);
-      }
-    } catch (err) {
-      console.error('Error fetching break time:', err);
-      message.error('Không thể tải thời gian nghỉ trưa.');
-    }
-  };
-
   useEffect(() => {
     fetchDepartments();
     fetchPositions();
@@ -113,7 +99,6 @@ const WorkInfo = ({ form, initialData }) => {
     fetchRanks();
     fetchBranches();
     fetchWorkModes();
-    fetchBreakTime();
     setManagers(['Lê Tiến Triển (CEO)', 'Nguyễn Văn B (Trưởng phòng)', 'Trần Văn C (Quản lý)']);
   }, []);
 
@@ -284,9 +269,8 @@ const WorkInfo = ({ form, initialData }) => {
               label="Giờ nghỉ trưa"
               name="lunchBreak"
               rules={[{ required: true, message: 'Vui lòng chọn giờ nghỉ trưa!' }]}
-              initialValue={breakTime} // Set initial value from API
             >
-              <Input disabled value={breakTime} />
+              <Input disabled />
             </Form.Item>
           </Col>
         </Row>
@@ -326,7 +310,7 @@ const WorkInfo = ({ form, initialData }) => {
             <p><strong>Hình thức làm việc:</strong> {initialData?.workMode || 'N/A'}</p>
           </Col>
           <Col xs={24} sm={6}>
-            <p><strong>Giờ nghỉ trưa:</strong> {breakTime || 'N/A'}</p>
+            <p><strong>Giờ nghỉ trưa:</strong> {breakTime || initialData?.lunchBreak || 'N/A'}</p>
           </Col>
         </Row>
       )}

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Form, Input, Select, Row, Col, Button } from 'antd';
+import { Form, Input, Select, Row, Col, Button, message } from 'antd';
 import { UploadOutlined, UserOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import axios from 'axios'; // Import axios
 
 const AvatarBox = styled.div`
   position: relative;
@@ -48,8 +49,21 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
   const [roleGroups, setRoleGroups] = React.useState([]);
   const avatarInputRef = useRef(null);
 
+  // Fetch roles from API
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get('/api/Role');
+      // Map the response to extract the 'name' field for the combobox
+      const roles = response.data.map((role) => role.name);
+      setRoleGroups(roles);
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+      message.error('Không thể tải danh sách nhóm quyền.');
+    }
+  };
+
   useEffect(() => {
-    setRoleGroups(['Nhân viên', 'Trưởng phòng ban', 'Quản lý cấp cao']);
+    fetchRoles(); // Fetch roles when the component mounts
   }, []);
 
   const handleImageChange = (event) => {
@@ -59,7 +73,6 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
       reader.onloadend = () => {
         const result = reader.result;
         setAvatarImage(result);
-        // Nếu muốn set vào form: form.setFieldsValue({ avatar: result });
       };
       reader.onerror = (error) => {
         console.error('FileReader error:', error);
@@ -86,7 +99,6 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
                 )}
               </AvatarBox>
 
-              {/* Đã xóa Form.Item gây cảnh báo */}
               <HiddenInput
                 type="file"
                 accept="image/*"
@@ -122,9 +134,9 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
             name="roleGroup"
             rules={[{ required: true, message: 'Vui lòng chọn nhóm quyền!' }]}
           >
-            <Select>
-              {roleGroups.map((role) => (
-                <Select.Option key={role} value={role}>
+            <Select placeholder="Chọn nhóm quyền">
+              {roleGroups.map((role, index) => (
+                <Select.Option key={index} value={role}>
                   {role}
                 </Select.Option>
               ))}

@@ -34,7 +34,10 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     try {
       const response = await axios.get('/api/CheckInOutSetting/GetBreakTime');
       if (response.data.code === 0) {
-        setBreakTime(`${response.data.data.breakHour}h${response.data.data.breakMinute}`);
+        const breakTimeValue = `${response.data.data.breakHour}h${response.data.data.breakMinute}`;
+        setBreakTime(breakTimeValue);
+        // Update the form field value after fetching
+        form.setFieldsValue({ lunchBreak: breakTimeValue });
       }
     } catch (err) {
       console.error('Error fetching break time:', err);
@@ -49,7 +52,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     username: '0058',
     password: '12345678',
     joinDate: moment(),
-    lunchBreak: breakTime, 
+    lunchBreak: '', // Initialize as empty; will be updated after API call
   };
 
   useEffect(() => {
@@ -76,7 +79,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         managedBy: initialData.managedBy,
         workLocation: initialData.workLocation,
         workMode: initialData.workMode,
-        lunchBreak: breakTime || initialData.lunchBreak, // Use API value or initialData
+        lunchBreak: initialData.lunchBreak || breakTime, // Use initialData or API value
         avatar: initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
@@ -165,7 +168,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
               item={{
                 key: "1",
                 header: "Thông tin công việc",
-                children: <WorkInfo form={form} initialData={initialData} />,
+                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} />,
               }}
             />
           </div>

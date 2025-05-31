@@ -7,14 +7,41 @@ import AccountInfo from "./Section/AccountInfo";
 import FooterBar from "../../Footer/Footer";
 import moment from "moment";
 import "./styles.css";
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
+  const [breakTime, setBreakTime] = useState(''); 
   const navigate = useNavigate();
 
-  // Define default values for the form
+  const fetchBreakTime = async () => {
+    try {
+      const response = await axios.get('/api/CheckInOutSetting/GetBreakTime');
+      if (response.data.code === 0) {
+        setBreakTime(`${response.data.data.breakHour}h${response.data.data.breakMinute}`);
+      }
+    } catch (err) {
+      console.error('Error fetching break time:', err);
+      message.error('Không thể tải thời gian nghỉ trưa.');
+    }
+  };
+
   const initialValues = {
     fullName: 'Nguyễn Văn A',
     dateOfBirth: moment('01/01/2002', 'DD/MM/YYYY'),
@@ -22,7 +49,12 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     username: '0058',
     password: '12345678',
     joinDate: moment(),
+    lunchBreak: breakTime, 
   };
+
+  useEffect(() => {
+    fetchBreakTime(); 
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -44,15 +76,18 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         managedBy: initialData.managedBy,
         workLocation: initialData.workLocation,
         workMode: initialData.workMode,
-        lunchBreak: initialData.lunchBreak,
+        lunchBreak: breakTime || initialData.lunchBreak, // Use API value or initialData
         avatar: initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
       setAvatarImage(initialData.avatar);
     } else {
-      form.setFieldsValue(initialValues);
+      form.setFieldsValue({
+        ...initialValues,
+        lunchBreak: breakTime, // Update with API value when available
+      });
     }
-  }, [initialData, form]);
+  }, [initialData, form, breakTime]);
 
   const handleCancel = () => {
     form.resetFields();
@@ -84,7 +119,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
           managedBy: formData.managedBy,
           workLocation: formData.workLocation,
           workMode: formData.workMode,
-          lunchBreak: formData.lunchBreak,
+          lunchBreak: breakTime || formData.lunchBreak,
           avatar: avatarImage || formData.avatar,
           roleGroup: formData.roleGroup,
         };
@@ -130,7 +165,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
               item={{
                 key: "1",
                 header: "Thông tin công việc",
-                children: <WorkInfo form={form} />,
+                children: <WorkInfo form={form} initialData={initialData} />,
               }}
             />
           </div>

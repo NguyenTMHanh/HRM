@@ -157,14 +157,10 @@ const JobTitleDlg = ({ visible, onClose, onSubmit, form, selectedJobTitle, isVie
   };
 
   const handleCancel = () => {
-    if (isViewMode) return;
-    const currentJobTitleCode = form.getFieldValue(["jobTitles", 0, "jobTitleCode"]);
-    form.resetFields();
-    form.setFieldsValue({ jobTitles: [{ jobTitleCode: currentJobTitleCode, title: "", rank: null, permissionGroup: null, description: "" }] });
+    onClose();
   };
 
   const handleClose = () => {
-    form.resetFields();
     onClose();
   };
 

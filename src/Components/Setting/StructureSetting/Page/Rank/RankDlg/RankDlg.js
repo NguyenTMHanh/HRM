@@ -158,14 +158,10 @@ const RankDlg = ({ visible, onClose, onSubmit, form, selectedRank, isViewMode, c
   };
 
   const handleCancel = () => {
-    if (isViewMode) return;
-    const currentRankCode = form.getFieldValue(["ranks", 0, "rankCode"]);
-    form.resetFields();
-    form.setFieldsValue({ ranks: [{ rankCode: currentRankCode, priorityLevel: 1, name: "", description: "" }] });
+    onClose();
   };
 
   const handleClose = () => {
-    form.resetFields();
     onClose();
   };
 

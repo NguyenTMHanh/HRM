@@ -156,16 +156,13 @@ const DepartmentDlg = ({ visible, onClose, onSubmit, form, selectedDepartment, i
   };
 
   const handleCancel = () => {
-    if (isViewMode) return;
-    const currentDepartmentCode = form.getFieldValue(["departments", 0, "departmentCode"]);
-    form.resetFields();
-    form.setFieldsValue({ departments: [{ departmentCode: currentDepartmentCode, name: "", description: "" }] });
+    onClose();
   };
 
   const handleClose = () => {
-    form.resetFields();
     onClose();
   };
+
 
   return (
     <div style={{ position: "relative" }}>

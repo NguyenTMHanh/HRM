@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Form, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import moment from 'moment';
+import { Form, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import moment from "moment";
 import Collapse from "../../../Shared/Collapse/Collapse";
 import PersonalInfo from "./Section/PersonalInfo";
 import Identification from "./Section/Identification";
@@ -10,6 +10,21 @@ import ContactInfo from "./Section/ContactInfo";
 import Bank from "./Section/Bank";
 import FooterBar from "../../Footer/Footer";
 import "./styles.css";
+import axios from "axios";
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers["Content-Type"] = "application/json";
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
@@ -19,18 +34,33 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   const [provinceMap, setProvinceMap] = useState({});
   const [districtMap, setDistrictMap] = useState({});
   const [wardMap, setWardMap] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Check permissions
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
+  );
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "employee" && p.actionId === "create"
+  );
 
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue({
         fullName: initialData.fullName,
         gender: initialData.gender,
-        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, 'DD/MM/YYYY') : null,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
         nationality: initialData.nationality,
         ethnicity: initialData.ethnicity,
         identityNumber: initialData.identityNumber,
-        issuedDate: initialData.issuedDate ? moment(initialData.issuedDate, 'DD/MM/YYYY') : null,
+        issuedDate: initialData.issuedDate ? moment(initialData.issuedDate, "DD/MM/YYYY") : null,
         issuedPlace: initialData.issuedPlace,
         frontImage: initialData.frontImage,
         backImage: initialData.backImage,
@@ -60,85 +90,156 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
     setIsSavedSuccessfully(false);
   };
 
-  const handleSave = () => {
-    form.validateFields()
-      .then(() => {
-        const formData = form.getFieldsValue();
-        const dataToSend = {
-          fullName: formData.fullName,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth && moment.isMoment(formData.dateOfBirth)
-            ? formData.dateOfBirth.format('DD/MM/YYYY')
-            : null,
-          nationality: formData.nationality,
-          ethnicity: formData.ethnicity,
-          identityNumber: formData.identityNumber,
-          issuedDate: formData.issuedDate && moment.isMoment(formData.issuedDate)
-            ? formData.issuedDate.format('DD/MM/YYYY')
-            : null,
-          issuedPlace: formData.issuedPlace,
-          frontImage: frontImage || formData.frontImage,
-          backImage: backImage || formData.backImage,
-          provinceResident: provinceMap[formData.provinceResident] || formData.provinceResident,
-          districtResident: districtMap[formData.districtResident] || formData.districtResident,
-          wardResident: wardMap[formData.wardResident] || formData.wardResident,
-          houseNumberResident: formData.houseNumberResident,
-          provinceContact: provinceMap[formData.provinceContact] || formData.provinceContact,
-          districtContact: districtMap[formData.districtContact] || formData.districtContact,
-          wardContact: wardMap[formData.wardContact] || formData.wardContact,
-          houseNumberContact: formData.houseNumberContact,
-          phoneNumber: formData.phoneNumber,
-          email: formData.email,
-          accountNumber: formData.accountNumber,
-          bank: formData.bank,
-          bankBranch: formData.bankBranch,
-        };
+  const handleSave = async () => {
+    if (!canCreate) {
+      message.error("Bạn không có quyền tạo mới nhân viên.");
+      return;
+    }
 
-        console.log("Data to send: ", dataToSend);
+    try {
+      setIsLoading(true);
+      // Validate form fields
+      const formData = await form.validateFields();
+      console.log("Form data before mapping:", formData); // Debug: Log raw form data
+
+      // Map form data to CreatePersonalEmployeeDto
+      const dataToSend = {
+      NameEmployee: formData.fullName,
+      Gender: formData.gender,
+      DateOfBirth: moment(formData.dateOfBirth),
+      Nationality: formData.nationality || null,
+      Ethnicity: formData.ethnicity || null,
+      NumberIdentification: formData.identityNumber,
+      DateIssueIdentification:  moment(formData.issuedDate),
+      PlaceIssueIdentification: formData.issuedPlace || null,
+      FrontIdentificationPath: frontImage || formData.frontImage,
+      BackIdentificationPath: backImage || formData.backImage,
+      ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || null,
+      DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || null,
+      WardResidence: wardMap[formData.wardResident] || formData.wardResident || null,
+      HouseNumberResidence: formData.houseNumberResident || null,
+      ProvinceContact: provinceMap[formData.prov省Contact] || formData.provinceContact || null,
+      DistrictContact: districtMap[formData.districtContact] || formData.districtContact || null,
+      WardContact: wardMap[formData.wardContact] || formData.wardContact || null,
+      HouseNumberContact: formData.houseNumberContact || null,
+      Email: formData.email,
+      PhoneNumber: formData.phoneNumber,
+      BankNumber: formData.accountNumber,
+      NameBank: formData.bank,
+      BranchBank: formData.bankBranch,
+    };
+
+      console.log("Data to send to API:", dataToSend); // Debug: Log payload sent to API
+
+      // Make API call
+      const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
+      console.log("API response:", response.data); // Debug: Log successful response
+
+      if (response.status === 200 && response.data.code === 0) {
+        message.success("Tạo mới thông tin cá nhân thành công!");
         setIsSavedSuccessfully(true);
-        
+        form.resetFields();
+        setFrontImage(null);
+        setBackImage(null);
 
-
-        if (typeof onSave === 'function') {
+        if (typeof onSave === "function") {
           onSave(dataToSend);
-          message.success("Cập nhật thông tin cá nhân thành công!");
-        } 
-        else{
-          message.success("Tạo mới thông tin cá nhân thành công!");
         }
-      })
-      .catch((errorInfo) => {
-        message.error("Lưu thất bại! Vui lòng điền đủ các trường bắt buộc.");
-        console.log("Error saving data: ", errorInfo);
-        setIsSavedSuccessfully(false);
-      });
+      } else {
+        message.error(response.data.message || "Tạo nhân viên thất bại!");
+      }
+    } catch (err) {
+      // Handle form validation errors
+      if (err.errorFields) {
+        console.log("Form validation errors:", err.errorFields); // Debug: Log form validation errors
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      // Handle API errors
+      console.error("Create employee error:", err); // Debug: Log full error
+      if (err.response) {
+        const { status, data } = err.response;
+        console.log("API error response:", data); // Debug: Log detailed API error response
+        const { code, errors } = data || {};
+        const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
+        switch (status) {
+          case 400:
+            switch (code) {
+              case 1003: // InvalidEmail
+                message.error("Email không hợp lệ.");
+                break;
+              case 1015: // InvalidPhoneNumber
+                message.error("Số điện thoại không hợp lệ.");
+                break;
+              case 1014: // InvalidIdentification
+                message.error("Số CCCD/CMND không hợp lệ.");
+                break;
+              default:
+                message.error(errorMsg);
+                break;
+            }
+            break;
+          case 409: // Handle Conflict errors
+            switch (code) {
+              case 1012: // DuplicateEmail
+                message.error("Email đã được sử dụng.");
+                break;
+              case 1013: // DuplicatePhoneNumber
+                message.error("Số điện thoại đã được sử dụng.");
+                break;
+              case 1014: // DuplicateIdentification
+                message.error("Số CCCD/CMND đã được sử dụng.");
+                break;
+              default:
+                message.error(errorMsg);
+                break;
+            }
+            break;
+          case 401:
+            message.error("Bạn không có quyền thực hiện hành động này.");
+            break;
+          case 500:
+            message.error("Lỗi server. Vui lòng thử lại sau.");
+            break;
+          default:
+            message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
+            break;
+        }
+      } else {
+        console.error("Network error:", err.message); // Debug: Log network errors
+        message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNext = () => {
     if (isSavedSuccessfully) {
-      navigate('/create/personel');
+      navigate("/create/personel");
     }
   };
 
   return (
-    <div className="modal-content-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Form form={form} layout="vertical" style={{ flex: '1 1 auto', overflowY: 'auto' }}>
+    <div className="modal-content-wrapper" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Form form={form} layout="vertical" style={{ flex: "1 1 auto", overflowY: "auto" }}>
         <div className="scroll-container">
-          <div className='collapse-container'>
+          <div className="collapse-container">
             <Collapse
               item={{
-                key: '1',
-                header: 'Thông tin cá nhân',
+                key: "1",
+                header: "Thông tin cá nhân",
                 children: <PersonalInfo form={form} />,
               }}
             />
           </div>
 
-          <div className='collapse-container'>
+          <div className="collapse-container">
             <Collapse
               item={{
-                key: '2',
-                header: 'Ảnh chụp CCCD/CMND',
+                key: "2",
+                header: "Ảnh chụp CCCD/CMND",
                 children: (
                   <Identification
                     form={form}
@@ -152,11 +253,11 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
             />
           </div>
 
-          <div className='collapse-container'>
+          <div className="collapse-container">
             <Collapse
               item={{
-                key: '3',
-                header: 'Thông tin thường trú',
+                key: "3",
+                header: "Thông tin thường trú",
                 children: (
                   <ResidentInfo
                     form={form}
@@ -169,11 +270,11 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
             />
           </div>
 
-          <div className='collapse-container'>
+          <div className="collapse-container">
             <Collapse
               item={{
-                key: '4',
-                header: 'Thông tin liên hệ',
+                key: "4",
+                header: "Thông tin liên hệ",
                 children: (
                   <ContactInfo
                     form={form}
@@ -186,11 +287,11 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
             />
           </div>
 
-          <div className='collapse-container'>
+          <div className="collapse-container">
             <Collapse
               item={{
-                key: '5',
-                header: 'Thông tin tài khoản ngân hàng',
+                key: "5",
+                header: "Thông tin tài khoản ngân hàng",
                 children: <Bank form={form} />,
               }}
             />
@@ -206,6 +307,7 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
         showCancel={true}
         showSave={true}
         isModalFooter={isModalFooter}
+        loading={isLoading}
         style={{ flexShrink: 0 }}
       />
     </div>

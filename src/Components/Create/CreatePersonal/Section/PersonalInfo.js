@@ -9,29 +9,28 @@ import {
   Col,
 } from 'antd';
 
-// Xóa import Option không cần thiết
 const PersonalInfo = () => {
   const [countries, setCountries] = useState([]);
-  const [nations, setNations] = useState([]);
   const [isVietnam, setIsVietnam] = useState(false);
 
   const countryMap = {
-    "Japan": "Nhật Bản",
+    Japan: "Nhật Bản",
     "United States": "Mỹ",
-    "Vietnam": "Việt Nam",
-    "Germany": "Đức",
-    "France": "Pháp",
+    Vietnam: "Việt Nam",
+    Germany: "Đức",
+    France: "Pháp",
     "United Kingdom": "Vương quốc Anh",
-    "China": "Trung Quốc",
-    "Russia": "Nga",
+    China: "Trung Quốc",
+    Russia: "Nga",
   };
 
   useEffect(() => {
     axios.get('https://restcountries.com/v3.1/all')
       .then(response => {
         const countryList = response.data.map(country => ({
-          value: country.name.common,
-          label: countryMap[country.name.common] || country.name.common,
+          value: countryMap[country.name.common] || country.name.common, // Store translated value
+          label: countryMap[country.name.common] || country.name.common, // Display translated value
+          original: country.name.common, // Keep original for isVietnam check
         }));
 
         const sortedCountries = countryList.sort((a, b) => a.label.localeCompare(b.label));
@@ -100,8 +99,8 @@ const PersonalInfo = () => {
     { value: 'Brau', label: 'Brau', key: 'Brau' },
   ];
 
-  const handleNationalityChange = (value) => {
-    setIsVietnam(value === "Vietnam");
+  const handleNationalityChange = (value, option) => {
+    setIsVietnam(option.original === "Vietnam");
   };
 
   const validateIdentityNumber = (_, value) => {
@@ -146,7 +145,7 @@ const PersonalInfo = () => {
             name="dateOfBirth"
             rules={[{ required: true, message: 'Vui lòng nhập ngày sinh!' }]}
           >
-            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày sinh"/>
+            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày sinh" />
           </Form.Item>
         </Col>
 
@@ -165,7 +164,7 @@ const PersonalInfo = () => {
               }
             >
               {countries.map((option) => (
-                <Select.Option key={option.value} value={option.value}>
+                <Select.Option key={option.value} value={option.value} original={option.original}>
                   {option.label}
                 </Select.Option>
               ))}
@@ -214,7 +213,7 @@ const PersonalInfo = () => {
             label="Ngày cấp"
             name="issuedDate"
           >
-            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày cấp"/>
+            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày cấp" />
           </Form.Item>
         </Col>
 

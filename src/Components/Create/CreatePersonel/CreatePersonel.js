@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Form, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import Collapse from "../../../Shared/Collapse/Collapse";
 import WorkInfo from "./Section/WorkInfo";
 import AccountInfo from "./Section/AccountInfo";
+import BasicInfo from "./Section/BasicInfo"
 import FooterBar from "../../Footer/Footer";
 import moment from "moment";
 import "./styles.css";
-import axios from 'axios';
+import axios from "axios";
 
-// Axios configuration
-axios.defaults.baseURL = 'https://localhost:7239';
+axios.defaults.baseURL = "https://localhost:7239";
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers['Content-Type'] = 'application/json';
+    config.headers["Content-Type"] = "application/json";
     return config;
   },
   (error) => Promise.reject(error)
@@ -27,51 +27,74 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
-  const [breakTime, setBreakTime] = useState(''); 
+  const [breakTime, setBreakTime] = useState("");
+  const [employees, setEmployees] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const fetchBreakTime = async () => {
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem("permissions")) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
+  );
+  const canCreatePersonel = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "employee" && p.actionId === "CanCreatePersonelEmployees"
+  );
+
+  const fetchBreakTime = useCallback(async () => {
     try {
-      const response = await axios.get('/api/CheckInOutSetting/GetBreakTime');
+      const response = await axios.get("/api/CheckInOutSetting/GetBreakTime");
       if (response.data.code === 0) {
-        const breakTimeValue = `${response.data.data.breakHour}h${response.data.data.breakMinute}`;
+        const breakHour = response.data.data.breakHour || 0;
+        const breakMinute = response.data.data.breakMinute || 0;
+        const totalHours = breakHour + breakMinute / 60;
+        const breakTimeValue = `${totalHours.toString().replace(/\.0+$/, '')}h`;
         setBreakTime(breakTimeValue);
-        // Update the form field value after fetching
         form.setFieldsValue({ lunchBreak: breakTimeValue });
+      } else {
+        setBreakTime("1h0");
+        form.setFieldsValue({ lunchBreak: "1h0" });
       }
     } catch (err) {
-      console.error('Error fetching break time:', err);
-      message.error('Không thể tải thời gian nghỉ trưa.');
+      console.error("Error fetching break time:", err);
+      message.error("Không thể tải thời gian nghỉ trưa. Sử dụng giá trị mặc định.");
+      setBreakTime("1h0");
+      form.setFieldsValue({ lunchBreak: "1h0" });
     }
-  };
+  }, [form]);
+
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const response = await axios.get("/api/Employee/CodeNameEmployee");
+      setEmployees(response.data);
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+      message.error("Không thể tải danh sách nhân viên.");
+    }
+  }, []);
 
   const initialValues = {
-    fullName: 'Nguyễn Văn A',
-    dateOfBirth: moment('01/01/2002', 'DD/MM/YYYY'),
-    gender: 'Nữ',
-    username: '0058',
-    password: '12345678',
     joinDate: moment(),
-    lunchBreak: '', // Initialize as empty; will be updated after API call
+    fullName: null, // Will be set after fetching employees
   };
 
   useEffect(() => {
-    fetchBreakTime(); 
-  }, []);
+    Promise.all([fetchBreakTime(), fetchEmployees()]);
+  }, [fetchBreakTime, fetchEmployees]);
 
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue({
-        fullName: initialData.fullName || initialValues.fullName,
-        dateOfBirth: initialData.dateOfBirth
-          ? moment(initialData.dateOfBirth, 'DD/MM/YYYY')
-          : initialValues.dateOfBirth,
-        gender: initialData.gender || initialValues.gender,
-        username: initialData.username || initialValues.username,
-        password: initialData.password || initialValues.password,
-        joinDate: initialData.joinDate
-          ? moment(initialData.joinDate, 'DD/MM/YYYY')
-          : initialValues.joinDate,
+        fullName: initialData.fullName,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        gender: initialData.gender,
+        username: initialData.username,
+        password: initialData.password,
+        joinDate: initialData.joinDate ? moment(initialData.joinDate, "DD/MM/YYYY") : null,
         department: initialData.department,
         jobTitle: initialData.jobTitle,
         level: initialData.level,
@@ -79,15 +102,14 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         managedBy: initialData.managedBy,
         workLocation: initialData.workLocation,
         workMode: initialData.workMode,
-        lunchBreak: initialData.lunchBreak || breakTime, // Use initialData or API value
+        lunchBreak: initialData.lunchBreak,
         avatar: initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
-      setAvatarImage(initialData.avatar);
     } else {
       form.setFieldsValue({
         ...initialValues,
-        lunchBreak: breakTime, // Update with API value when available
+        lunchBreak: breakTime,
       });
     }
   }, [initialData, form, breakTime]);
@@ -98,77 +120,181 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     setIsSavedSuccessfully(false);
   };
 
-  const handleSave = () => {
-    form
-      .validateFields()
-      .then(() => {
-        const formData = form.getFieldsValue();
+  const handleSave = async () => {
+    if (!canCreatePersonel) {
+      message.error("Bạn không có quyền tạo hồ sơ nhân sự.");
+      return;
+    }
 
-        const dataToSend = {
-          fullName: formData.fullName,
-          dateOfBirth: formData.dateOfBirth && moment.isMoment(formData.dateOfBirth)
-            ? formData.dateOfBirth.format('DD/MM/YYYY')
-            : null,
-          gender: formData.gender,
-          username: formData.username,
-          password: formData.password,
-          joinDate: formData.joinDate && moment.isMoment(formData.joinDate)
-            ? formData.joinDate.format('DD/MM/YYYY')
-            : null,
-          department: formData.department,
-          jobTitle: formData.jobTitle,
-          level: formData.level,
-          position: formData.position,
-          managedBy: formData.managedBy,
-          workLocation: formData.workLocation,
-          workMode: formData.workMode,
-          lunchBreak: breakTime || formData.lunchBreak,
-          avatar: avatarImage || formData.avatar,
-          roleGroup: formData.roleGroup,
-        };
+    try {
+      setIsLoading(true);
 
-        console.log("Data to send: ", dataToSend);
+
+      const formData = await form.validateFields();
+
+      const employeeCode = formData.fullName ? formData.fullName.split(" - ")[0] : null;
+      const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
+
+      const dataToSend = {
+        employeeCode,
+        nameEmployee: formData.fullName ? formData.fullName.split(" - ")[1] : null,
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+        gender: formData.gender,
+        username: formData.username,
+        password: formData.password,
+        dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
+        departmentName: formData.department,
+        jobtitleName: formData.jobTitle,
+        rankName: formData.level,
+        positionName: formData.position,
+        managerId: managerCode,
+        branchName: formData.workLocation,
+        jobTypeName: formData.workMode,
+        breakLunch: parseBreakLunch(breakTime || formData.lunchBreak),
+        avatarPath: avatarImage || formData.avatar || "",
+        roleName: formData.roleGroup,
+      };
+
+      const response = await axios.post("/api/Employee/CreatePersonel", dataToSend);
+
+      if (response.status === 200 && response.data.code === 0) {
+        message.destroy();
+        message.success("Tạo mới hồ sơ nhân sự thành công!");
         setIsSavedSuccessfully(true);
+        form.resetFields();
+        fetchEmployees();
+        fetchBreakTime();
+        setAvatarImage(null);
 
-        if (typeof onSave === 'function') {
+        if (typeof onSave === "function") {
           onSave(dataToSend);
-          message.success("Cập nhật thông tin nhân sự thành công!");
-        } else {
-          message.success("Tạo mới thông tin nhân sự thành công!");
         }
-      })
-      .catch((errorInfo) => {
-        message.error("Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.");
-        console.log("Error saving data: ", errorInfo);
-        setIsSavedSuccessfully(false);
-      });
+      } else {
+        message.destroy();
+        message.error(response.data.message || "Tạo hồ sơ nhân sự thất bại!");
+      }
+    } catch (err) {
+      message.destroy();
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      console.error("Create personel employee error:", err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { code, errors } = data || {};
+        const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
+
+        switch (status) {
+          case 400:
+            if (errors) {
+              if (errors["$.dateOfBirth"]) {
+                message.error("Ngày sinh không hợp lệ. Vui lòng kiểm tra!");
+              } else if (errors["$.dateJoinCompany"]) {
+                message.error("Ngày gia nhập không hợp lệ. Vui lòng kiểm tra!");
+              } else if (errors.model) {
+                message.error("Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra các trường bắt buộc!");
+              } else {
+                message.error(errorMsg);
+              }
+            } else {
+              switch (code) {
+                case 5:
+                  message.error("Yêu cầu không hợp lệ.");
+                  break;
+                case 1002:
+                  message.error("Tên đăng nhập đã tồn tại trong hệ thống!");
+                  break;
+                case 1003:
+                  message.error("Email không hợp lệ!");
+                  break;
+                case 1004:
+                  message.error("Nhóm quyền không tồn tại!");
+                  break;
+                case 1015:
+                  message.error("Chi nhánh không tồn tại!");
+                  break;
+                case 1016:
+                  message.error("Bộ phận không tồn tại!");
+                  break;
+                case 1017:
+                  message.error("Chức vụ không tồn tại!");
+                  break;
+                case 1018:
+                  message.error("Cấp bậc không tồn tại!");
+                  break;
+                case 1019:
+                  message.error("Vị trí không tồn tại!");
+                  break;
+                case 1020:
+                  message.error("Người quản lý không tồn tại!");
+                  break;
+                case 1021:
+                  message.error("Hình thức làm việc không tồn tại!");
+                  break;
+                case 1022:
+                  message.error("Nhân viên không tồn tại! Vui lòng tạo thông tin cá nhân trước!");
+                  break;
+                case 1023:
+                  message.error("Hồ sơ nhân sự đã được tạo trước đó!");
+                  break;
+                default:
+                  message.error(errorMsg);
+                  break;
+              }
+            }
+            break;
+          case 401:
+            message.error("Bạn không có quyền thực hiện hành động này!");
+            break;
+          case 500:
+            message.error("Lỗi server! Vui lòng thử lại sau!");
+            break;
+          default:
+            message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
+            break;
+        }
+      } else {
+        console.error("Network error:", err.message);
+        message.error("Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng!");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const parseBreakLunch = (breakTimeStr) => {
+    if (!breakTimeStr) return 0;
+    const [hours, minutes] = breakTimeStr.split("h").map((part) => parseFloat(part));
+    return hours + (minutes || 0) / 60;
   };
 
   const handleNext = () => {
     if (isSavedSuccessfully) {
-      navigate('/create/contract');
+      navigate("/create/contract");
     }
   };
 
   const handleBack = () => {
-    navigate('/create/personal');
+    navigate("/create/personal");
   };
 
   return (
-    <div className="modal-content-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="modal-content-wrapper" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Form
         form={form}
         layout="vertical"
         initialValues={initialValues}
-        style={{ flex: '1 1 auto', overflowY: 'auto' }}
+        style={{ flex: "1 1 auto", overflowY: "auto" }}
       >
         <div className="scroll-container">
           <div className="collapse-container">
             <Collapse
               item={{
                 key: "1",
-                header: "Thông tin công việc",
-                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} />,
+                header: "Thông tin cơ bản",
+                children: <BasicInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
               }}
             />
           </div>
@@ -177,6 +303,16 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
             <Collapse
               item={{
                 key: "2",
+                header: "Thông tin công việc",
+                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
+              }}
+            />
+          </div>
+
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: "3",
                 header: "Thông tin tài khoản",
                 children: (
                   <AccountInfo
@@ -196,11 +332,12 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         onCancel={handleCancel}
         onNext={handleNext}
         onBack={handleBack}
-        showNext={isModalFooter ? false : isSavedSuccessfully}
-        showBack={!isModalFooter} 
+        showNext={true}
+        showBack={!isModalFooter}
         showCancel={true}
         showSave={true}
         isModalFooter={isModalFooter}
+        loading={isLoading}
         style={{ flexShrink: 0 }}
       />
     </div>

@@ -91,37 +91,34 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   };
 
   const handleSave = async () => {
-    if (!canCreate) {
-      message.error("Bạn không có quyền tạo mới nhân viên.");
-      return;
-    }
+  if (!canCreate) {
+    message.error("Bạn không có quyền tạo mới nhân viên.");
+    return;
+  }
 
-    try {
-      setIsLoading(true);
-      // Validate form fields
-      const formData = await form.validateFields();
-      console.log("Form data before mapping:", formData); // Debug: Log raw form data
+  try {
+    setIsLoading(true);
+    const formData = await form.validateFields();
 
-      // Map form data to CreatePersonalEmployeeDto
-      const dataToSend = {
+    const dataToSend = {
       NameEmployee: formData.fullName,
       Gender: formData.gender,
-      DateOfBirth: moment(formData.dateOfBirth),
-      Nationality: formData.nationality || null,
-      Ethnicity: formData.ethnicity || null,
+      DateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+      Nationality: formData.nationality || "",
+      Ethnicity: formData.ethnicity || "",
       NumberIdentification: formData.identityNumber,
-      DateIssueIdentification:  moment(formData.issuedDate),
-      PlaceIssueIdentification: formData.issuedPlace || null,
+      DateIssueIdentification: formData.issuedDate ? formData.issuedDate.toISOString() : null,
+      PlaceIssueIdentification: formData.issuedPlace || "",
       FrontIdentificationPath: frontImage || formData.frontImage,
       BackIdentificationPath: backImage || formData.backImage,
-      ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || null,
-      DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || null,
-      WardResidence: wardMap[formData.wardResident] || formData.wardResident || null,
-      HouseNumberResidence: formData.houseNumberResident || null,
-      ProvinceContact: provinceMap[formData.prov省Contact] || formData.provinceContact || null,
-      DistrictContact: districtMap[formData.districtContact] || formData.districtContact || null,
-      WardContact: wardMap[formData.wardContact] || formData.wardContact || null,
-      HouseNumberContact: formData.houseNumberContact || null,
+      ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || "",
+      DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || "",
+      WardResidence: wardMap[formData.wardResident] || formData.wardResident || "",
+      HouseNumberResidence: formData.houseNumberResident || "",
+      ProvinceContact: provinceMap[formData.provinceContact] || formData.provinceContact || "",
+      DistrictContact: districtMap[formData.districtContact] || formData.districtContact || "",
+      WardContact: wardMap[formData.wardContact] || formData.wardContact || "",
+      HouseNumberContact: formData.houseNumberContact || "",
       Email: formData.email,
       PhoneNumber: formData.phoneNumber,
       BankNumber: formData.accountNumber,
@@ -129,91 +126,84 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
       BranchBank: formData.bankBranch,
     };
 
-      console.log("Data to send to API:", dataToSend); // Debug: Log payload sent to API
+    const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
+   
 
-      // Make API call
-      const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
-      console.log("API response:", response.data); // Debug: Log successful response
+    if (response.status === 200 && response.data.code === 0) {
+      message.success("Tạo mới thông tin cá nhân thành công!");
+      setIsSavedSuccessfully(true);
+      form.resetFields();
+      setFrontImage(null);
+      setBackImage(null);
 
-      if (response.status === 200 && response.data.code === 0) {
-        message.success("Tạo mới thông tin cá nhân thành công!");
-        setIsSavedSuccessfully(true);
-        form.resetFields();
-        setFrontImage(null);
-        setBackImage(null);
-
-        if (typeof onSave === "function") {
-          onSave(dataToSend);
-        }
-      } else {
-        message.error(response.data.message || "Tạo nhân viên thất bại!");
+      if (typeof onSave === "function") {
+        onSave(dataToSend);
       }
-    } catch (err) {
-      // Handle form validation errors
-      if (err.errorFields) {
-        console.log("Form validation errors:", err.errorFields); // Debug: Log form validation errors
-        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
-        return;
-      }
-
-      // Handle API errors
-      console.error("Create employee error:", err); // Debug: Log full error
-      if (err.response) {
-        const { status, data } = err.response;
-        console.log("API error response:", data); // Debug: Log detailed API error response
-        const { code, errors } = data || {};
-        const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
-        switch (status) {
-          case 400:
-            switch (code) {
-              case 1003: // InvalidEmail
-                message.error("Email không hợp lệ.");
-                break;
-              case 1015: // InvalidPhoneNumber
-                message.error("Số điện thoại không hợp lệ.");
-                break;
-              case 1014: // InvalidIdentification
-                message.error("Số CCCD/CMND không hợp lệ.");
-                break;
-              default:
-                message.error(errorMsg);
-                break;
-            }
-            break;
-          case 409: // Handle Conflict errors
-            switch (code) {
-              case 1012: // DuplicateEmail
-                message.error("Email đã được sử dụng.");
-                break;
-              case 1013: // DuplicatePhoneNumber
-                message.error("Số điện thoại đã được sử dụng.");
-                break;
-              case 1014: // DuplicateIdentification
-                message.error("Số CCCD/CMND đã được sử dụng.");
-                break;
-              default:
-                message.error(errorMsg);
-                break;
-            }
-            break;
-          case 401:
-            message.error("Bạn không có quyền thực hiện hành động này.");
-            break;
-          case 500:
-            message.error("Lỗi server. Vui lòng thử lại sau.");
-            break;
-          default:
-            message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
-            break;
-        }
-      } else {
-        console.error("Network error:", err.message); // Debug: Log network errors
-        message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
-      }
-    } finally {
-      setIsLoading(false);
+    } else {
+      message.error(response.data.message || "Tạo nhân viên thất bại!");
     }
-  };
+  } catch (err) {
+    if (err.errorFields) {
+      message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+      return;
+    }
+
+    console.error("Create employee error:", err);
+    if (err.response) {
+      const { status, data } = err.response;
+      const { code, errors } = data || {};
+      const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
+      switch (status) {
+        case 400:
+          switch (code) {
+            case 1003:
+              message.error("Email không hợp lệ.");
+              break;
+            case 1015:
+              message.error("Số điện thoại không hợp lệ.");
+              break;
+            case 1014:
+              message.error("Số CCCD/CMND không hợp lệ.");
+              break;
+            default:
+              message.error(errorMsg);
+              break;
+          }
+          break;
+        case 409:
+          switch (code) {
+            case 1012:
+              message.error("Email đã được sử dụng.");
+              break;
+            case 1013:
+              message.error("Số điện thoại đã được sử dụng.");
+              break;
+            case 1014:
+              message.error("Số CCCD/CMND đã được sử dụng.");
+              break;
+            default:
+              message.error(errorMsg);
+              break;
+          }
+          break;
+        case 401:
+          message.error("Bạn không có quyền thực hiện hành động này.");
+          break;
+        case 500:
+          message.error("Lỗi server. Vui lòng thử lại sau.");
+          break;
+        default:
+          message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
+          break;
+      }
+    } else {
+      console.error("Network error:", err.message);
+      message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleNext = () => {
     if (isSavedSuccessfully) {
@@ -303,7 +293,7 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
         onSave={handleSave}
         onCancel={handleCancel}
         onNext={handleNext}
-        showNext={isModalFooter ? false : isSavedSuccessfully}
+        showNext={true}
         showCancel={true}
         showSave={true}
         isModalFooter={isModalFooter}

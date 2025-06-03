@@ -212,6 +212,7 @@ const PersonalInfo = () => {
           <Form.Item
             label="Ngày cấp"
             name="issuedDate"
+            rules={[{ required: true, message: 'Vui lòng chọn ngày cấp!' }]}
           >
             <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="Chọn ngày cấp" />
           </Form.Item>

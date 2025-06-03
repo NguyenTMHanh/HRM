@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Form, Input, Select, Row, Col, Button, message } from 'antd';
 import { UploadOutlined, UserOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
+import debounce from "lodash/debounce";
 
 const AvatarBox = styled.div`
   position: relative;
@@ -45,26 +46,69 @@ const AvatarContainer = styled.div`
   align-items: center;
 `;
 
-const AccountInfo = ({ setAvatarImage, avatarImage }) => {
-  const [roleGroups, setRoleGroups] = React.useState([]);
+const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
+  const [roleGroups, setRoleGroups] = useState([]);
   const avatarInputRef = useRef(null);
 
-  // Fetch roles from API
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
       const response = await axios.get('/api/Role');
-      // Map the response to extract the 'name' field for the combobox
       const roles = response.data.map((role) => role.name);
       setRoleGroups(roles);
     } catch (err) {
       console.error('Error fetching roles:', err);
       message.error('Không thể tải danh sách nhóm quyền.');
     }
-  };
+  }, []);
+
+  const fetchAccountDefault = useCallback(async (employeeCode) => {
+    if (!employeeCode) return;
+    try {
+      const response = await axios.get(`/api/Employee/GetAccountDefault?employeeCode=${employeeCode}`);
+      const { username, password } = response.data;
+      form.setFieldsValue({
+        username: username || '',
+        password: password || '',
+      });
+    } catch (err) {
+      console.error('Error fetching account default:', err);
+      message.error('Không thể tải thông tin tài khoản mặc định.');
+      form.setFieldsValue({
+        username: '',
+        password: '',
+      });
+    }
+  }, [form]);
 
   useEffect(() => {
-    fetchRoles(); // Fetch roles when the component mounts
-  }, []);
+    fetchRoles();
+  }, [fetchRoles]);
+
+  const selectedEmployee = Form.useWatch('fullName', form);
+
+  const debouncedFetchAccountDefault = useMemo(() => debounce((employeeCode) => {
+    if (employeeCode) {
+      fetchAccountDefault(employeeCode);
+    } else {
+      form.setFieldsValue({
+        username: '',
+        password: '',
+      });
+    }
+  }, 300), [fetchAccountDefault, form]);
+
+  useEffect(() => {
+    if (selectedEmployee && typeof selectedEmployee === 'string') {
+      const employeeCode = selectedEmployee.split(' - ')[0];
+      debouncedFetchAccountDefault(employeeCode);
+    } else {
+      debouncedFetchAccountDefault(null);
+    }
+
+    return () => {
+      debouncedFetchAccountDefault.cancel();
+    };
+  }, [selectedEmployee, debouncedFetchAccountDefault]);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -80,6 +124,12 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
       reader.readAsDataURL(file);
     }
   };
+
+  const roleOptions = useMemo(() => roleGroups.map((role, index) => (
+    <Select.Option key={index} value={role}>
+      {role}
+    </Select.Option>
+  )), [roleGroups]);
 
   return (
     <>
@@ -124,7 +174,7 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
 
         <Col xs={24} sm={6}>
           <Form.Item label="Mật khẩu (*)" name="password">
-            <Input.Password disabled />
+            <Input.Password />
           </Form.Item>
         </Col>
 
@@ -135,17 +185,13 @@ const AccountInfo = ({ setAvatarImage, avatarImage }) => {
             rules={[{ required: true, message: 'Vui lòng chọn nhóm quyền!' }]}
           >
             <Select placeholder="Chọn nhóm quyền">
-              {roleGroups.map((role, index) => (
-                <Select.Option key={index} value={role}>
-                  {role}
-                </Select.Option>
-              ))}
+              {roleOptions}
             </Select>
           </Form.Item>
         </Col>
       </Row>
     </>
   );
-};
+});
 
 export default AccountInfo;

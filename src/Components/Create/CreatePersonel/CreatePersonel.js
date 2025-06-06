@@ -42,7 +42,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
   );
   const canCreatePersonel = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === "employee" && p.actionId === "CanCreatePersonelEmployees"
+    (p) => p.moduleId === "profilePersonel" && p.actionId === "create"
   );
 
   const fetchBreakTime = useCallback(async () => {

@@ -59,7 +59,7 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   );
   const canCreateContract = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'employee' && p.actionId === 'CanCreateContractEmployees'
+    (p) => p.moduleId === 'profileContract' && p.actionId === 'create'
   );
 
   const fetchEmployees = useCallback(async () => {

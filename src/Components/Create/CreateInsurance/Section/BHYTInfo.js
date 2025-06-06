@@ -15,7 +15,7 @@ const BHYTInfo = () => {
           name="bhytCode"
           rules={[{ required: true, message: 'Vui lòng nhập mã số BHYT!' }]}
         >
-          <Input disabled placeholder="Mã số bảo hiểm y tế" />
+          <Input placeholder="Mã số bảo hiểm y tế" />
         </Form.Item>
       </Col>
 

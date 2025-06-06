@@ -48,7 +48,7 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
     (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
   );
   const canCreate = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === "employee" && p.actionId === "create"
+    (p) => p.moduleId === "profilePersonal" && p.actionId === "create"
   );
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, message } from 'antd';
 import TaxInfo from './Section/TaxInfo';
@@ -6,10 +6,27 @@ import Dependent from './Section/Dependent';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import FooterBar from '../../Footer/Footer';
 import moment from 'moment';
+import axios from 'axios';
+import BasicInfo from './Section/BasicInfo';
+
+// Axios configuration
+axios.defaults.baseURL = 'https://localhost:7239';
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
+  const [employees, setEmployees] = useState([]);
   const navigate = useNavigate();
 
   const initialValues = useMemo(
@@ -17,25 +34,50 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
       hasTax: false,
       taxCode: '',
       dependents: [],
+      fullName: null,
+      gender: null,
+      dateOfBirth: null,
     }),
     []
   );
 
+  // Fetch employees without tax information
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/Employee/CodeNameEmployeeUnTax');
+      setEmployees(response.data);
+    } catch (err) {
+      console.error('Error fetching employees without tax info:', err);
+      message.error('Không thể tải danh sách nhân viên.');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+
   useEffect(() => {
     if (initialData) {
       form.setFieldsValue({
-        hasTax: initialData.hasTax || initialValues.hasTax,
+        hasTax: initialData.hasTaxCode || initialValues.hasTax,
         taxCode: initialData.taxCode || initialValues.taxCode,
+        fullName: initialData.fullName || initialValues.fullName,
+        gender: initialData.gender || initialValues.gender,
+        dateOfBirth: initialData.dateOfBirth
+          ? moment(initialData.dateOfBirth, 'YYYY-MM-DD')
+          : initialValues.dateOfBirth,
         dependents: initialData.dependents
           ? initialData.dependents.map((dependent) => ({
-              registered: dependent.registered,
+              registered: dependent.registerDependentStatus,
               taxCode: dependent.taxCode,
-              fullName: dependent.fullName,
-              birthDate: dependent.birthDate
-                ? moment(dependent.birthDate, 'YYYY-MM-DD')
+              fullName: dependent.nameDependent,
+              birthDate: dependent.dayOfBirthDependent
+                ? moment(dependent.dayOfBirthDependent, 'YYYY-MM-DD')
                 : null,
               relationship: dependent.relationship,
-              proofFile: dependent.proofFile || [],
+              proofFile: dependent.evidencePath
+                ? [{ uid: `-${Math.random().toString(36).substr(2, 9)}`, name: dependent.evidencePath, status: 'done' }]
+                : [],
             }))
           : initialValues.dependents,
       });
@@ -47,54 +89,96 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   const handleCancel = () => {
     form.resetFields();
     setIsSavedSuccessfully(false);
+    if (typeof onCancel === 'function') {
+      onCancel();
+    }
   };
 
-  const handleSave = () => {
-    form
-      .validateFields()
-      .then(() => {
-        const formData = form.getFieldsValue();
+  const handleSave = async () => {
+    try {
+      const formData = await form.validateFields();
 
-        const processedDependents = formData.dependents
-          ? formData.dependents.map((dependent) => ({
-              registered: dependent.registered,
-              taxCode: dependent.taxCode,
-              fullName: dependent.fullName,
-              birthDate: dependent.birthDate && moment.isMoment(dependent.birthDate)
-                ? dependent.birthDate.format('YYYY-MM-DD')
-                : null,
-              relationship: dependent.relationship,
-              proofFile: dependent.proofFile
-                ? dependent.proofFile.map((file) => ({
-                    uid: file.uid || `-${Math.random().toString(36).substr(2, 9)}`,
-                    name: file.name,
-                    status: file.status || 'done',
-                  }))
-                : [],
-            }))
-          : [];
+      const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
+      const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-        const dataToSend = {
-          hasTax: formData.hasTax,
-          taxCode: formData.taxCode,
-          dependents: processedDependents,
-        };
+      const processedDependents = formData.dependents
+        ? formData.dependents.map((dependent) => ({
+            registerDependentStatus: dependent.registered || '',
+            taxCode: dependent.taxCode || '',
+            nameDependent: dependent.fullName || '',
+            dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
+            relationship: dependent.relationship || '',
+            evidencePath: dependent.proofFile && dependent.proofFile.length > 0
+              ? dependent.proofFile[0].name
+              : '',
+          }))
+        : [];
 
-        console.log('Data to send: ', dataToSend);
+      const dataToSend = {
+        employeeCode: employeeCode || '',
+        nameEmployee: nameEmployee || '',
+        gender: formData.gender || '',
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+        hasTaxCode: formData.hasTax || false,
+        taxCode: formData.taxCode || '',
+        dependents: processedDependents,
+      };
+
+      console.log("Data send: ", dataToSend);
+      const response = await axios.post('/api/Employee/CreateTax', dataToSend);
+
+      if (response.status === 200 && response.data.code === 0) {
+        message.success('Tạo mới thông tin thuế thành công!');
         setIsSavedSuccessfully(true);
-
+        form.resetFields();
+        fetchEmployees(); // Refresh employee list after successful save
         if (typeof onSave === 'function') {
           onSave(dataToSend);
-          message.success('Cập nhật thông tin thuế thành công!');
-        } else {
-          message.success('Tạo mới thông tin thuế thành công!');
         }
-      })
-      .catch((errorInfo) => {
-        message.error('Lưu thất bại! Vui lòng nhập đầy đủ các trường bắt buộc.');
-        console.log('Error saving data: ', errorInfo);
-        setIsSavedSuccessfully(false);
-      });
+      } else {
+        message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
+        return;
+      }
+
+      console.error('Create tax info error:', err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { code, errors } = data || {};
+        const errorMsg = errors?.[0] || data?.message || 'Không thể xử lý yêu cầu.';
+
+        switch (status) {
+          case 400:
+            switch (code) {
+              case 1022: // EmployeeNotFound
+                message.error('Nhân viên không tồn tại! Vui lòng tạo thông tin cá nhân trước!');
+                break;
+              case 1026: // DuplicateTax
+                message.error('Thông tin thuế đã tồn tại trong hệ thống!');
+                break;
+              default:
+                message.error(errorMsg);
+                break;
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền thực hiện hành động này!');
+            break;
+          case 500:
+            message.error('Lỗi server! Vui lòng thử lại sau!');
+            break;
+          default:
+            message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
+            break;
+        }
+      } else {
+        console.error('Network error:', err.message);
+        message.error('Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng!');
+      }
+    }
   };
 
   const handleBack = () => {
@@ -114,6 +198,16 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
             <Collapse
               item={{
                 key: '1',
+                header: 'Thông tin cơ bản',
+                children: <BasicInfo form={form} initialData={initialData} employees={employees} />,
+              }}
+            />
+          </div>
+
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '2',
                 header: 'Thông tin Thuế TNCN',
                 children: <TaxInfo form={form} />,
               }}
@@ -123,7 +217,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
           <div className="collapse-container">
             <Collapse
               item={{
-                key: '2',
+                key: '3',
                 header: 'Thông tin người phụ thuộc',
                 children: <Dependent form={form} />,
               }}

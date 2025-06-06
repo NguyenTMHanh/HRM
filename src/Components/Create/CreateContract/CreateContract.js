@@ -253,7 +253,7 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
         })),
       };
       
-      console.log("data send: ", dataToSend);
+
       const response = await axios.post('/api/Employee/CreateContract', dataToSend);
 
       if (response.status === 200 && response.data.code === 0) {

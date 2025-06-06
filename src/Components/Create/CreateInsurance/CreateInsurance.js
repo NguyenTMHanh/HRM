@@ -217,7 +217,7 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
         dateEndParticipateInsurance: formData.bhEndDate ? formData.bhEndDate.toISOString() : null,                  
       };
 
-      console.log('Data to send:', dataToSend);
+
       const response = await axios.post('/api/Employee/CreateInsurance', dataToSend);
 
       if (response.status === 200 && response.data.code === 0) {

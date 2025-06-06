@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Spin } from 'antd';
+import { Modal, Spin, message } from 'antd';
 import PersonalInfo from './Section/PersonalInfo';
 import Identification from './Section/Identification';
 import ResidentInfo from './Section/ResidentInfo';
@@ -10,7 +10,24 @@ import History from '../../../Shared/History/History';
 import { useNavigate } from 'react-router-dom';
 import FooterBar from '../../Footer/Footer';
 import CreatePersonal from '../../Create/CreatePersonal/CreatePersonal';
+import axios from 'axios';
 import './styles.css';
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function PersonalInfoProfile() {
   const [data, setData] = useState(null);
@@ -34,57 +51,150 @@ function PersonalInfoProfile() {
 
   const handleSave = (updatedData) => {
     if (updatedData) {
-      setData(updatedData);
+      // Refresh data after save
+      fetchPersonalData();
     }
     setIsModalVisible(false);
   };
 
-  useEffect(() => {
-    const fetchMockData = async () => {
-      try {
-        setLoading(true);
-        const mockData = {
-          fullName: 'Nguyễn Văn A',
-          gender: 'Nam',
-          dateOfBirth: '01/01/1990',
-          nationality: 'Việt Nam',
-          ethnicity: 'Kinh',
-          identityNumber: '012345678901',
-          issuedDate: '15/03/2010',
-          issuedPlace: 'TP. Hồ Chí Minh',
-          frontImage: 'https://media-cdn-v2.laodong.vn/storage/newsportal/2021/1/26/874344/Can-Cuoc-Cong-Dan-Ga.jpg',
-          backImage: 'https://badontv.vn/uploads/news/2021_03/2701_cccd1-1611715812152.jpg',
-          provinceResident: 'Quảng Nam',
-          districtResident: 'Đại Lộc',
-          wardResident: 'Đại Lãnh',
-          houseNumberResident: 'Thôn Tịnh Đông Tây',
-          provinceContact: 'Đà Nẵng',
-          districtContact: 'Liên Chiểu',
-          wardContact: 'Hòa Khánh Bắc',
-          houseNumberContact: 'K58/25 Ngô Thì Nhậm',
-          phoneNumber: '0913362717',
-          email: 'myhanh13022002@gmail.com',
-          accountNumber: '5601546004',
-          bank: 'BIDV',
-          bankBranch: 'Chi nhánh BIDV Hải Vân',
-        };
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setData(mockData);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching mock data:', err);
-        setLoading(false);
+  // Function to get employee code from userId
+  const getEmployeeCode = async (userId) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
+      if (response.data.code === 0) {
+        return response.data.data; // employeeCode
+      } else {
+        throw new Error(response.data.message || 'Failed to get employee code');
       }
-    };
+    } catch (error) {
+      console.error('Error getting employee code:', error);
+      throw error;
+    }
+  };
 
-    fetchMockData();
+  // Function to get personal information
+  const getPersonalInformation = async (employeeCode) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetPersonalInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to get personal information');
+      }
+    } catch (error) {
+      console.error('Error getting personal information:', error);
+      throw error;
+    }
+  };
+
+  // Function to get image URL from file ID
+  const getImageUrl = (fileId) => {
+    if (!fileId) return null;
+    return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
+  };
+
+  // Function to format date from API response
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Function to map API data to component format
+  const mapApiDataToComponentFormat = (apiData) => {
+    return {
+      fullName: apiData.nameEmployee || '',
+      gender: apiData.gender || '',
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      nationality: apiData.nationality || '',
+      ethnicity: apiData.ethnicity || '',
+      identityNumber: apiData.numberIdentification || '',
+      issuedDate: formatDate(apiData.dateIssueIdentification),
+      issuedPlace: apiData.placeIssueIdentification || '',
+      frontImage: getImageUrl(apiData.frontIdentificationPath),
+      backImage: getImageUrl(apiData.backIdentificationPath),
+      provinceResident: apiData.provinceResidence || '',
+      districtResident: apiData.districtResidence || '',
+      wardResident: apiData.wardResidence || '',
+      houseNumberResident: apiData.houseNumberResidence || '',
+      provinceContact: apiData.provinceContact || '',
+      districtContact: apiData.districtContact || '',
+      wardContact: apiData.wardContact || '',
+      houseNumberContact: apiData.houseNumberContact || '',
+      phoneNumber: apiData.phoneNumber || '',
+      email: apiData.email || '',
+      accountNumber: apiData.bankNumber || '',
+      bank: apiData.nameBank || '',
+      bankBranch: apiData.branchBank || '',
+    };
+  };
+
+  // Main function to fetch personal data
+  const fetchPersonalData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get userId from localStorage (assuming it's stored after login)
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        return;
+      }
+
+      // Step 1: Get employee code from userId
+      const employeeCode = await getEmployeeCode(userId);
+      
+      // Step 2: Get personal information using employee code
+      const personalInfo = await getPersonalInformation(employeeCode);
+      
+      // Step 3: Map API data to component format
+      const mappedData = mapApiDataToComponentFormat(personalInfo);
+      
+      setData(mappedData);
+    } catch (error) {
+      console.error('Error fetching personal data:', error);
+      
+      // Handle specific error codes
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        const errorCode = errorData?.code;
+        
+        switch (errorCode) {
+          case 1022: // CustomCodes.EmployeeNotFound
+            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ cá nhân trước.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin cá nhân.');
+            break;
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPersonalData();
   }, []);
 
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <Spin />
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải thông tin cá nhân...</div>
+      </div>
+    );
+  }
+
+  // If no data and not loading, show message
+  if (!data && !loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ fontSize: '16px', color: '#666' }}>
+          Chưa có thông tin cá nhân. Vui lòng tạo hồ sơ cá nhân trước.
+        </div>
       </div>
     );
   }
@@ -156,7 +266,6 @@ function PersonalInfoProfile() {
               }}
             />
           </div>
-
         </div>
 
         <div className="right-column">
@@ -169,7 +278,6 @@ function PersonalInfoProfile() {
               }}
             />
           </div>
-
         </div>
       </div>
 

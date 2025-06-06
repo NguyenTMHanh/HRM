@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Spin } from 'antd';
+import { Modal, Spin, message } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import WorkInfo from './Section/WorkInfo';
 import History from '../../../Shared/History/History';
 import FooterBar from '../../Footer/Footer';
 import CreatePersonel from '../../Create/CreatePersonel/CreatePersonel';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './styles.css';
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function PersonelInfoProfile() {
   const [data, setData] = useState(null);
@@ -15,39 +32,130 @@ function PersonelInfoProfile() {
   const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMockData = async () => {
-      try {
-        setLoading(true);
-        const mockData = {
-          fullName: 'Nguyễn Thị Mỹ Hạnh',
-          gender: 'Nữ',
-          dateOfBirth: '01/01/2002',
-          joinDate: '03/02/2025',
-          department: 'Lập trình',
-          jobTitle: 'Nhân viên',
-          level: 'Cấp 3',
-          position: 'Fresher',
-          managedBy: 'Lê Tiến Triển',
-          workLocation: 'Prima Solutions',
-          workMode: 'Intership',
-          lunchBreak: '1.5 giờ',
-          username: '0058',
-          password: '12345678',
-          avatar: 'https://example.com/avatar.jpg',
-          roleGroup: 'Nhân viên',
-        };
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setData(mockData);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching mock data:', err);
-        setLoading(false);
+  // Function to get employee code from userId (reuse from PersonalInfoProfile)
+  const getEmployeeCode = async (userId) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
+      if (response.data.code === 0) {
+        return response.data.data; // employeeCode
+      } else {
+        throw new Error(response.data.message || 'Failed to get employee code');
       }
-    };
+    } catch (error) {
+      console.error('Error getting employee code:', error);
+      throw error;
+    }
+  };
 
-    fetchMockData();
+  // Function to get personnel information
+  const getPersonelInformation = async (employeeCode) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetPersonelInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to get personnel information');
+      }
+    } catch (error) {
+      console.error('Error getting personnel information:', error);
+      throw error;
+    }
+  };
+
+  // Function to get image URL from file ID (avatar)
+  const getImageUrl = (fileId) => {
+    if (!fileId) return null;
+    return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
+  };
+
+  // Function to format date from API response
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Function to format gender from English to Vietnamese
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' : 
+           gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
+
+  // Function to format lunch break hours
+  const formatLunchBreak = (hours) => {
+    if (!hours) return '';
+    return `${hours} giờ`;
+  };
+
+  // Function to map API data to component format
+  const mapApiDataToComponentFormat = (apiData) => {
+    return {
+      employeeCode: apiData.employeeCode || '',
+      fullName: apiData.nameEmployee || '',
+      gender: formatGender(apiData.gender),
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      joinDate: formatDate(apiData.dateJoinCompany),
+      department: apiData.departmentName || '',
+      jobTitle: apiData.jobtitleName || '',
+      level: apiData.rankName || '',
+      position: apiData.positionName || '',
+      managedBy: apiData.managerName || '',
+      workLocation: apiData.branchName || '',
+      workMode: apiData.jobTypeName || '',
+      lunchBreak: formatLunchBreak(apiData.breakLunch),
+      avatarUrl: getImageUrl(apiData.avatarPath),
+    };
+  };
+
+  // Main function to fetch personnel data
+  const fetchPersonelData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get userId from localStorage (assuming it's stored after login)
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        return;
+      }
+
+      // Step 1: Get employee code from userId
+      const employeeCode = await getEmployeeCode(userId);
+      
+      // Step 2: Get personnel information using employee code
+      const personelInfo = await getPersonelInformation(employeeCode);
+      
+      // Step 3: Map API data to component format
+      const mappedData = mapApiDataToComponentFormat(personelInfo);
+      
+      setData(mappedData);
+    } catch (error) {
+      console.error('Error fetching personnel data:', error);
+      
+      // Handle specific error codes
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        const errorCode = errorData?.code;
+        
+        switch (errorCode) {
+          case 1022: // CustomCodes.EmployeeNotFound
+            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin nhân sự.');
+            break;
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPersonelData();
   }, []);
 
   const handleNext = () => {
@@ -69,7 +177,8 @@ function PersonelInfoProfile() {
 
   const handleSave = (updatedData) => {
     if (updatedData) {
-      setData(updatedData);
+      // Refresh data after save
+      fetchPersonelData();
     }
     setIsModalVisible(false);
   };
@@ -95,7 +204,19 @@ function PersonelInfoProfile() {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <Spin />
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải thông tin nhân sự...</div>
+      </div>
+    );
+  }
+
+  // If no data and not loading, show message
+  if (!data && !loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ fontSize: '16px', color: '#666' }}>
+          Chưa có thông tin nhân sự. Vui lòng tạo hồ sơ nhân sự trước.
+        </div>
       </div>
     );
   }

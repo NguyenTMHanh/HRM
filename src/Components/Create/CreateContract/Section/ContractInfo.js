@@ -27,10 +27,10 @@ const ContractInfo = ({ form }) => {
       <Col xs={24} sm={6}>
         <Form.Item label="Loại hợp đồng" name="contractType">
           <Select placeholder="Chọn loại hợp đồng">
-            <Select.Option value="HĐLĐ không xác định thời hạn">
+            <Select.Option value="NoLimitedContract">
               HĐLĐ không xác định thời hạn
             </Select.Option>
-            <Select.Option value="HĐLĐ xác định thời hạn">
+            <Select.Option value="LimitedContract">
               HĐLĐ xác định thời hạn
             </Select.Option>
           </Select>
@@ -38,7 +38,7 @@ const ContractInfo = ({ form }) => {
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Ngày bắt đầu HĐ" name="startDate">
+        <Form.Item label="Ngày bắt đầu HĐ" name="startDate"             rules={[{ required: true, message: 'Vui lòng nhập ngày bắt đầu HĐLĐ!' }]}>
           <DatePicker
             format="DD/MM/YYYY"
             disabledDate={disabledStartDate}
@@ -49,11 +49,11 @@ const ContractInfo = ({ form }) => {
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Ngày kết thúc HĐ" name="endDate">
+        <Form.Item label="Ngày kết thúc HĐ" name="endDate" rules={[{ required: true, message: 'Vui lòng nhập ngày kết thúc HĐLĐ!' }]}>
           <DatePicker
             format="DD/MM/YYYY"
             disabledDate={disabledEndDate}
-            placeholder="Chọn ngày kết thúc hợp đồng"
+            placeholder="Chọn ngày kết thúc hợp đồng"           
             style={{ width: '100%' }}
           />
         </Form.Item>
@@ -62,8 +62,8 @@ const ContractInfo = ({ form }) => {
       <Col xs={24} sm={6}>
         <Form.Item label="Tình trạng" name="status">
           <Select placeholder="Chọn tình trạng">
-            <Select.Option value="Còn hiệu lực">Còn hiệu lực</Select.Option>
-            <Select.Option value="Hết hiệu lực">Hết hiệu lực</Select.Option>
+            <Select.Option value="Valid">Còn hiệu lực</Select.Option>
+            <Select.Option value="expire">Hết hiệu lực</Select.Option>
           </Select>
         </Form.Item>
       </Col>
@@ -89,25 +89,33 @@ const ContractInfo = ({ form }) => {
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Vị trí" name="position">
+        <Form.Item label="Vị trí" name="position"             rules={[{ required: true, message: 'Vui lòng nhập vị trí' }]}>
           <Input placeholder="Nhập vị trí công việc" disabled />
         </Form.Item>
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Hệ số lương" name="salaryCoefficient">
+        <Form.Item label="Hệ số lương" name="salaryCoefficient"             rules={[{ required: true, message: 'Vui lòng nhập hệ số lương!' }]}>
           <Input placeholder="Nhập hệ số lương" disabled />
         </Form.Item>
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Ngày công chuẩn" name="standardWorkingDays">
+        <Form.Item
+          label="Ngày công chuẩn"
+          name="standardWorkingDays"
+          rules={[{ required: true, message: 'Vui lòng nhập số ngày công chuẩn!' }]}
+        >
           <Input placeholder="Nhập số ngày công chuẩn" disabled />
         </Form.Item>
       </Col>
 
       <Col xs={24} sm={6}>
-        <Form.Item label="Tiền lương cơ bản" name="basicSalary">
+        <Form.Item
+          label="Tiền lương cơ bản"
+          name="basicSalary"
+          rules={[{ required: true, message: 'Vui lòng nhập tiền lương cơ bản!' }]}
+        >
           <Input placeholder="Nhập tiền lương cơ bản" disabled />
         </Form.Item>
       </Col>

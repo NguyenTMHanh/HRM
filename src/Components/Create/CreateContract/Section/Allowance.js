@@ -1,6 +1,7 @@
-import React from "react";
-import { Form, Select, Input, Button, Row, Col } from "antd";
-import styled from "styled-components";
+import React, { useState, useEffect } from 'react';
+import { Form, Select, Input, Button, Row, Col } from 'antd';
+import styled from 'styled-components';
+import axios from 'axios';
 
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
@@ -42,17 +43,43 @@ const AddButton = styled(Button)`
   }
 `;
 
+// Custom function to format numbers with spaces as thousand separators
+const formatWithSpaces = (number) => {
+  if (number == null) return '';
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+};
+
 const Allowance = ({ form }) => {
-  const allowanceOptions = [
-    { label: "Phụ cấp ăn trưa", value: "Phụ cấp ăn trưa", amount: "1,000,000 VNĐ" },
-    { label: "Phụ cấp đi lại", value: "Phụ cấp đi lại", amount: "2,000,000 VNĐ" },
-    { label: "Phụ cấp điện thoại", value: "Phụ cấp điện thoại", amount: "3,000,000 VNĐ" },
-    { label: "Phụ cấp nhà ở", value: "Phụ cấp nhà ở", amount: "1,500,000 VNĐ" },
-  ];
+  const [allowanceOptions, setAllowanceOptions] = useState([]);
+
+  // Fetch allowances from the API
+  useEffect(() => {
+    const fetchAllowances = async () => {
+      try {
+        const response = await axios.get('/api/Allowance');
+        if (response.status === 200 && Array.isArray(response.data)) {
+          // Map API response to the format expected by the Select component
+          const options = response.data.map((allowance) => ({
+            label: allowance.nameAllowance,
+            value: allowance.nameAllowance,
+            amount: `${formatWithSpaces(allowance.moneyAllowance)} VNĐ`,
+            moneyAllowance: allowance.moneyAllowance, // Store raw amount for reference
+          }));
+          setAllowanceOptions(options);
+        } else {
+          console.error('Unexpected API response:', response);
+        }
+      } catch (err) {
+        console.error('Error fetching allowances:', err);
+      }
+    };
+
+    fetchAllowances();
+  }, []);
 
   const getAmountByName = (name) => {
     const found = allowanceOptions.find((item) => item.value === name);
-    return found?.amount || "";
+    return found?.amount || '';
   };
 
   return (
@@ -65,8 +92,8 @@ const Allowance = ({ form }) => {
                 <Form.Item
                   {...restField}
                   label="Tên phụ cấp"
-                  name={[name, "name"]}
-                  rules={[{ required: true, message: "Vui lòng chọn tên phụ cấp!" }]}
+                  name={[name, 'name']}
+                  rules={[{ required: true, message: 'Vui lòng chọn tên phụ cấp!' }]}
                 >
                   <Select
                     placeholder="Chọn tên phụ cấp"
@@ -74,7 +101,7 @@ const Allowance = ({ form }) => {
                     onChange={(value) => {
                       form.setFieldsValue({
                         allowances: form
-                          .getFieldValue("allowances")
+                          .getFieldValue('allowances')
                           .map((item, idx) =>
                             idx === name ? { ...item, amount: getAmountByName(value) } : item
                           ),
@@ -88,14 +115,14 @@ const Allowance = ({ form }) => {
                 <Form.Item
                   {...restField}
                   label="Mức phụ cấp"
-                  name={[name, "amount"]}
-                  rules={[{ required: true, message: "Mức phụ cấp không được để trống!" }]}
+                  name={[name, 'amount']}
+                  rules={[{ required: true, message: 'Mức phụ cấp không được để trống!' }]}
                 >
                   <Input placeholder="Mức phụ cấp" disabled />
                 </Form.Item>
               </Col>
 
-              <Col xs={24} sm={2} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Col xs={24} sm={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <DeleteButton onClick={() => remove(name)}>Xóa</DeleteButton>
               </Col>
             </Row>

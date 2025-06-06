@@ -167,13 +167,13 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
         </Col>
 
         <Col xs={24} sm={6}>
-          <Form.Item label="Tên đăng nhập" name="username">
+          <Form.Item label="Tên đăng nhập" name="username"             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
             <Input disabled />
           </Form.Item>
         </Col>
 
         <Col xs={24} sm={6}>
-          <Form.Item label="Mật khẩu (*)" name="password">
+          <Form.Item label="Mật khẩu (*)" name="password"             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu ban đầu' }]}>
             <Input.Password />
           </Form.Item>
         </Col>

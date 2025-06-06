@@ -17,7 +17,10 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers["Content-Type"] = "application/json";
+    // Only set Content-Type for non-FormData requests
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -27,6 +30,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
+  const [avatarId, setAvatarId] = useState(null); // Store uploaded avatar ID
   const [breakTime, setBreakTime] = useState("");
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,6 +110,15 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         avatar: initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
+      
+      // Set avatar data if exists
+      if (initialData.avatar) {
+        setAvatarImage(initialData.avatar);
+        // If avatar is already an ID, use it. Otherwise, it might be a URL or base64
+        if (typeof initialData.avatar === 'string' && initialData.avatar.length <= 50) {
+          setAvatarId(initialData.avatar);
+        }
+      }
     } else {
       form.setFieldsValue({
         ...initialValues,
@@ -117,8 +130,14 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   const handleCancel = () => {
     form.resetFields();
     setAvatarImage(null);
+    setAvatarId(null);
     setIsSavedSuccessfully(false);
   };
+
+  // Handle avatar upload callback
+  const handleAvatarUpload = useCallback((uploadedAvatarId) => {
+    setAvatarId(uploadedAvatarId);
+  }, []);
 
   const handleSave = async () => {
     if (!canCreatePersonel) {
@@ -128,7 +147,6 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
 
     try {
       setIsLoading(true);
-
 
       const formData = await form.validateFields();
 
@@ -151,7 +169,8 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         branchName: formData.workLocation,
         jobTypeName: formData.workMode,
         breakLunch: parseBreakLunch(breakTime || formData.lunchBreak),
-        avatarPath: avatarImage || formData.avatar || "",
+        // Use avatar ID instead of image data
+        avatarPath: avatarId || "", // This will be the ID returned from upload API
         roleName: formData.roleGroup,
       };
 
@@ -165,6 +184,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         fetchEmployees();
         fetchBreakTime();
         setAvatarImage(null);
+        setAvatarId(null);
 
         if (typeof onSave === "function") {
           onSave(dataToSend);
@@ -319,6 +339,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
                     form={form}
                     setAvatarImage={setAvatarImage}
                     avatarImage={avatarImage}
+                    onAvatarUpload={handleAvatarUpload}
                   />
                 ),
               }}

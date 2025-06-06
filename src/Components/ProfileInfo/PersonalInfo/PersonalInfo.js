@@ -16,7 +16,7 @@ function PersonalInfoProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [formKey, setFormKey] = useState(0); 
+  const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
 
   const handleNext = () => {
@@ -25,7 +25,7 @@ function PersonalInfoProfile() {
 
   const handleEdit = () => {
     setIsModalVisible(true);
-    setFormKey(prev => prev + 1); 
+    setFormKey(prev => prev + 1);
   };
 
   const handleModalClose = () => {
@@ -111,51 +111,65 @@ function PersonalInfoProfile() {
     <div className="scroll-container">
       <div className="main-content">
         <div className="left-column">
-          <Collapse
-            item={{
-              key: '1',
-              header: 'Thông tin cá nhân',
-              children: <PersonalInfo {...data} />,
-            }}
-          />
-          <Collapse
-            item={{
-              key: '2',
-              header: 'Ảnh chụp CCCD/CMND',
-              children: <Identification {...data} />,
-            }}
-          />
-          <Collapse
-            item={{
-              key: '3',
-              header: 'Thông tin thường trú',
-              children: <ResidentInfo {...data} />,
-            }}
-          />
-          <Collapse
-            item={{
-              key: '4',
-              header: 'Thông tin liên hệ',
-              children: <ContactInfo {...data} />,
-            }}
-          />
-          <Collapse
-            item={{
-              key: '5',
-              header: 'Thông tin tài khoản ngân hàng',
-              children: <BankInfo {...data} />,
-            }}
-          />
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '1',
+                header: 'Thông tin cá nhân',
+                children: <PersonalInfo {...data} />,
+              }}
+            />
+          </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '2',
+                header: 'Ảnh chụp CCCD/CMND',
+                children: <Identification {...data} />,
+              }}
+            />
+          </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '3',
+                header: 'Thông tin thường trú',
+                children: <ResidentInfo {...data} />,
+              }}
+            />
+          </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '4',
+                header: 'Thông tin liên hệ',
+                children: <ContactInfo {...data} />,
+              }}
+            />
+          </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '5',
+                header: 'Thông tin tài khoản ngân hàng',
+                children: <BankInfo {...data} />,
+              }}
+            />
+          </div>
+
         </div>
 
         <div className="right-column">
-          <Collapse
-            item={{
-              key: '6',
-              header: 'Lịch sử hoạt động',
-              children: <History historyItems={historyItems} />,
-            }}
-          />
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '6',
+                header: 'Lịch sử hoạt động',
+                children: <History historyItems={historyItems} />,
+              }}
+            />
+          </div>
+
         </div>
       </div>
 
@@ -175,7 +189,7 @@ function PersonalInfoProfile() {
             initialData={data}
             onSave={handleSave}
             onCancel={handleModalClose}
-            isModalFooter={true} 
+            isModalFooter={true}
           />
         </Modal>
       </div>

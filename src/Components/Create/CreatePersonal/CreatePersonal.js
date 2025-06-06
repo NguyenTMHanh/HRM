@@ -20,7 +20,10 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers["Content-Type"] = "application/json";
+    // Only set Content-Type for non-FormData requests
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,6 +33,8 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
+  const [frontImageId, setFrontImageId] = useState(null); // Store front image ID
+  const [backImageId, setBackImageId] = useState(null);   // Store back image ID
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [provinceMap, setProvinceMap] = useState({});
   const [districtMap, setDistrictMap] = useState({});
@@ -50,6 +55,15 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   const canCreate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "profilePersonal" && p.actionId === "create"
   );
+
+  // Handle image upload callback
+  const handleImageUpload = (imageId, type) => {
+    if (type === 'front') {
+      setFrontImageId(imageId);
+    } else if (type === 'back') {
+      setBackImageId(imageId);
+    }
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -78,8 +92,19 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
         bank: initialData.bank,
         bankBranch: initialData.bankBranch,
       });
-      setFrontImage(initialData.frontImage);
-      setBackImage(initialData.backImage);
+      // Set initial images and IDs if provided
+      if (initialData.frontImage) {
+        setFrontImage(initialData.frontImage);
+        if (typeof initialData.frontImage === 'string' && initialData.frontImage.length <= 50) {
+          setFrontImageId(initialData.frontImage);
+        }
+      }
+      if (initialData.backImage) {
+        setBackImage(initialData.backImage);
+        if (typeof initialData.backImage === 'string' && initialData.backImage.length <= 50) {
+          setBackImageId(initialData.backImage);
+        }
+      }
     }
   }, [initialData, form]);
 
@@ -87,105 +112,108 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
     form.resetFields();
     setFrontImage(null);
     setBackImage(null);
+    setFrontImageId(null);
+    setBackImageId(null);
     setIsSavedSuccessfully(false);
   };
 
   const handleSave = async () => {
-  if (!canCreate) {
-    message.error("Bạn không có quyền tạo mới nhân viên.");
-    return;
-  }
-
-  try {
-    setIsLoading(true);
-    const formData = await form.validateFields();
-
-    const dataToSend = {
-      NameEmployee: formData.fullName,
-      Gender: formData.gender,
-      DateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
-      Nationality: formData.nationality || "",
-      Ethnicity: formData.ethnicity || "",
-      NumberIdentification: formData.identityNumber,
-      DateIssueIdentification: formData.issuedDate ? formData.issuedDate.toISOString() : null,
-      PlaceIssueIdentification: formData.issuedPlace || "",
-      FrontIdentificationPath: frontImage || formData.frontImage,
-      BackIdentificationPath: backImage || formData.backImage,
-      ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || "",
-      DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || "",
-      WardResidence: wardMap[formData.wardResident] || formData.wardResident || "",
-      HouseNumberResidence: formData.houseNumberResident || "",
-      ProvinceContact: provinceMap[formData.provinceContact] || formData.provinceContact || "",
-      DistrictContact: districtMap[formData.districtContact] || formData.districtContact || "",
-      WardContact: wardMap[formData.wardContact] || formData.wardContact || "",
-      HouseNumberContact: formData.houseNumberContact || "",
-      Email: formData.email,
-      PhoneNumber: formData.phoneNumber,
-      BankNumber: formData.accountNumber,
-      NameBank: formData.bank,
-      BranchBank: formData.bankBranch,
-    };
-
-    const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
-   
-
-    if (response.status === 200 && response.data.code === 0) {
-      message.success("Tạo mới thông tin cá nhân thành công!");
-      setIsSavedSuccessfully(true);
-      form.resetFields();
-      setFrontImage(null);
-      setBackImage(null);
-
-      if (typeof onSave === "function") {
-        onSave(dataToSend);
-      }
-    } else {
-      message.error(response.data.message || "Tạo nhân viên thất bại!");
-    }
-  } catch (err) {
-    if (err.errorFields) {
-      message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+    if (!canCreate) {
+      message.error("Bạn không có quyền tạo mới nhân viên.");
       return;
     }
 
-    console.error("Create employee error:", err);
-    if (err.response) {
-      const { status, data } = err.response;
-      const { code, errors } = data || {};
-      const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
-      switch (status) {
-        case 400:
-          switch (code) {
-            case 1003:
-              message.error("Email không hợp lệ.");
-              break;
-            case 1015:
-              message.error("Số điện thoại không hợp lệ.");
-              break;
-            case 1014:
-              message.error("Số CCCD/CMND không hợp lệ.");
-              break;
-            default:
-              message.error(errorMsg);
-              break;
-          }
-          break;
-        case 409:
-          switch (code) {
-            case 1012:
-              message.error("Email đã được sử dụng.");
-              break;
-            case 1013:
-              message.error("Số điện thoại đã được sử dụng.");
-              break;
-            case 1014:
-              message.error("Số CCCD/CMND đã được sử dụng.");
-              break;
-            default:
-              message.error(errorMsg);
-              break;
-          }
-          break;
+    try {
+      setIsLoading(true);
+      const formData = await form.validateFields();
+
+      const dataToSend = {
+        NameEmployee: formData.fullName,
+        Gender: formData.gender,
+        DateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+        Nationality: formData.nationality || "",
+        Ethnicity: formData.ethnicity || "",
+        NumberIdentification: formData.identityNumber,
+        DateIssueIdentification: formData.issuedDate ? formData.issuedDate.toISOString() : null,
+        PlaceIssueIdentification: formData.issuedPlace || "",
+        FrontIdentificationPath: frontImageId || formData.frontImage || "",
+        BackIdentificationPath: backImageId || formData.backImage || "",
+        ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || "",
+        DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || "",
+        WardResidence: wardMap[formData.wardResident] || formData.wardResident || "",
+        HouseNumberResidence: formData.houseNumberResident || "",
+        ProvinceContact: provinceMap[formData.provinceContact] || formData.provinceContact || "",
+        DistrictContact: districtMap[formData.districtContact] || formData.districtContact || "",
+        WardContact: wardMap[formData.wardContact] || formData.wardContact || "",
+        HouseNumberContact: formData.houseNumberContact || "",
+        Email: formData.email,
+        PhoneNumber: formData.phoneNumber,
+        BankNumber: formData.accountNumber,
+        NameBank: formData.bank,
+        BranchBank: formData.bankBranch,
+      };
+
+      const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
+
+      if (response.status === 200 && response.data.code === 0) {
+        message.success("Tạo mới thông tin cá nhân thành công!");
+        setIsSavedSuccessfully(true);
+        form.resetFields();
+        setFrontImage(null);
+        setBackImage(null);
+        setFrontImageId(null);
+        setBackImageId(null);
+
+        if (typeof onSave === "function") {
+          onSave(dataToSend);
+        }
+      } else {
+        message.error(response.data.message || "Tạo nhân viên thất bại!");
+      }
+    } catch (err) {
+      if (err.errorFields) {
+        message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
+        return;
+      }
+
+      console.error("Create employee error:", err);
+      if (err.response) {
+        const { status, data } = err.response;
+        const { code, errors } = data || {};
+        const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
+        switch (status) {
+          case 400:
+            switch (code) {
+              case 1003:
+                message.error("Email không hợp lệ.");
+                break;
+              case 1015:
+                message.error("Số điện thoại không hợp lệ.");
+                break;
+              case 1014:
+                message.error("Số CCCD/CMND không hợp lệ.");
+                break;
+              default:
+                message.error(errorMsg);
+                break;
+            }
+            break;
+          case 409:
+            switch (code) {
+              case 1012:
+                message.error("Email đã được sử dụng.");
+                break;
+              case 1013:
+                message.error("Số điện thoại đã được sử dụng.");
+                break;
+              case 1014:
+                message.error("Số CCCD/CMND đã được sử dụng.");
+                break;
+              default:
+                message.error(errorMsg);
+                break;
+            }
+            break;
         case 401:
           message.error("Bạn không có quyền thực hiện hành động này.");
           break;
@@ -237,6 +265,7 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
                     setBackImage={setBackImage}
                     frontImage={frontImage}
                     backImage={backImage}
+                    onImageUpload={handleImageUpload}
                   />
                 ),
               }}

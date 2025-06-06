@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Form, Input, Select, Row, Col, Button, message } from 'antd';
-import { UploadOutlined, UserOutlined } from '@ant-design/icons';
+import { UploadOutlined, UserOutlined, LoadingOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import axios from 'axios';
 import debounce from "lodash/debounce";
@@ -46,8 +46,9 @@ const AvatarContainer = styled.div`
   align-items: center;
 `;
 
-const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
+const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form, onAvatarUpload }) => {
   const [roleGroups, setRoleGroups] = useState([]);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const avatarInputRef = useRef(null);
 
   const fetchRoles = useCallback(async () => {
@@ -110,18 +111,90 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
     };
   }, [selectedEmployee, debouncedFetchAccountDefault]);
 
-  const handleImageChange = (event) => {
+  const uploadAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setUploadLoading(true);
+      
+      // Create a new axios instance without the global interceptor for this upload
+      const uploadAxios = axios.create({
+        baseURL: axios.defaults.baseURL,
+      });
+      
+      // Add only the auth header for upload
+      const token = localStorage.getItem("accessToken");
+      const uploadConfig = {
+        headers: {}
+      };
+      
+      if (token) {
+        uploadConfig.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Don't set Content-Type, let browser set it with boundary for multipart/form-data
+      
+      const response = await uploadAxios.post('/api/FileUpload/UploadFile', formData, uploadConfig);
+
+      if (response.status === 200) {
+        const { id, filePath } = response.data;
+        
+        // Callback to parent component with avatar ID
+        if (onAvatarUpload) {
+          onAvatarUpload(id);
+        }
+        
+        return { id, filePath };
+      }
+    } catch (error) {
+      console.error('Upload avatar error:', error);
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else {
+        message.error('Upload avatar thất bại!');
+      }
+      throw error;
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleImageChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result;
-        setAvatarImage(result);
-      };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-      };
-      reader.readAsDataURL(file);
+      // Validate file type
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      if (!allowedExtensions.includes(fileExtension)) {
+        message.error('Chỉ cho phép tải lên file ảnh (jpg, jpeg, png, gif)!');
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        message.error('Kích thước file phải nhỏ hơn 5MB!');
+        return;
+      }
+
+      try {
+        // Show preview immediately
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAvatarImage(reader.result);
+        };
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          message.error('Không thể đọc file!');
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to server
+        await uploadAvatar(file);
+      } catch (error) {
+        // If upload fails, remove preview
+        setAvatarImage(null);
+      }
     }
   };
 
@@ -139,12 +212,21 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
             <div style={{ marginBottom: '8px' }}>Avatar</div>
             <AvatarContainer>
               <AvatarBox
-                onClick={() => avatarInputRef.current.click()}
-                style={{ backgroundImage: avatarImage ? `url(${avatarImage})` : 'none' }}
+                onClick={() => !uploadLoading && avatarInputRef.current.click()}
+                style={{ 
+                  backgroundImage: avatarImage ? `url(${avatarImage})` : 'none',
+                  cursor: uploadLoading ? 'not-allowed' : 'pointer'
+                }}
               >
-                {!avatarImage && (
+                {!avatarImage && !uploadLoading && (
                   <Placeholder>
                     <UserOutlined style={{ fontSize: '120px', color: '#fff' }} />
+                  </Placeholder>
+                )}
+                {uploadLoading && (
+                  <Placeholder>
+                    <LoadingOutlined style={{ fontSize: '40px', color: '#1890ff' }} />
+                    <div style={{ marginTop: '10px', color: '#1890ff' }}>Đang tải...</div>
                   </Placeholder>
                 )}
               </AvatarBox>
@@ -154,26 +236,37 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form }) => {
                 accept="image/*"
                 ref={avatarInputRef}
                 onChange={handleImageChange}
+                disabled={uploadLoading}
               />
 
               <UploadButton
-                icon={<UploadOutlined />}
-                onClick={() => avatarInputRef.current.click()}
+                icon={uploadLoading ? <LoadingOutlined /> : <UploadOutlined />}
+                onClick={() => !uploadLoading && avatarInputRef.current.click()}
+                loading={uploadLoading}
+                disabled={uploadLoading}
               >
-                Avatar
+                {uploadLoading ? 'Đang tải...' : 'Avatar'}
               </UploadButton>
             </AvatarContainer>
           </div>
         </Col>
 
         <Col xs={24} sm={6}>
-          <Form.Item label="Tên đăng nhập" name="username"             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
+          <Form.Item 
+            label="Tên đăng nhập" 
+            name="username" 
+            rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}
+          >
             <Input disabled />
           </Form.Item>
         </Col>
 
         <Col xs={24} sm={6}>
-          <Form.Item label="Mật khẩu (*)" name="password"             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu ban đầu' }]}>
+          <Form.Item 
+            label="Mật khẩu (*)" 
+            name="password" 
+            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu ban đầu' }]}
+          >
             <Input.Password />
           </Form.Item>
         </Col>

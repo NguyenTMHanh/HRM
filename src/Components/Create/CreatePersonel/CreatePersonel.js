@@ -132,8 +132,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
   const handleCancel = () => {
     if (typeof onCancel === "function") {
       onCancel();
-    }
-    else {
+    } else {
       form.resetFields();
       setAvatarImage(null);
       setAvatarId(null);
@@ -155,6 +154,17 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
       setIsLoading(true);
 
       const formData = await form.validateFields();
+      // In edit mode, skip validation for WorkInfo fields if not displayed
+      const fieldsToSkipInEdit = [
+        'joinDate', 'workLocation', 'department', 'jobTitle',
+        'level', 'position', 'managedBy', 'workMode', 'lunchBreak'
+      ];
+
+      if (initialData) {
+        fieldsToSkipInEdit.forEach(field => {
+          form.setFields([{ name: field, errors: [], value: form.getFieldValue(field) }]);
+        });
+      }
 
       const employeeCode = formData.fullName ? formData.fullName.split(" - ")[0] : null;
       const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
@@ -166,15 +176,15 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         gender: formData.gender,
         username: formData.username,
         password: formData.password,
-        dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
-        departmentName: formData.department,
-        jobtitleName: formData.jobTitle,
-        rankName: formData.level,
-        positionName: formData.position,
-        managerId: managerCode,
-        branchName: formData.workLocation,
-        jobTypeName: formData.workMode,
-        breakLunch: parseBreakLunch(breakTime || formData.lunchBreak),
+        dateJoinCompany: initialData ? initialData.joinDate : (formData.joinDate ? formData.joinDate.toISOString() : null),
+        departmentName: initialData ? initialData.department : formData.department,
+        jobtitleName: initialData ? initialData.jobTitle : formData.jobTitle,
+        rankName: initialData ? initialData.level : formData.level,
+        positionName: initialData ? initialData.position : formData.position,
+        managerId: initialData ? (initialData.managedBy ? initialData.managedBy.split(" - ")[0] : null) : managerCode,
+        branchName: initialData ? initialData.workLocation : formData.workLocation,
+        jobTypeName: initialData ? initialData.workMode : formData.workMode,
+        breakLunch: initialData ? parseBreakLunch(initialData.lunchBreak) : parseBreakLunch(breakTime || formData.lunchBreak),
         avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
@@ -319,7 +329,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
               item={{
                 key: "1",
                 header: "Thông tin cơ bản",
-                children: <BasicInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} isModalFooter={isModalFooter}/>,
+                children: <BasicInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} isModalFooter={isModalFooter} />,
               }}
             />
           </div>
@@ -334,22 +344,27 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
             />
           </div>
 
-          <div className="collapse-container">
-            <Collapse
-              item={{
-                key: "3",
-                header: "Thông tin tài khoản",
-                children: (
-                  <AccountInfo
-                    form={form}
-                    setAvatarImage={setAvatarImage}
-                    avatarImage={avatarImage}
-                    onAvatarUpload={handleAvatarUpload}
-                  />
-                ),
-              }}
-            />
-          </div>
+
+          {!initialData && (
+
+            <div className="collapse-container">
+              <Collapse
+                item={{
+                  key: "3",
+                  header: "Thông tin tài khoản",
+                  children: (
+                    <AccountInfo
+                      form={form}
+                      setAvatarImage={setAvatarImage}
+                      avatarImage={avatarImage}
+                      onAvatarUpload={handleAvatarUpload}
+                    />
+                  ),
+                }}
+              />
+            </div>
+          )}
+
         </div>
       </Form>
 
@@ -358,7 +373,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         onCancel={handleCancel}
         onNext={handleNext}
         onBack={handleBack}
-        showNext={!isModalFooter} 
+        showNext={!isModalFooter}
         showBack={!isModalFooter}
         showCancel={true}
         showSave={true}

@@ -58,30 +58,36 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
 
   useEffect(() => {
     if (initialData) {
+      console.log('InitialData received:', initialData); // Debug
+      
       const fullName = initialData.employeeCode && initialData.fullName
-        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        ? `${initialData.employeeCode} - ${initialData.fullName}`
         : null;
-      form.setFieldsValue({
+      
+      const formValues = {
         fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
         gender: initialData.gender,
-        hasTax: initialData.hasTaxCode || initialValues.hasTax,
+        // FIX: Sử dụng đúng tên field
+        hasTax: initialData.hasTax || initialValues.hasTax,
         taxCode: initialData.taxCode || initialValues.taxCode,
         dependents: initialData.dependents
           ? initialData.dependents.map((dependent) => ({
-            registered: dependent.registerDependentStatus,
-            taxCode: dependent.taxCode,
-            fullName: dependent.nameDependent,
-            birthDate: dependent.dayOfBirthDependent
-              ? moment(dependent.dayOfBirthDependent, 'YYYY-MM-DD')
-              : null,
-            relationship: dependent.relationship,
-            proofFile: dependent.evidencePath
-              ? [{ uid: `-${Math.random().toString(36).substr(2, 9)}`, name: dependent.evidencePath, status: 'done' }]
-              : [],
-          }))
+              registered: dependent.registered, // FIX: Sử dụng đúng tên field
+              taxCode: dependent.taxCode,
+              fullName: dependent.fullName, // FIX: Sử dụng đúng tên field
+              // FIX: Xử lý ngày sinh đúng format
+              birthDate: dependent.birthDate
+                ? moment(dependent.birthDate, 'DD/MM/YYYY')
+                : null,
+              relationship: dependent.relationship,
+              proofFile: dependent.proofFile || [],
+            }))
           : initialValues.dependents,
-      });
+      };
+      
+      console.log('Form values to set:', formValues); // Debug
+      form.setFieldsValue(formValues);
     } else {
       form.setFieldsValue(initialValues);
     }

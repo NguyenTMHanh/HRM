@@ -4,7 +4,7 @@ import moment from "moment";
 import axios from "axios";
 import debounce from "lodash/debounce";
 
-const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) => {
+const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
@@ -79,17 +79,8 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
         params: { employeeCode, rankName },
       });
       setManagers(response.data);
-      // Get current managedBy value
-      const currentManagedBy = form.getFieldValue("managedBy");
-      // Only reset managedBy if the current value is not in the new managers list
-      if (
-        currentManagedBy &&
-        !response.data.some(
-          (manager) =>
-            `${manager.employeeCode} - ${manager.employeeName}` ===
-            currentManagedBy
-        )
-      ) {
+      // Only clear managedBy if it's not from initialData
+      if (!initialData?.managedBy) {
         form.setFieldsValue({ managedBy: undefined });
       }
     } catch (err) {
@@ -98,8 +89,9 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
       setManagers([]);
       form.setFieldsValue({ managedBy: undefined });
     }
-  }, [form]);
+  }, [form, initialData?.managedBy]);
 
+  // Initial fetch for all data
   useEffect(() => {
     Promise.all([
       fetchDepartments(),
@@ -110,6 +102,13 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
       fetchWorkModes(),
     ]);
   }, [fetchDepartments, fetchPositions, fetchJobTitles, fetchRanks, fetchBranches, fetchWorkModes]);
+
+  // Fetch managers when component mounts with initialData
+  useEffect(() => {
+    if (initialData?.employeeCode && initialData?.level) {
+      fetchManagers(initialData.employeeCode, initialData.level);
+    }
+  }, [initialData?.employeeCode, initialData?.level, fetchManagers]);
 
   const selectedEmployee = Form.useWatch("fullName", form);
   const selectedRank = Form.useWatch("level", form);
@@ -127,15 +126,9 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
     [fetchManagers, form]
   );
 
+  // Handle changes in employee selection or rank
   useEffect(() => {
-    if (isModalFooter && initialData?.employeeCode) {
-      // Trong chế độ modal, fetch managers với employeeCode từ initialData và selectedRank hoặc initialData.level
-      const rankToUse = selectedRank || initialData.level;
-      if (rankToUse) {
-        fetchManagers(initialData.employeeCode, rankToUse);
-      }
-    } else if (selectedEmployee && typeof selectedEmployee === "string") {
-      // Trong chế độ thông thường, fetch managers với selectedEmployee và selectedRank
+    if (selectedEmployee && typeof selectedEmployee === "string") {
       const employeeCode = selectedEmployee.split(" - ")[0];
       debouncedFetch(employeeCode, selectedRank);
     } else {
@@ -145,7 +138,21 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
     return () => {
       debouncedFetch.cancel();
     };
-  }, [selectedEmployee, selectedRank, debouncedFetch, isModalFooter, initialData, fetchManagers]);
+  }, [selectedEmployee, selectedRank, debouncedFetch]);
+
+  // Handle rank change - clear managedBy when rank changes
+  const handleRankChange = (value) => {
+    form.setFieldsValue({ level: value, managedBy: undefined });
+    
+    // Get current employee code
+    const currentEmployee = form.getFieldValue("fullName");
+    if (currentEmployee && typeof currentEmployee === "string") {
+      const employeeCode = currentEmployee.split(" - ")[0];
+      if (employeeCode && value) {
+        fetchManagers(employeeCode, value);
+      }
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -278,7 +285,12 @@ const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) =>
               name="level"
               rules={[{ required: true, message: "Vui lòng chọn cấp bậc!" }]}
             >
-              <Select placeholder="Chọn cấp bậc">{rankOptions}</Select>
+              <Select 
+                placeholder="Chọn cấp bậc"
+                onChange={handleRankChange}
+              >
+                {rankOptions}
+              </Select>
             </Form.Item>
           </Col>
           <Col xs={24} sm={6}>

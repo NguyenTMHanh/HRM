@@ -329,7 +329,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
               item={{
                 key: "2",
                 header: "Thông tin công việc",
-                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} isModalFooter={isModalFooter} />,
+                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
               }}
             />
           </div>

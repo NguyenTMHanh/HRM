@@ -31,7 +31,7 @@
   padding: 8px 40px 8px 12px;
   border: 1px solid #ccc;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .search-button {
@@ -54,13 +54,13 @@
 .items-per-page {
   display: flex;
   align-items: center;
-  font-size: 14px;
+  font-size: 0.875rem;
   gap: 8px;
 }
 
 .items-per-page select {
   padding: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -71,7 +71,7 @@
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -262,7 +262,7 @@ td.group-cell {
 
 .branch-filter select {
   padding: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -275,7 +275,7 @@ td.group-cell {
 
 .department-filter select {
   padding: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   border: 1px solid #ccc;
   border-radius: 4px;
 }

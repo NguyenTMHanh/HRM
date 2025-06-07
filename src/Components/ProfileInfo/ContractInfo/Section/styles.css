@@ -8,13 +8,13 @@
   }
   
   .info-label {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 400;
     color: #8c8c8c;
   }
   
   .info-value {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 500;
     color: #141414;
   }
@@ -25,5 +25,5 @@
   }
 
   .custom-allowance-table .ant-table-cell {
-    font-size: 1rem;
+    font-size: 0.875rem;
   }

@@ -171,7 +171,7 @@ const PermissionSelector = ({ form, isViewMode }) => {
 
       <div key={allModule.id} style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <Text strong style={{ fontSize: 16, flex: 1 }}>
+          <Text strong style={{ fontSize: '0.875rem', flex: 1 }}>
             {allModule.name}
           </Text>
         </div>
@@ -205,7 +205,7 @@ const PermissionSelector = ({ form, isViewMode }) => {
         return (
           <div key={module.id} style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-              <Text strong style={{ fontSize: 16, flex: 1 }}>
+              <Text strong style={{ fontSize: '0.875rem', flex: 1 }}>
                 {module.name}
               </Text>
               {!isViewMode && (

@@ -20,7 +20,7 @@ const UploadBox = styled.div`
   background-color: #e6f0fa;
   text-align: center;
   color: #666;
-  font-size: 1rem;
+  font-size: 0.875rem;
   transition: all 0.3s;
 
   &:hover {
@@ -47,7 +47,7 @@ const Bar = styled.div`
 
 const Text = styled.div`
   margin-top: 10px;
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #666;
 `;
 

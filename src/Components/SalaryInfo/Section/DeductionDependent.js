@@ -19,7 +19,7 @@ const DeductionDependent = ({ dependents = [] }) => {
   ];
 
   return (
-    <div className="info-display" style={{ fontSize: '1rem !important' }}>
+    <div className="info-display" style={{ fontSize: '0.875rem !important' }}>
       <Table
         columns={columns}
         dataSource={dependents.map((item, index) => ({ ...item, key: index }))}

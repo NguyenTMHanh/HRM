@@ -214,7 +214,7 @@ function PersonelInfoProfile() {
   if (!data && !loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
-        <div style={{ fontSize: '16px', color: '#666' }}>
+        <div style={{ fontSize: '0.875rem', color: '#666' }}>
           Chưa có thông tin nhân sự. Vui lòng tạo hồ sơ nhân sự trước.
         </div>
       </div>

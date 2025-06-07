@@ -184,7 +184,13 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
 
   useEffect(() => {
     if (initialData) {
+      const fullName = initialData.employeeCode && initialData.fullName
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        : null;
       form.setFieldsValue({
+        fullName,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        gender: initialData.gender,
         contractId: initialData.contractId,
         contractType: initialData.contractType,
         startDate: initialData.startDate
@@ -201,7 +207,6 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
         standardWorkingDays: initialData.standardWorkingDays,
         basicSalary: initialData.basicSalary,
         allowances: initialData.allowances || initialValues.allowances,
-        fullName: initialData.fullName,
       });
     } else {
       form.setFieldsValue(initialValues);
@@ -252,7 +257,7 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
           moneyAllowance: parseNumber(allowance.amount),
         })),
       };
-      
+
 
       const response = await axios.post('/api/Employee/CreateContract', dataToSend);
 
@@ -312,7 +317,7 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
             message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
             break;
         }
-      }else {
+      } else {
         console.error('Network error:', err.message);
         message.error('Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng!');
       }

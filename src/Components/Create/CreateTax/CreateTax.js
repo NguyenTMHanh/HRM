@@ -58,27 +58,28 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
 
   useEffect(() => {
     if (initialData) {
+      const fullName = initialData.employeeCode && initialData.fullName
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        : null;
       form.setFieldsValue({
+        fullName,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        gender: initialData.gender,
         hasTax: initialData.hasTaxCode || initialValues.hasTax,
         taxCode: initialData.taxCode || initialValues.taxCode,
-        fullName: initialData.fullName || initialValues.fullName,
-        gender: initialData.gender || initialValues.gender,
-        dateOfBirth: initialData.dateOfBirth
-          ? moment(initialData.dateOfBirth, 'YYYY-MM-DD')
-          : initialValues.dateOfBirth,
         dependents: initialData.dependents
           ? initialData.dependents.map((dependent) => ({
-              registered: dependent.registerDependentStatus,
-              taxCode: dependent.taxCode,
-              fullName: dependent.nameDependent,
-              birthDate: dependent.dayOfBirthDependent
-                ? moment(dependent.dayOfBirthDependent, 'YYYY-MM-DD')
-                : null,
-              relationship: dependent.relationship,
-              proofFile: dependent.evidencePath
-                ? [{ uid: `-${Math.random().toString(36).substr(2, 9)}`, name: dependent.evidencePath, status: 'done' }]
-                : [],
-            }))
+            registered: dependent.registerDependentStatus,
+            taxCode: dependent.taxCode,
+            fullName: dependent.nameDependent,
+            birthDate: dependent.dayOfBirthDependent
+              ? moment(dependent.dayOfBirthDependent, 'YYYY-MM-DD')
+              : null,
+            relationship: dependent.relationship,
+            proofFile: dependent.evidencePath
+              ? [{ uid: `-${Math.random().toString(36).substr(2, 9)}`, name: dependent.evidencePath, status: 'done' }]
+              : [],
+          }))
           : initialValues.dependents,
       });
     } else {
@@ -95,14 +96,14 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   };
 
   const handleSave = async () => {
-  try {
-    const formData = await form.validateFields();
+    try {
+      const formData = await form.validateFields();
 
-    const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
-    const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
+      const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
+      const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-    const processedDependents = formData.dependents
-      ? formData.dependents.map((dependent) => ({
+      const processedDependents = formData.dependents
+        ? formData.dependents.map((dependent) => ({
           registerDependentStatus: dependent.registered || '',
           taxCode: dependent.taxCode || '',
           nameDependent: dependent.fullName || '',
@@ -110,33 +111,33 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
           relationship: dependent.relationship || '',
           evidencePath: dependent.proofFile || '', // Use file ID directly
         }))
-      : [];
+        : [];
 
-    const dataToSend = {
-      employeeCode: employeeCode || '',
-      nameEmployee: nameEmployee || '',
-      gender: formData.gender || '',
-      dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
-      hasTaxCode: formData.hasTax || false,
-      taxCode: formData.taxCode || '',
-      dependents: processedDependents,
-    };
+      const dataToSend = {
+        employeeCode: employeeCode || '',
+        nameEmployee: nameEmployee || '',
+        gender: formData.gender || '',
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+        hasTaxCode: formData.hasTax || false,
+        taxCode: formData.taxCode || '',
+        dependents: processedDependents,
+      };
 
-    console.log("Data send: ", dataToSend);
-    const response = await axios.post('/api/Employee/CreateTax', dataToSend);
+      console.log("Data send: ", dataToSend);
+      const response = await axios.post('/api/Employee/CreateTax', dataToSend);
 
-    if (response.status === 200 && response.data.code === 0) {
-      message.success('Tạo mới thông tin thuế thành công!');
-      setIsSavedSuccessfully(true);
-      form.resetFields();
-      fetchEmployees();
-      if (typeof onSave === 'function') {
-        onSave(dataToSend);
+      if (response.status === 200 && response.data.code === 0) {
+        message.success('Tạo mới thông tin thuế thành công!');
+        setIsSavedSuccessfully(true);
+        form.resetFields();
+        fetchEmployees();
+        if (typeof onSave === 'function') {
+          onSave(dataToSend);
+        }
+      } else {
+        message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
       }
-    } else {
-      message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
-    }
-  } catch (err) {
+    } catch (err) {
       if (err.errorFields) {
         message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
         return;

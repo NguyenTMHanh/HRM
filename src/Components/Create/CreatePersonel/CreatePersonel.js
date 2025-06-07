@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Collapse from "../../../Shared/Collapse/Collapse";
 import WorkInfo from "./Section/WorkInfo";
 import AccountInfo from "./Section/AccountInfo";
-import BasicInfo from "./Section/BasicInfo"
+import BasicInfo from "./Section/BasicInfo";
 import FooterBar from "../../Footer/Footer";
 import moment from "moment";
 import "./styles.css";
@@ -17,7 +17,6 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Only set Content-Type for non-FormData requests
     if (!(config.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json";
     }
@@ -30,7 +29,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
-  const [avatarId, setAvatarId] = useState(null); // Store uploaded avatar ID
+  const [avatarId, setAvatarId] = useState(null);
   const [breakTime, setBreakTime] = useState("");
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +82,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
 
   const initialValues = {
     joinDate: moment(),
-    fullName: null, // Will be set after fetching employees
+    fullName: null,
   };
 
   useEffect(() => {
@@ -92,8 +91,13 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
 
   useEffect(() => {
     if (initialData) {
+      // Ensure fullName is in the format "employeeCode - employeeName"
+      const fullName = initialData.employeeCode && initialData.fullName
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        : null;
+
       form.setFieldsValue({
-        fullName: initialData.fullName,
+        fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
         gender: initialData.gender,
         username: initialData.username,
@@ -107,16 +111,14 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         workLocation: initialData.workLocation,
         workMode: initialData.workMode,
         lunchBreak: initialData.lunchBreak,
-        avatar: initialData.avatar,
+        avatar: initialData.avatarUrl || initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
-      
-      // Set avatar data if exists
-      if (initialData.avatar) {
-        setAvatarImage(initialData.avatar);
-        // If avatar is already an ID, use it. Otherwise, it might be a URL or base64
-        if (typeof initialData.avatar === 'string' && initialData.avatar.length <= 50) {
-          setAvatarId(initialData.avatar);
+
+      if (initialData.avatarUrl || initialData.avatar) {
+        setAvatarImage(initialData.avatarUrl || initialData.avatar);
+        if (typeof (initialData.avatarUrl || initialData.avatar) === 'string' && (initialData.avatarUrl || initialData.avatar).length <= 50) {
+          setAvatarId(initialData.avatarUrl || initialData.avatar);
         }
       }
     } else {
@@ -134,7 +136,6 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
     setIsSavedSuccessfully(false);
   };
 
-  // Handle avatar upload callback
   const handleAvatarUpload = useCallback((uploadedAvatarId) => {
     setAvatarId(uploadedAvatarId);
   }, []);
@@ -169,8 +170,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         branchName: formData.workLocation,
         jobTypeName: formData.workMode,
         breakLunch: parseBreakLunch(breakTime || formData.lunchBreak),
-        // Use avatar ID instead of image data
-        avatarPath: avatarId || "", // This will be the ID returned from upload API
+        avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
 

@@ -118,9 +118,16 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
 
   useEffect(() => {
     if (initialData) {
+      const fullName = initialData.employeeCode && initialData.fullName
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        : null;
       const bhxhCodeFromBHYT = getBHXHCodeFromBHYT(initialData.bhytCode);
       setBhxhCode(initialData.bhxhCode || bhxhCodeFromBHYT);
+
       form.setFieldsValue({
+        fullName,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        gender: initialData.gender,
         bhytCode: initialData.bhytCode || initialValues.bhytCode,
         bhytRate: initialData.bhytRate || initialValues.bhytRate,
         registeredHospital: initialData.registeredHospital,
@@ -141,7 +148,6 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
         bhEndDate: initialData.bhEndDate
           ? moment(initialData.bhEndDate, 'DD/MM/YYYY')
           : initialValues.bhEndDate,
-        fullName: initialData.fullName,
       });
     } else {
       form.setFieldsValue(initialValues);
@@ -189,7 +195,7 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
       const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
       const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-      
+
       // Phân tích tỷ lệ bảo hiểm
       const bhytRates = parseRate(formData.bhytRate);
       const bhxhRates = parseRate(formData.bhxhRate);
@@ -204,7 +210,7 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
         rateBHYTEmpt: bhytRates.empRate,
         rateBHYTBussiness: bhytRates.businessRate,
         registerMedical: formData.registeredHospital || '',
-        dateStartParticipateBHYT: formData.bhytStartDate ? formData.bhytStartDate.toISOString() : null,       
+        dateStartParticipateBHYT: formData.bhytStartDate ? formData.bhytStartDate.toISOString() : null,
         hasBHXH: formData.hasJoined || false,
         codeBHXH: formData.bhxhCode || '',
         rateBHXHEmpt: bhxhRates.empRate,
@@ -212,9 +218,9 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
         dateStartParticipateBHXH: formData.bhxhStartDate ? formData.bhxhStartDate.toISOString() : null,
         rateBHTNEmpt: bhtnRates.empRate,
         rateBHTNBussiness: bhtnRates.businessRate,
-        dateStartParticipateBHTN: formData.bhtnStartDate ? formData.bhtnStartDate.toISOString() : null,            
+        dateStartParticipateBHTN: formData.bhtnStartDate ? formData.bhtnStartDate.toISOString() : null,
         insuranceStatus: formData.bhStatus || '',
-        dateEndParticipateInsurance: formData.bhEndDate ? formData.bhEndDate.toISOString() : null,                  
+        dateEndParticipateInsurance: formData.bhEndDate ? formData.bhEndDate.toISOString() : null,
       };
 
 

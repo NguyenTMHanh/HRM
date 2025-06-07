@@ -52,13 +52,9 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
   );
 
   useEffect(() => {
-    if (selectedEmployee && typeof selectedEmployee === "string") {
-      const employeeCode = selectedEmployee.split(" - ")[0];
-      debouncedFetch(employeeCode);
-    } else {
-      debouncedFetch(null);
-    }
-
+    // Extract employeeCode from selectedEmployee (format: "employeeCode - employeeName")
+    const employeeCode = selectedEmployee ? selectedEmployee.split(" - ")[0] : null;
+    debouncedFetch(employeeCode);
     return () => {
       debouncedFetch.cancel();
     };
@@ -104,10 +100,7 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>
-            <Form.Item
-              label="Ngày sinh"
-              name="dateOfBirth"
-            >
+            <Form.Item label="Ngày sinh" name="dateOfBirth">
               <DatePicker
                 format="DD/MM/YYYY"
                 style={{ width: "100%" }}

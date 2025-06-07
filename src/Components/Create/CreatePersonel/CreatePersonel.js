@@ -25,7 +25,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
+function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
@@ -130,10 +130,15 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
   }, [initialData, form, breakTime]);
 
   const handleCancel = () => {
-    form.resetFields();
-    setAvatarImage(null);
-    setAvatarId(null);
-    setIsSavedSuccessfully(false);
+    if (typeof onCancel === "function") {
+      onCancel();
+    }
+    else {
+      form.resetFields();
+      setAvatarImage(null);
+      setAvatarId(null);
+      setIsSavedSuccessfully(false);
+    }
   };
 
   const handleAvatarUpload = useCallback((uploadedAvatarId) => {
@@ -353,7 +358,7 @@ function CreatePersonel({ initialData, onSave, isModalFooter = false }) {
         onCancel={handleCancel}
         onNext={handleNext}
         onBack={handleBack}
-        showNext={true}
+        showNext={!isModalFooter} 
         showBack={!isModalFooter}
         showCancel={true}
         showSave={true}

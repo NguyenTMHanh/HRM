@@ -31,7 +31,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateContract({ initialData, onSave, isModalFooter = false }) {
+function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -214,8 +214,13 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
   }, [initialData, form]);
 
   const handleCancel = () => {
-    form.resetFields();
-    setIsSavedSuccessfully(false);
+    if (typeof onCancel === "function") {
+      onCancel();
+    } else {
+      form.resetFields();
+      setIsSavedSuccessfully(false);
+    }
+
   };
 
   const parseNumber = (value) => {
@@ -381,7 +386,7 @@ function CreateContract({ initialData, onSave, isModalFooter = false }) {
         onCancel={handleCancel}
         onNext={handleNext}
         onBack={handleBack}
-        showNext={true}
+        showNext={!isModalFooter} 
         showBack={!isModalFooter}
         showCancel={true}
         showSave={true}

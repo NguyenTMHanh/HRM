@@ -88,10 +88,12 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   }, [initialData, form, initialValues]);
 
   const handleCancel = () => {
-    form.resetFields();
-    setIsSavedSuccessfully(false);
     if (typeof onCancel === 'function') {
       onCancel();
+    }
+    else {
+      form.resetFields();
+      setIsSavedSuccessfully(false);
     }
   };
 

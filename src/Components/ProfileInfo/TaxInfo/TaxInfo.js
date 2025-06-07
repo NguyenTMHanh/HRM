@@ -284,6 +284,7 @@ function TaxInfoProfile() {
             key={formKey}
             initialData={data}
             onSave={handleSave}
+            onCancel={handleModalClose}
             isModalFooter={true}
           />
         </Modal>

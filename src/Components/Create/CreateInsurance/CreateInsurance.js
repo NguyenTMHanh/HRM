@@ -27,7 +27,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
+function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [bhxhCode, setBhxhCode] = useState('');
@@ -172,8 +172,13 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
   };
 
   const handleCancel = () => {
+        if (typeof onCancel === "function") {
+      onCancel(); 
+    }
+    else{
     form.resetFields();
     setIsSavedSuccessfully(false);
+    }
   };
 
   const parseRate = (rateString) => {
@@ -365,7 +370,7 @@ function CreateInsurance({ initialData, onSave, isModalFooter = false }) {
         onCancel={handleCancel}
         onNext={handleNext}
         onBack={handleBack}
-        showNext={true}
+        showNext={!isModalFooter}
         showBack={!isModalFooter}
         showCancel={true}
         showSave={true}

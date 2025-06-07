@@ -314,6 +314,7 @@ function ContractInfoProfile() {
             key={formKey}
             initialData={data}
             onSave={handleSave}
+            onCancel={handleModalClose}
             isModalFooter={true}
           />
         </Modal>

@@ -29,7 +29,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
+function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -109,12 +109,17 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
   }, [initialData, form]);
 
   const handleCancel = () => {
-    form.resetFields();
-    setFrontImage(null);
-    setBackImage(null);
-    setFrontImageId(null);
-    setBackImageId(null);
-    setIsSavedSuccessfully(false);
+    if (typeof onCancel === "function") {
+      onCancel(); 
+    }
+    else {
+      form.resetFields();
+      setFrontImage(null);
+      setBackImage(null);
+      setFrontImageId(null);
+      setBackImageId(null);
+      setIsSavedSuccessfully(false);
+    }
   };
 
   const handleSave = async () => {
@@ -214,24 +219,24 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
                 break;
             }
             break;
-        case 401:
-          message.error("Bạn không có quyền thực hiện hành động này.");
-          break;
-        case 500:
-          message.error("Lỗi server. Vui lòng thử lại sau.");
-          break;
-        default:
-          message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
-          break;
+          case 401:
+            message.error("Bạn không có quyền thực hiện hành động này.");
+            break;
+          case 500:
+            message.error("Lỗi server. Vui lòng thử lại sau.");
+            break;
+          default:
+            message.error(`Lỗi không xác định với mã trạng thái: ${status}`);
+            break;
+        }
+      } else {
+        console.error("Network error:", err.message);
+        message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
       }
-    } else {
-      console.error("Network error:", err.message);
-      message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    } finally {
+      setIsLoading(false);
     }
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleNext = () => {
     if (isSavedSuccessfully) {
@@ -322,7 +327,7 @@ function CreatePersonal({ initialData, onSave, isModalFooter = false }) {
         onSave={handleSave}
         onCancel={handleCancel}
         onNext={handleNext}
-        showNext={true}
+        showNext={!isModalFooter} 
         showCancel={true}
         showSave={true}
         isModalFooter={isModalFooter}

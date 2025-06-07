@@ -4,7 +4,7 @@ import moment from "moment";
 import axios from "axios";
 import debounce from "lodash/debounce";
 
-const BasicInfo = React.memo(({ form, initialData, employees }) => {
+const BasicInfo = React.memo(({ form, initialData, employees, isModalFooter }) => {
   const [managers, setManagers] = useState([]);
 
   const fetchGenderAndBirth = useCallback(async (employeeCode) => {
@@ -95,7 +95,12 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
               name="fullName"
               rules={[{ required: true, message: "Vui lòng chọn nhân viên!" }]}
             >
-              <Select placeholder="Chọn nhân viên">{employeeOptions}</Select>
+              <Select
+                placeholder="Chọn nhân viên"
+                disabled={isModalFooter} // Vô hiệu hóa khi ở chế độ modal
+              >
+                {employeeOptions}
+              </Select>
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>
@@ -104,10 +109,7 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>
-            <Form.Item
-              label="Ngày sinh"
-              name="dateOfBirth"
-            >
+            <Form.Item label="Ngày sinh" name="dateOfBirth">
               <DatePicker
                 format="DD/MM/YYYY"
                 style={{ width: "100%" }}

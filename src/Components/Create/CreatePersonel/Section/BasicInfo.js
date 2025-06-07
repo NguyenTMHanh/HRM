@@ -4,7 +4,7 @@ import moment from "moment";
 import axios from "axios";
 import debounce from "lodash/debounce";
 
-const BasicInfo = React.memo(({ form, initialData, employees }) => {
+const BasicInfo = React.memo(({ form, initialData, employees, isModalFooter }) => {
   const [managers, setManagers] = useState([]);
 
   const fetchGenderAndBirth = useCallback(async (employeeCode) => {
@@ -52,9 +52,13 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
   );
 
   useEffect(() => {
-    // Extract employeeCode from selectedEmployee (format: "employeeCode - employeeName")
-    const employeeCode = selectedEmployee ? selectedEmployee.split(" - ")[0] : null;
-    debouncedFetch(employeeCode);
+    if (selectedEmployee && typeof selectedEmployee === "string") {
+      const employeeCode = selectedEmployee.split(" - ")[0];
+      debouncedFetch(employeeCode);
+    } else {
+      debouncedFetch(null);
+    }
+
     return () => {
       debouncedFetch.cancel();
     };
@@ -91,7 +95,12 @@ const BasicInfo = React.memo(({ form, initialData, employees }) => {
               name="fullName"
               rules={[{ required: true, message: "Vui lòng chọn nhân viên!" }]}
             >
-              <Select placeholder="Chọn nhân viên">{employeeOptions}</Select>
+              <Select
+                placeholder="Chọn nhân viên"
+                disabled={isModalFooter} // Vô hiệu hóa khi ở chế độ modal
+              >
+                {employeeOptions}
+              </Select>
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>

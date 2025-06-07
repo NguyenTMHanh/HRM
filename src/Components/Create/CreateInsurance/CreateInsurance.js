@@ -318,7 +318,7 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
               item={{
                 key: '1',
                 header: 'Thông tin cơ bản',
-                children: <BasicInfo form={form} initialData={initialData} employees={employees} />,
+                children: <BasicInfo form={form} initialData={initialData} employees={employees} isModalFooter={isModalFooter}/>,
               }}
             />
           </div>

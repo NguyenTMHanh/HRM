@@ -95,50 +95,48 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   };
 
   const handleSave = async () => {
-    try {
-      const formData = await form.validateFields();
+  try {
+    const formData = await form.validateFields();
 
-      const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
-      const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
+    const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
+    const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-      const processedDependents = formData.dependents
-        ? formData.dependents.map((dependent) => ({
-            registerDependentStatus: dependent.registered || '',
-            taxCode: dependent.taxCode || '',
-            nameDependent: dependent.fullName || '',
-            dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
-            relationship: dependent.relationship || '',
-            evidencePath: dependent.proofFile && dependent.proofFile.length > 0
-              ? dependent.proofFile[0].name
-              : '',
-          }))
-        : [];
+    const processedDependents = formData.dependents
+      ? formData.dependents.map((dependent) => ({
+          registerDependentStatus: dependent.registered || '',
+          taxCode: dependent.taxCode || '',
+          nameDependent: dependent.fullName || '',
+          dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
+          relationship: dependent.relationship || '',
+          evidencePath: dependent.proofFile || '', // Use file ID directly
+        }))
+      : [];
 
-      const dataToSend = {
-        employeeCode: employeeCode || '',
-        nameEmployee: nameEmployee || '',
-        gender: formData.gender || '',
-        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
-        hasTaxCode: formData.hasTax || false,
-        taxCode: formData.taxCode || '',
-        dependents: processedDependents,
-      };
+    const dataToSend = {
+      employeeCode: employeeCode || '',
+      nameEmployee: nameEmployee || '',
+      gender: formData.gender || '',
+      dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+      hasTaxCode: formData.hasTax || false,
+      taxCode: formData.taxCode || '',
+      dependents: processedDependents,
+    };
 
-      console.log("Data send: ", dataToSend);
-      const response = await axios.post('/api/Employee/CreateTax', dataToSend);
+    console.log("Data send: ", dataToSend);
+    const response = await axios.post('/api/Employee/CreateTax', dataToSend);
 
-      if (response.status === 200 && response.data.code === 0) {
-        message.success('Tạo mới thông tin thuế thành công!');
-        setIsSavedSuccessfully(true);
-        form.resetFields();
-        fetchEmployees(); // Refresh employee list after successful save
-        if (typeof onSave === 'function') {
-          onSave(dataToSend);
-        }
-      } else {
-        message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
+    if (response.status === 200 && response.data.code === 0) {
+      message.success('Tạo mới thông tin thuế thành công!');
+      setIsSavedSuccessfully(true);
+      form.resetFields();
+      fetchEmployees();
+      if (typeof onSave === 'function') {
+        onSave(dataToSend);
       }
-    } catch (err) {
+    } else {
+      message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
+    }
+  } catch (err) {
       if (err.errorFields) {
         message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
         return;

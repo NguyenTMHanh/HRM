@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Input, Button, Row, Col, Select, Form, DatePicker, Upload } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Input, Button, Row, Col, Select, Form, DatePicker, Upload, message } from "antd";
+import { UploadOutlined , LoadingOutlined} from "@ant-design/icons";
 import styled from "styled-components";
 import moment from "moment";
+import axios from "axios";
 
 const DeleteButton = styled(Button)`
   background-color: #f5222d;
@@ -43,7 +44,6 @@ const AddButton = styled(Button)`
   }
 `;
 
-// Styled component cho Upload
 const StyledUpload = styled(Upload)`
   display: block;
 
@@ -65,32 +65,114 @@ const Dependent = ({ form }) => {
     { label: "Khác", value: "Khác" },
   ];
 
-  // State để lưu fileList cho từng mục trong Form.List
+  // State to store fileList and file IDs for each dependent
   const [fileLists, setFileLists] = useState({});
+  const [fileIds, setFileIds] = useState({}); // Store file IDs
+  const [uploadLoading, setUploadLoading] = useState({}); // Track loading state per index
 
-  // Hàm xử lý sự kiện upload
-  const handleUploadChange = (index, info) => {
-    const newFileLists = { ...fileLists, [index]: info.fileList };
-    setFileLists(newFileLists);
-    form.setFieldsValue({
-      dependents: form
-        .getFieldValue("dependents")
-        .map((dep, idx) =>
-          idx === index ? { ...dep, proofFile: info.fileList } : dep
-        ),
-    });
+  // Upload file to server
+  const uploadProofFile = async (file, index) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploadLoading((prev) => ({ ...prev, [index]: true }));
+
+      // Create a new axios instance for upload
+      const uploadAxios = axios.create({
+        baseURL: axios.defaults.baseURL,
+      });
+
+      const token = localStorage.getItem("accessToken");
+      const uploadConfig = {
+        headers: {},
+      };
+
+      if (token) {
+        uploadConfig.headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await uploadAxios.post("/api/FileUpload/UploadFile", formData, uploadConfig);
+
+      if (response.status === 200) {
+        const { id, fileName } = response.data;
+        return { id, fileName };
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Upload proof file error:", error);
+      message.error(error.response?.data?.message || "Tải hồ sơ minh chứng thất bại!");
+      throw error;
+    } finally {
+      setUploadLoading((prev) => ({ ...prev, [index]: false }));
+    }
   };
 
-  // Đồng bộ fileLists với Form.List khi fields thay đổi
+  // Handle file upload change
+  const handleUploadChange = async (index, info) => {
+    const file = info.file;
+    const newFileLists = { ...fileLists, [index]: [file] };
+    setFileLists(newFileLists);
+
+    if (file.status !== "removed") {
+      try {
+        const { id, fileName } = await uploadProofFile(file, index);
+        // Update file ID in state
+        setFileIds((prev) => ({ ...prev, [index]: id }));
+
+        // Update form field with file ID
+        const currentDependents = form.getFieldValue("dependents") || [];
+        currentDependents[index] = {
+          ...currentDependents[index],
+          proofFile: id, // Store file ID instead of fileList
+          fileName, // Store file name for display
+        };
+        form.setFieldsValue({ dependents: currentDependents });
+
+        message.success("Tải hồ sơ minh chứng thành công!");
+      } catch (error) {
+        // Remove file from fileList if upload fails
+        setFileLists((prev) => ({ ...prev, [index]: [] }));
+      }
+    } else {
+      // Handle file removal
+      setFileLists((prev) => ({ ...prev, [index]: [] }));
+      setFileIds((prev) => {
+        const newFileIds = { ...prev };
+        delete newFileIds[index];
+        return newFileIds;
+      });
+
+      const currentDependents = form.getFieldValue("dependents") || [];
+      currentDependents[index] = {
+        ...currentDependents[index],
+        proofFile: null,
+        fileName: null,
+      };
+      form.setFieldsValue({ dependents: currentDependents });
+    }
+  };
+
+  // Sync fileLists and fileIds with Form.List when fields change
   useEffect(() => {
     const currentDependents = form.getFieldValue("dependents") || [];
     const newFileLists = {};
+    const newFileIds = {};
     currentDependents.forEach((dep, index) => {
       if (dep && dep.proofFile) {
-        newFileLists[index] = dep.proofFile;
+        newFileIds[index] = dep.proofFile;
+        newFileLists[index] = [
+          {
+            uid: `-${index}`,
+            name: dep.fileName || "File",
+            status: "done",
+          },
+        ];
       }
     });
     setFileLists(newFileLists);
+    setFileIds(newFileIds);
   }, [form.getFieldValue("dependents")]);
 
   return (
@@ -132,9 +214,7 @@ const Dependent = ({ form }) => {
                   {...restField}
                   label="Họ và tên"
                   name={[name, "fullName"]}
-                  rules={[
-                    { required: true, message: "Vui lòng nhập họ tên!" },
-                  ]}
+                  rules={[{ required: true, message: "Vui lòng nhập họ tên!" }]}
                 >
                   <Input placeholder="Nhập họ và tên" />
                 </Form.Item>
@@ -175,18 +255,21 @@ const Dependent = ({ form }) => {
                   {...restField}
                   label="Hồ sơ minh chứng"
                   name={[name, "proofFile"]}
-                  valuePropName="fileList"
                   rules={[{ required: true, message: "Vui lòng tải lên hồ sơ minh chứng!" }]}
                 >
                   <StyledUpload
-                    beforeUpload={() => false}
+                    beforeUpload={() => false} // Prevent auto-upload
                     showUploadList={false}
                     maxCount={1}
                     fileList={fileLists[index] || []}
                     onChange={(info) => handleUploadChange(index, info)}
+                    disabled={uploadLoading[index]}
                   >
-                    <Button icon={<UploadOutlined />}>
-                      {(fileLists[index] && fileLists[index].length > 0)
+                    <Button
+                      icon={uploadLoading[index] ? <LoadingOutlined /> : <UploadOutlined />}
+                      loading={uploadLoading[index]}
+                    >
+                      {fileLists[index] && fileLists[index].length > 0
                         ? fileLists[index][0].name
                         : "Tải lên"}
                     </Button>

@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Spin } from 'antd';
+import { Modal, Spin, message } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import ContractInfo from './Section/ContractInfo';
 import AllowanceInfo from './Section/AllowanceInfo';
 import History from '../../../Shared/History/History';
 import FooterBar from '../../Footer/Footer';
-import CreateContract from '../../Create/CreateContract/CreateContract'
+import CreateContract from '../../Create/CreateContract/CreateContract';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './styles.css';
+
+// Axios configuration (giả sử đã được cấu hình toàn cục như trong PersonelInfoProfile)
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 function ContractInfoProfile() {
   const [data, setData] = useState(null);
@@ -16,39 +33,137 @@ function ContractInfoProfile() {
   const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMockData = async () => {
-      try {
-        setLoading(true);
-        const mockData = {
-          contractId: 'HDLĐ-2025-001',
-          contractType: 'HĐLĐ xác định thời hạn',
-          startDate: '03/02/2025',
-          endDate: '01/01/2026',
-          status: 'Còn hiệu lực',
-          hourlyWage: '25 000 VNĐ',
-          workHoursPerDay: '8',
-          position: 'Nhân viên phát triển phần mềm',
-          salaryCoefficient: '1.5',
-          standardWorkingDays: '26',
-          basicSalary: '7 500 000 VNĐ',
-          allowances: [
-            { name: 'Phụ cấp ăn trưa', amount: '1 000 000 VNĐ' },
-            { name: 'Phụ cấp đi lại', amount: '2 000 000 VNĐ' },
-            { name: 'Phụ cấp điện thoại', amount: '3 000 000 VNĐ' },
-          ],
-        };
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setData(mockData);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching mock data:', err);
-        setLoading(false);
+  // Hàm lấy employeeCode từ userId (tái sử dụng từ PersonelInfoProfile)
+  const getEmployeeCode = async (userId) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
+      if (response.data.code === 0) {
+        return response.data.data; // employeeCode
+      } else {
+        throw new Error(response.data.message || 'Failed to get employee code');
       }
-    };
+    } catch (error) {
+      console.error('Error getting employee code:', error);
+      throw error;
+    }
+  };
 
-    fetchMockData();
+  // Hàm gọi API lấy thông tin hợp đồng
+  const getContractInformation = async (employeeCode) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetContractInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to get contract information');
+      }
+    } catch (error) {
+      console.error('Error getting contract information:', error);
+      throw error;
+    }
+  };
+
+  // Hàm format ngày tháng
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Hàm format tiền tệ VNĐ
+  const formatCurrency = (amount) => {
+    if (!amount) return '0 VNĐ';
+    return `${amount.toLocaleString('vi-VN')} VNĐ`;
+  };
+
+  // Hàm format loại hợp đồng sang tiếng Việt
+  const formatContractType = (type) => {
+    if (!type) return '';
+    switch (type) {
+      case 'NoLimitedContract':
+        return 'HĐLĐ không xác định thời hạn';
+      case 'FixedTermContract':
+        return 'HĐLĐ xác định thời hạn';
+      default:
+        return type;
+    }
+  };
+
+  // Hàm format trạng thái hợp đồng
+  const formatContractStatus = (status) => {
+    if (!status) return '';
+    return status.toLowerCase() === 'valid' ? 'Còn hiệu lực' : 'Hết hiệu lực';
+  };
+
+  // Hàm ánh xạ dữ liệu API sang định dạng component
+  const mapApiDataToComponentFormat = (apiData) => {
+    return {
+      contractId: apiData.codeContract || '',
+      contractType: formatContractType(apiData.typeContract),
+      startDate: formatDate(apiData.startContract),
+      endDate: formatDate(apiData.endContract),
+      status: formatContractStatus(apiData.statusContract),
+      hourlyWage: formatCurrency(apiData.hourlySalary),
+      workHoursPerDay: apiData.hourWorkStandard ? `${apiData.hourWorkStandard} giờ` : '',
+      position: apiData.namePosition || '',
+      salaryCoefficient: apiData.coefficientSalary?.toString() || '',
+      standardWorkingDays: apiData.dayWorkStandard?.toString() || '',
+      basicSalary: formatCurrency(apiData.basicSalary),
+      allowances: apiData.allowances?.map(allowance => ({
+        name: allowance.nameAllowance,
+        amount: formatCurrency(allowance.moneyAllowance),
+      })) || [],
+    };
+  };
+
+  // Hàm chính để lấy dữ liệu hợp đồng
+  const fetchContractData = async () => {
+    try {
+      setLoading(true);
+
+      // Lấy userId từ localStorage
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        return;
+      }
+
+      // Bước 1: Lấy employeeCode từ userId
+      const employeeCode = await getEmployeeCode(userId);
+
+      // Bước 2: Lấy thông tin hợp đồng bằng employeeCode
+      const contractInfo = await getContractInformation(employeeCode);
+
+      // Bước 3: Ánh xạ dữ liệu API sang định dạng component
+      const mappedData = mapApiDataToComponentFormat(contractInfo);
+
+      setData(mappedData);
+    } catch (error) {
+      console.error('Error fetching contract data:', error);
+
+      // Xử lý lỗi cụ thể
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        const errorCode = errorData?.code;
+
+        switch (errorCode) {
+          case 1022: // CustomCodes.EmployeeNotFound
+            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin hợp đồng.');
+            break;
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContractData();
   }, []);
 
   const handleNext = () => {
@@ -70,24 +185,25 @@ function ContractInfoProfile() {
 
   const handleSave = (updatedData) => {
     if (updatedData) {
-      setData(updatedData);
+      // Làm mới dữ liệu sau khi lưu
+      fetchContractData();
     }
     setIsModalVisible(false);
   };
 
   const historyItems = [
     {
-      title: 'Cập nhật thông tin cá nhân',
+      title: 'Cập nhật thông tin hợp đồng',
       source: 'Người dùng',
       date: '10/04/2025',
     },
     {
-      title: 'Thay đổi thông tin liên hệ',
+      title: 'Thay đổi phụ cấp',
       source: 'Người dùng',
       date: '09/04/2025',
     },
     {
-      title: 'Thêm tài khoản ngân hàng',
+      title: 'Thêm thông tin hợp đồng',
       source: 'Người dùng',
       date: '08/04/2025',
     },
@@ -96,7 +212,18 @@ function ContractInfoProfile() {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <Spin />
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải thông tin hợp đồng...</div>
+      </div>
+    );
+  }
+
+  if (!data && !loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ fontSize: '16px', color: '#666' }}>
+          Chưa có thông tin hợp đồng. Vui lòng tạo hợp đồng trước.
+        </div>
       </div>
     );
   }

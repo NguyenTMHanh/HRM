@@ -78,8 +78,8 @@ function PersonelInfoProfile() {
   // Function to format gender from English to Vietnamese
   const formatGender = (gender) => {
     if (!gender) return '';
-    return gender.toLowerCase() === 'female' ? 'Nữ' : 
-           gender.toLowerCase() === 'male' ? 'Nam' : gender;
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
   };
 
   // Function to format lunch break hours
@@ -91,18 +91,18 @@ function PersonelInfoProfile() {
   // Function to map API data to component format
   const mapApiDataToComponentFormat = (apiData) => {
     return {
-      employeeCode: apiData.employeeCode || '',
-      fullName: apiData.nameEmployee || '',
+      employeeCode: apiData.employeeCode || " ",
+      fullName: apiData.nameEmployee || " ",
       gender: formatGender(apiData.gender),
       dateOfBirth: formatDate(apiData.dateOfBirth),
       joinDate: formatDate(apiData.dateJoinCompany),
-      department: apiData.departmentName || '',
-      jobTitle: apiData.jobtitleName || '',
-      level: apiData.rankName || '',
-      position: apiData.positionName || '',
-      managedBy: apiData.managerName || '',
-      workLocation: apiData.branchName || '',
-      workMode: apiData.jobTypeName || '',
+      department: apiData.departmentName || " ",
+      jobTitle: apiData.jobtitleName || " ",
+      level: apiData.rankName || " ",
+      position: apiData.positionName || " ",
+      managedBy: apiData.managerName || " ",
+      workLocation: apiData.branchName || " ",
+      workMode: apiData.jobTypeName || " ",
       lunchBreak: formatLunchBreak(apiData.breakLunch),
       avatarUrl: getImageUrl(apiData.avatarPath),
     };
@@ -112,7 +112,7 @@ function PersonelInfoProfile() {
   const fetchPersonelData = async () => {
     try {
       setLoading(true);
-      
+
       // Get userId from localStorage (assuming it's stored after login)
       const userId = localStorage.getItem('userId');
       if (!userId) {
@@ -122,22 +122,22 @@ function PersonelInfoProfile() {
 
       // Step 1: Get employee code from userId
       const employeeCode = await getEmployeeCode(userId);
-      
+
       // Step 2: Get personnel information using employee code
       const personelInfo = await getPersonelInformation(employeeCode);
-      
+
       // Step 3: Map API data to component format
       const mappedData = mapApiDataToComponentFormat(personelInfo);
-      
+
       setData(mappedData);
     } catch (error) {
       console.error('Error fetching personnel data:', error);
-      
+
       // Handle specific error codes
       if (error.response) {
         const { status, data: errorData } = error.response;
         const errorCode = errorData?.code;
-        
+
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
             message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
@@ -225,23 +225,29 @@ function PersonelInfoProfile() {
     <div className="scroll-container">
       <div className="main-content">
         <div className="left-column">
-          <Collapse
-            item={{
-              key: '1',
-              header: 'Thông tin công việc',
-              children: <WorkInfo {...data} />,
-            }}
-          />
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '1',
+                header: 'Thông tin công việc',
+                children: <WorkInfo {...data} />,
+              }}
+            />
+          </div>
+
         </div>
 
         <div className="right-column">
-          <Collapse
-            item={{
-              key: '3',
-              header: 'Lịch sử hoạt động',
-              children: <History historyItems={historyItems} />,
-            }}
-          />
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '3',
+                header: 'Lịch sử hoạt động',
+                children: <History historyItems={historyItems} />,
+              }}
+            />
+          </div>
+
         </div>
       </div>
 

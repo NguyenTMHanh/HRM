@@ -43,7 +43,7 @@ const WorkInfo = ({
             <div style={{ marginRight: '60px'}}>
                 <Avatar
                     style={{backgroundColor: '#e6e9f0'}}
-                    size={300}
+                    size={200}
                     src={avatarUrl}
                     icon={<UserOutlined />} 
                 />

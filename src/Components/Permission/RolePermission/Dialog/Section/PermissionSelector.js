@@ -32,7 +32,7 @@ const limitedModules = [
 ];
 
 const limitedActions = allActions.filter(
-  (action) => action.key === "view" || action.key === "update"
+  (action) => action.key === "update"
 );
 
 const allModule = { id: "allModule", name: "Tất cả module" };

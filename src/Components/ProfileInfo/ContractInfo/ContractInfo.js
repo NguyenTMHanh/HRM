@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './styles.css';
 
-// Axios configuration (giả sử đã được cấu hình toàn cục như trong PersonelInfoProfile)
+// Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
 axios.interceptors.request.use(
   (config) => {
@@ -32,9 +32,23 @@ function ContractInfoProfile() {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [permissions, setPermissions] = useState([]);
   const navigate = useNavigate();
 
-  // Hàm lấy employeeCode từ userId (tái sử dụng từ PersonelInfoProfile)
+  // Fetch permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission check for update action
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'profileContract' && p.actionId === 'update'
+  );
+
+  // Hàm lấy employeeCode từ userId
   const getEmployeeCode = async (userId) => {
     try {
       const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
@@ -89,11 +103,13 @@ function ContractInfoProfile() {
         return type;
     }
   };
+
   const formatGender = (gender) => {
     if (!gender) return '';
     return gender.toLowerCase() === 'female' ? 'Nữ' :
       gender.toLowerCase() === 'male' ? 'Nam' : gender;
   };
+
   // Hàm format trạng thái hợp đồng
   const formatContractStatus = (status) => {
     if (!status) return '';
@@ -183,6 +199,10 @@ function ContractInfoProfile() {
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin hợp đồng.');
+      return;
+    }
     setIsModalVisible(true);
     setFormKey(prev => prev + 1);
   };
@@ -240,7 +260,6 @@ function ContractInfoProfile() {
     <div className="scroll-container">
       <div className="main-content">
         <div className="left-column">
-
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
               <Collapse
@@ -263,7 +282,6 @@ function ContractInfoProfile() {
               />
             </div>
           </div>
-
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
               <Collapse
@@ -297,7 +315,7 @@ function ContractInfoProfile() {
         onNext={handleNext}
         showBack={true}
         onBack={handleBack}
-        showEdit={true}
+        showEdit={canUpdate} // Only show Edit button if user has update permission
         onEdit={handleEdit}
       />
 

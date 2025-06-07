@@ -32,7 +32,18 @@ function PersonelInfoProfile() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
 
+  // Permission check for update action
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'profilePersonel' && p.actionId === 'update'
+  );
   // Function to get employee code from userId (reuse from PersonalInfoProfile)
   const getEmployeeCode = async (userId) => {
     try {
@@ -167,6 +178,10 @@ function PersonelInfoProfile() {
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
+      return;
+    }
     setIsModalVisible(true);
     setFormKey(prev => prev + 1);
   };
@@ -266,7 +281,7 @@ function PersonelInfoProfile() {
         onNext={handleNext}
         showBack={true}
         onBack={handleBack}
-        showEdit={true}
+        showEdit={canUpdate}
         onEdit={handleEdit}
       />
 

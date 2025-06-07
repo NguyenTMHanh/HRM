@@ -35,12 +35,27 @@ function PersonalInfoProfile() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
 
+  // Permission check for update action
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'profilePersonal' && p.actionId === 'update'
+  );
   const handleNext = () => {
     navigate('/infomation/personel');
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin cá nhân.');
+      return;
+    }
     setIsModalVisible(true);
     setFormKey(prev => prev + 1);
   };
@@ -134,7 +149,7 @@ function PersonalInfoProfile() {
   const fetchPersonalData = async () => {
     try {
       setLoading(true);
-      
+
       // Get userId from localStorage (assuming it's stored after login)
       const userId = localStorage.getItem('userId');
       if (!userId) {
@@ -144,22 +159,22 @@ function PersonalInfoProfile() {
 
       // Step 1: Get employee code from userId
       const employeeCode = await getEmployeeCode(userId);
-      
+
       // Step 2: Get personal information using employee code
       const personalInfo = await getPersonalInformation(employeeCode);
-      
+
       // Step 3: Map API data to component format
       const mappedData = mapApiDataToComponentFormat(personalInfo);
-      
+
       setData(mappedData);
     } catch (error) {
       console.error('Error fetching personal data:', error);
-      
+
       // Handle specific error codes
       if (error.response) {
         const { status, data: errorData } = error.response;
         const errorCode = errorData?.code;
-        
+
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
             break;
@@ -281,7 +296,7 @@ function PersonalInfoProfile() {
         </div>
       </div>
 
-      <FooterBar showNext={true} onNext={handleNext} showEdit={true} onEdit={handleEdit} />
+      <FooterBar showNext={true} onNext={handleNext} showEdit={canUpdate} onEdit={handleEdit} />
 
       <div style={{ position: 'relative' }}>
         <Modal

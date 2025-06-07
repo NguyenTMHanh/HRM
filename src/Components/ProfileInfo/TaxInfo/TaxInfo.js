@@ -33,7 +33,18 @@ function TaxInfoProfile() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const navigate = useNavigate();
+  const [permissions, setPermissions] = useState([]);
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
 
+  // Permission check for update action
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'profileTax' && p.actionId === 'update'
+  );
   // Hàm lấy employeeCode từ userId
   const getEmployeeCode = async (userId) => {
     try {
@@ -82,7 +93,7 @@ function TaxInfoProfile() {
       gender: formatGender(apiData.gender),
       dateOfBirth: formatDate(apiData.dateOfBirth),
       hasTax: apiData.hasTaxCode || false,
-      taxCode: apiData.taxCode || '',      
+      taxCode: apiData.taxCode || '',
       dependents: apiData.dependents?.map((dependent) => ({
         registered: dependent.registerDependentStatus || '',
         taxCode: dependent.taxCode || '',
@@ -91,13 +102,13 @@ function TaxInfoProfile() {
         relationship: dependent.relationship || '',
         proofFile: dependent.evidencePath
           ? [
-              {
-                uid: dependent.evidencePath,
-                name: dependent.evidencePath, // File name (will be updated after fetching file)
-                status: 'done',
-                fileId: dependent.evidencePath, // Store file ID for fetching
-              },
-            ]
+            {
+              uid: dependent.evidencePath,
+              name: dependent.evidencePath, // File name (will be updated after fetching file)
+              status: 'done',
+              fileId: dependent.evidencePath, // Store file ID for fetching
+            },
+          ]
           : [],
       })) || [],
     };
@@ -155,6 +166,10 @@ function TaxInfoProfile() {
   };
 
   const handleEdit = () => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin thuế TNCN.');
+      return;
+    }
     setIsModalVisible(true);
     setFormKey((prev) => prev + 1);
   };
@@ -267,7 +282,7 @@ function TaxInfoProfile() {
       <FooterBar
         showBack={true}
         onBack={handleBack}
-        showEdit={true}
+        showEdit={canUpdate}
         onEdit={handleEdit}
       />
 

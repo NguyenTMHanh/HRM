@@ -21,17 +21,17 @@ const ContractInfo = ({
   };
 
   const infoItems = [
-    { label: 'Mã số HĐLĐ', value: contractId || 'N/A' },
-    { label: 'Loại hợp đồng', value: contractType || 'N/A' },
+    { label: 'Mã số HĐLĐ', value: contractId || "" },
+    { label: 'Loại hợp đồng', value: contractType || "" },
     { label: 'Ngày bắt đầu HĐ', value: formatDate(startDate)},
     { label: 'Ngày kết thúc HĐ', value: formatDate(endDate)},
-    { label: 'Tình trạng', value: status || 'N/A' },
-    { label: 'Mức lương/1h', value: hourlyWage || 'N/A' },
-    { label: 'Số giờ làm việc chuẩn/1 ngày', value: workHoursPerDay || 'N/A' },
-    { label: 'Vị trí', value: position || 'N/A' },
-    { label: 'Hệ số lương', value: salaryCoefficient || 'N/A' },
-    { label: 'Ngày công chuẩn', value: standardWorkingDays || 'N/A' },
-    { label: 'Tiền lương cơ bản', value: basicSalary || 'N/A' },
+    { label: 'Tình trạng', value: status || "" },
+    { label: 'Mức lương/1h', value: hourlyWage || "" },
+    { label: 'Số giờ làm việc chuẩn/1 ngày', value: workHoursPerDay || "" },
+    { label: 'Vị trí', value: position || "" },
+    { label: 'Hệ số lương', value: salaryCoefficient || "" },
+    { label: 'Ngày công chuẩn', value: standardWorkingDays || "" },
+    { label: 'Tiền lương cơ bản', value: basicSalary || "" },
   ];
 
   return (

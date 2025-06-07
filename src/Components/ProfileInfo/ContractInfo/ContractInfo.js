@@ -4,6 +4,7 @@ import Collapse from '../../../Shared/Collapse/Collapse';
 import ContractInfo from './Section/ContractInfo';
 import AllowanceInfo from './Section/AllowanceInfo';
 import History from '../../../Shared/History/History';
+import BasicInfo from './Section/BasicInfo';
 import FooterBar from '../../Footer/Footer';
 import CreateContract from '../../Create/CreateContract/CreateContract';
 import { useNavigate } from 'react-router-dom';
@@ -88,7 +89,11 @@ function ContractInfoProfile() {
         return type;
     }
   };
-
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
   // Hàm format trạng thái hợp đồng
   const formatContractStatus = (status) => {
     if (!status) return '';
@@ -98,16 +103,20 @@ function ContractInfoProfile() {
   // Hàm ánh xạ dữ liệu API sang định dạng component
   const mapApiDataToComponentFormat = (apiData) => {
     return {
-      contractId: apiData.codeContract || '',
+      employeeCode: apiData.employeeCode || " ",
+      fullName: apiData.nameEmployee || " ",
+      gender: formatGender(apiData.gender),
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      contractId: apiData.codeContract || " ",
       contractType: formatContractType(apiData.typeContract),
       startDate: formatDate(apiData.startContract),
       endDate: formatDate(apiData.endContract),
       status: formatContractStatus(apiData.statusContract),
       hourlyWage: formatCurrency(apiData.hourlySalary),
-      workHoursPerDay: apiData.hourWorkStandard ? `${apiData.hourWorkStandard} giờ` : '',
-      position: apiData.namePosition || '',
-      salaryCoefficient: apiData.coefficientSalary?.toString() || '',
-      standardWorkingDays: apiData.dayWorkStandard?.toString() || '',
+      workHoursPerDay: apiData.hourWorkStandard ? `${apiData.hourWorkStandard} giờ` : " ",
+      position: apiData.namePosition || " ",
+      salaryCoefficient: apiData.coefficientSalary?.toString() || " ",
+      standardWorkingDays: apiData.dayWorkStandard?.toString() || " ",
       basicSalary: formatCurrency(apiData.basicSalary),
       allowances: apiData.allowances?.map(allowance => ({
         name: allowance.nameAllowance,
@@ -148,7 +157,6 @@ function ContractInfoProfile() {
 
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
-            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
             break;
           default:
             message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin hợp đồng.');
@@ -232,11 +240,23 @@ function ContractInfoProfile() {
     <div className="scroll-container">
       <div className="main-content">
         <div className="left-column">
+
           <div className="collapse-container">
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
                   key: '1',
+                  header: 'Thông tin cơ bản',
+                  children: <BasicInfo {...data} />,
+                }}
+              />
+            </div>
+          </div>
+          <div className="collapse-container">
+            <div style={{ width: '100%' }}>
+              <Collapse
+                item={{
+                  key: '2',
                   header: 'Thông tin HĐLĐ',
                   children: <ContractInfo {...data} />,
                 }}
@@ -248,7 +268,7 @@ function ContractInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '2',
+                  key: '3',
                   header: 'Thông tin phụ cấp',
                   children: <AllowanceInfo {...data} />,
                 }}

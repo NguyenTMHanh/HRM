@@ -3,6 +3,7 @@ import { Modal, Spin, message } from 'antd';
 import Collapse from '../../../Shared/Collapse/Collapse';
 import WorkInfo from './Section/WorkInfo';
 import History from '../../../Shared/History/History';
+import BasicInfo from './Section/BasicInfo';
 import FooterBar from '../../Footer/Footer';
 import CreatePersonel from '../../Create/CreatePersonel/CreatePersonel';
 import { useNavigate } from 'react-router-dom';
@@ -140,7 +141,6 @@ function PersonelInfoProfile() {
 
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
-            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
             break;
           default:
             message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin nhân sự.');
@@ -225,10 +225,20 @@ function PersonelInfoProfile() {
     <div className="scroll-container">
       <div className="main-content">
         <div className="left-column">
+
           <div className="collapse-container">
             <Collapse
               item={{
                 key: '1',
+                header: 'Thông tin cơ bản',
+                children: <BasicInfo {...data} />,
+              }}
+            />
+          </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: '2',
                 header: 'Thông tin công việc',
                 children: <WorkInfo {...data} />,
               }}

@@ -4,6 +4,7 @@ import Collapse from '../../../Shared/Collapse/Collapse';
 import TaxInfo from './Section/TaxInfo';
 import DependentInfo from './Section/Dependent';
 import History from '../../../Shared/History/History';
+import BasicInfo from './Section/BasicInfo';
 import FooterBar from '../../Footer/Footer';
 import CreateTax from '../../Create/CreateTax/CreateTax';
 import { useNavigate } from 'react-router-dom';
@@ -68,15 +69,20 @@ function TaxInfoProfile() {
     if (!dateString) return null;
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
-
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
   // Hàm ánh xạ dữ liệu API sang định dạng component
   const mapApiDataToComponentFormat = (apiData) => {
     return {
+      employeeCode: apiData.employeeCode || " ",
+      fullName: apiData.nameEmployee || " ",
+      gender: formatGender(apiData.gender),
+      dateOfBirth: formatDate(apiData.dateOfBirth),
       hasTax: apiData.hasTaxCode || false,
-      taxCode: apiData.taxCode || '',
-      fullName: `${apiData.employeeCode} - ${apiData.nameEmployee}`,
-      gender: apiData.gender || '',
-      dateOfBirth: apiData.dateOfBirth ? formatDate(apiData.dateOfBirth) : '',
+      taxCode: apiData.taxCode || '',      
       dependents: apiData.dependents?.map((dependent) => ({
         registered: dependent.registerDependentStatus || '',
         taxCode: dependent.taxCode || '',
@@ -127,7 +133,6 @@ function TaxInfoProfile() {
 
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
-            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ thuế trước.');
             break;
           default:
             message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin thuế.');
@@ -212,6 +217,18 @@ function TaxInfoProfile() {
               <Collapse
                 item={{
                   key: '1',
+                  header: 'Thông tin cơ bản',
+                  children: <BasicInfo {...data} />,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="collapse-container">
+            <div style={{ width: '100%' }}>
+              <Collapse
+                item={{
+                  key: '2',
                   header: 'Thông tin Thuế TNCN',
                   children: <TaxInfo {...data} />,
                 }}
@@ -223,7 +240,7 @@ function TaxInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '2',
+                  key: '3',
                   header: 'Thông tin người phụ thuộc',
                   children: <DependentInfo {...data} />,
                 }}
@@ -237,7 +254,7 @@ function TaxInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '3',
+                  key: '4',
                   header: 'Lịch sử hoạt động',
                   children: <History historyItems={historyItems} />,
                 }}

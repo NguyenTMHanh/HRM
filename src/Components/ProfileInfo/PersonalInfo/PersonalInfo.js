@@ -162,7 +162,6 @@ function PersonalInfoProfile() {
         
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
-            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ cá nhân trước.');
             break;
           default:
             message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin cá nhân.');

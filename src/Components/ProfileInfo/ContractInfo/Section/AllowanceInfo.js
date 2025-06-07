@@ -8,13 +8,13 @@ const AllowanceInfo = ({ allowances = [] }) => {
       title: 'Tên phụ cấp',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => text || 'N/A',
+      render: (text) => text || " ",
     },
     {
       title: 'Mức phụ cấp',
       dataIndex: 'amount',
       key: 'amount',
-      render: (text) => text || 'N/A',
+      render: (text) => text || " ",
     },
   ];
 

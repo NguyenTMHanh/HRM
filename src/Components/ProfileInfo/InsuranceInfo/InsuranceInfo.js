@@ -5,6 +5,7 @@ import BHYTInfo from './Section/BHYTInfo';
 import BHXHInfo from './Section/BHXHInfo';
 import BHTNInfo from './Section/BHTNInfo';
 import GeneralInfo from './Section/GeneralInfo';
+import BasicInfo from './Section/BasicInfo';
 import History from '../../../Shared/History/History';
 import FooterBar from '../../Footer/Footer';
 import CreateInsurance from '../../Create/CreateInsurance/CreateInsurance';
@@ -89,22 +90,32 @@ function InsuranceInfoProfile() {
     return hasJoined ? 'Có tham gia' : 'Không tham gia';
   };
 
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
+
   // Hàm ánh xạ dữ liệu API sang định dạng component
   const mapApiDataToComponentFormat = (apiData) => {
-    
+
     return {
+      employeeCode: apiData.employeeCode || " ",
+      fullName: apiData.nameEmployee || " ",
+      gender: formatGender(apiData.gender),
+      dateOfBirth: formatDate(apiData.dateOfBirth),
       bhytCode: apiData.codeBHYT || "",
       bhytRate: formatInsuranceRate(apiData.rateBHYTEmpt, apiData.rateBHYTBussiness) || "",
       registeredHospital: apiData.registerMedical || "",
-      bhytStartDate: formatDate(apiData.dateStartParticipateBHYT)|| "",
-      hasJoined: formatHasJoined(apiData.hasBHXH)|| "",
+      bhytStartDate: formatDate(apiData.dateStartParticipateBHYT) || "",
+      hasJoined: formatHasJoined(apiData.hasBHXH) || "",
       bhxhCode: apiData.codeBHXH || "",
-      bhxhRate: formatInsuranceRate(apiData.rateBHXHEmpt, apiData.rateBHXHBussiness)|| "",
-      bhxhStartDate: formatDate(apiData.dateStartParticipateBHXH)|| "",
-      bhtnRate: formatInsuranceRate(apiData.rateBHTNEmpt, apiData.rateBHTNBussiness)|| "",
-      bhtnStartDate: formatDate(apiData.dateStartParticipateBHTN)|| "",
-      bhStatus: formatInsuranceStatus(apiData.insuranceStatus)|| "",
-      bhEndDate: formatDate(apiData.dateEndParticipateInsurance)|| "",
+      bhxhRate: formatInsuranceRate(apiData.rateBHXHEmpt, apiData.rateBHXHBussiness) || "",
+      bhxhStartDate: formatDate(apiData.dateStartParticipateBHXH) || "",
+      bhtnRate: formatInsuranceRate(apiData.rateBHTNEmpt, apiData.rateBHTNBussiness) || "",
+      bhtnStartDate: formatDate(apiData.dateStartParticipateBHTN) || "",
+      bhStatus: formatInsuranceStatus(apiData.insuranceStatus) || "",
+      bhEndDate: formatDate(apiData.dateEndParticipateInsurance) || "",
     };
   };
 
@@ -140,7 +151,6 @@ function InsuranceInfoProfile() {
 
         switch (errorCode) {
           case 1022: // CustomCodes.EmployeeNotFound
-            message.error('Không tìm thấy thông tin nhân viên. Vui lòng tạo hồ sơ nhân sự trước.');
             break;
           default:
             message.error(errorData?.message || 'Có lỗi xảy ra khi tải thông tin bảo hiểm.');
@@ -229,6 +239,18 @@ function InsuranceInfoProfile() {
               <Collapse
                 item={{
                   key: '1',
+                  header: 'Thông tin cơ bản',
+                  children: <BasicInfo {...data} />,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="collapse-container">
+            <div style={{ width: '100%' }}>
+              <Collapse
+                item={{
+                  key: '2',
                   header: 'Thông tin BHYT',
                   children: <BHYTInfo {...data} />,
                 }}
@@ -240,7 +262,7 @@ function InsuranceInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '2',
+                  key: '3',
                   header: 'Thông tin BHXH',
                   children: <BHXHInfo {...data} />,
                 }}
@@ -252,7 +274,7 @@ function InsuranceInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '3',
+                  key: '4',
                   header: 'Thông tin BHTN',
                   children: <BHTNInfo {...data} />,
                 }}
@@ -264,7 +286,7 @@ function InsuranceInfoProfile() {
             <div style={{ width: '100%' }}>
               <Collapse
                 item={{
-                  key: '4',
+                  key: '5',
                   header: 'Thông tin BH chung',
                   children: <GeneralInfo {...data} />,
                 }}

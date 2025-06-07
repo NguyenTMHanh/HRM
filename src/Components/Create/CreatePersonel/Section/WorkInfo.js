@@ -4,7 +4,7 @@ import moment from "moment";
 import axios from "axios";
 import debounce from "lodash/debounce";
 
-const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
+const WorkInfo = React.memo(({ form, initialData, breakTime, isModalFooter }) => {
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [jobTitles, setJobTitles] = useState([]);
@@ -79,7 +79,19 @@ const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
         params: { employeeCode, rankName },
       });
       setManagers(response.data);
-      form.setFieldsValue({ managedBy: undefined });
+      // Get current managedBy value
+      const currentManagedBy = form.getFieldValue("managedBy");
+      // Only reset managedBy if the current value is not in the new managers list
+      if (
+        currentManagedBy &&
+        !response.data.some(
+          (manager) =>
+            `${manager.employeeCode} - ${manager.employeeName}` ===
+            currentManagedBy
+        )
+      ) {
+        form.setFieldsValue({ managedBy: undefined });
+      }
     } catch (err) {
       console.error("Error fetching managers:", err);
       message.error("Không thể tải danh sách người quản lý.");
@@ -116,7 +128,14 @@ const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
   );
 
   useEffect(() => {
-    if (selectedEmployee && typeof selectedEmployee === "string") {
+    if (isModalFooter && initialData?.employeeCode) {
+      // Trong chế độ modal, fetch managers với employeeCode từ initialData và selectedRank hoặc initialData.level
+      const rankToUse = selectedRank || initialData.level;
+      if (rankToUse) {
+        fetchManagers(initialData.employeeCode, rankToUse);
+      }
+    } else if (selectedEmployee && typeof selectedEmployee === "string") {
+      // Trong chế độ thông thường, fetch managers với selectedEmployee và selectedRank
       const employeeCode = selectedEmployee.split(" - ")[0];
       debouncedFetch(employeeCode, selectedRank);
     } else {
@@ -126,7 +145,7 @@ const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
     return () => {
       debouncedFetch.cancel();
     };
-  }, [selectedEmployee, selectedRank, debouncedFetch]);
+  }, [selectedEmployee, selectedRank, debouncedFetch, isModalFooter, initialData, fetchManagers]);
 
   const formatDate = (date) => {
     if (!date) return "";

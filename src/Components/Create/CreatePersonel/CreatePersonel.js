@@ -25,7 +25,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }) {
+function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false , isEditMode = false}) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
@@ -193,21 +193,17 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         });
       }
 
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
-        return;
-      }
 
-      const employeeCode = await getEmployeeCode(userId);
+
+      const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
       const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
       const dataToSend = {
         employeeCode,
         nameEmployee: formData.fullName ? formData.fullName.split(" - ")[1] : null,
         dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
         gender: formData.gender,
-        username: "",
-        password: "",
+        username: formData.username || "",
+        password: formData.password || "",
         dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
         departmentName:formData.department,
         jobtitleName: formData.jobTitle,
@@ -220,8 +216,15 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
-console.log('data:',dataToSend )
-      const response = await axios.put("/api/Employee/UpdatePersonel", dataToSend);
+console.log('Data: ', dataToSend);
+      let response;
+
+      if (isEditMode) {
+        response = await axios.put("/api/Employee/UpdatePersonel", dataToSend);
+      } else {
+        // Create mode
+        response = await axios.post("/api/Employee/CreatePersonel", dataToSend);
+      }
 
       if (response.status === 200 && response.data.code === 0) {
         message.destroy();

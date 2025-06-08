@@ -24,6 +24,7 @@ const HRHistoryCheckin = () => {
   const checkinData = [
     {
       employeeId: 'HR001',
+      avatar: '/avatar.jpg',
       fullName: 'Nguyễn Văn A',
       branch: 'Hà Nội',
       department: 'Nhân sự',
@@ -36,6 +37,7 @@ const HRHistoryCheckin = () => {
     },
     {
       employeeId: 'IT002',
+      avatar: '/avatar.jpg',
       fullName: 'Trần Thị B',
       branch: 'Hồ Chí Minh',
       department: 'Công nghệ thông tin',
@@ -48,6 +50,7 @@ const HRHistoryCheckin = () => {
     },
     {
       employeeId: 'FIN003',
+      avatar: '/avatar.jpg',
       fullName: 'Lê Văn C',
       branch: 'Đà Nẵng',
       department: 'Tài chính',
@@ -60,6 +63,7 @@ const HRHistoryCheckin = () => {
     },
     {
       employeeId: 'HR002',
+      avatar: '/avatar.jpg',
       fullName: 'Nguyễn Văn A',
       branch: 'Hà Nội',
       department: 'Nhân sự',
@@ -72,6 +76,7 @@ const HRHistoryCheckin = () => {
     },
     {
       employeeId: 'IT003',
+      avatar: '/avatar.jpg',
       fullName: 'Trần Thị B',
       branch: 'Hồ Chí Minh',
       department: 'Công nghệ thông tin',
@@ -84,6 +89,7 @@ const HRHistoryCheckin = () => {
     },
     {
       employeeId: 'FIN004',
+      avatar: '/avatar.jpg',
       fullName: 'Lê Văn C',
       branch: 'Đà Nẵng',
       department: 'Tài chính',
@@ -94,10 +100,27 @@ const HRHistoryCheckin = () => {
       workType: 'Văn phòng',
       dayType: 'WorkDay',
     },
-  ];
+  ].map((item, index) => ({
+    ...item,
+    stt: index + 1,
+  }));
 
   const columns = [
-    { label: 'Mã nhân sự', key: 'employeeId' },
+    { label: 'STT', key: 'stt' },
+    {
+      label: 'Mã nhân sự',
+      key: 'avatar',
+      render: (value, item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src={value}
+            alt={`${item.fullName}'s avatar`}
+            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+          />
+          <span>{item.employeeId}</span>
+        </div>
+      ),
+    },
     { label: 'Họ và tên NLĐ', key: 'fullName' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
@@ -112,7 +135,7 @@ const HRHistoryCheckin = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['employeeId', 'fullName', 'branch', 'department', 'position'],
+      columns: ['stt', 'avatar', 'fullName', 'branch', 'department', 'position'],
     },
     {
       label: 'Thông tin lịch sử chấm công',

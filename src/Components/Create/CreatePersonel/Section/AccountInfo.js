@@ -46,7 +46,14 @@ const AvatarContainer = styled.div`
   align-items: center;
 `;
 
-const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form, onAvatarUpload }) => {
+const AccountInfo = React.memo(({ 
+  setAvatarImage, 
+  avatarImage, 
+  form, 
+  onAvatarUpload, 
+  isEditMode = false, 
+  canUpdateRoleGroup = false 
+}) => {
   const [roleGroups, setRoleGroups] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const avatarInputRef = useRef(null);
@@ -99,17 +106,18 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form, onAvatarUpl
   }, 300), [fetchAccountDefault, form]);
 
   useEffect(() => {
-    if (selectedEmployee && typeof selectedEmployee === 'string') {
+    // Only fetch account default in create mode (not edit mode)
+    if (!isEditMode && selectedEmployee && typeof selectedEmployee === 'string') {
       const employeeCode = selectedEmployee.split(' - ')[0];
       debouncedFetchAccountDefault(employeeCode);
-    } else {
+    } else if (!isEditMode) {
       debouncedFetchAccountDefault(null);
     }
 
     return () => {
       debouncedFetchAccountDefault.cancel();
     };
-  }, [selectedEmployee, debouncedFetchAccountDefault]);
+  }, [selectedEmployee, debouncedFetchAccountDefault, isEditMode]);
 
   const uploadAvatar = async (file) => {
     const formData = new FormData();
@@ -204,6 +212,73 @@ const AccountInfo = React.memo(({ setAvatarImage, avatarImage, form, onAvatarUpl
     </Select.Option>
   )), [roleGroups]);
 
+  // In edit mode, show only avatar and role group
+  if (isEditMode) {
+    return (
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <div>
+            <div style={{ marginBottom: '8px' }}>Avatar</div>
+            <AvatarContainer>
+              <AvatarBox
+                onClick={() => !uploadLoading && avatarInputRef.current.click()}
+                style={{ 
+                  backgroundImage: avatarImage ? `url(${avatarImage})` : 'none',
+                  cursor: uploadLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {!avatarImage && !uploadLoading && (
+                  <Placeholder>
+                    <UserOutlined style={{ fontSize: '120px', color: '#fff' }} />
+                  </Placeholder>
+                )}
+                {uploadLoading && (
+                  <Placeholder>
+                    <LoadingOutlined style={{ fontSize: '40px', color: '#1890ff' }} />
+                    <div style={{ marginTop: '10px', color: '#1890ff' }}>Đang tải...</div>
+                  </Placeholder>
+                )}
+              </AvatarBox>
+
+              <HiddenInput
+                type="file"
+                accept="image/*"
+                ref={avatarInputRef}
+                onChange={handleImageChange}
+                disabled={uploadLoading}
+              />
+
+              <UploadButton
+                icon={uploadLoading ? <LoadingOutlined /> : <UploadOutlined />}
+                onClick={() => !uploadLoading && avatarInputRef.current.click()}
+                loading={uploadLoading}
+                disabled={uploadLoading}
+              >
+                {uploadLoading ? 'Đang tải...' : 'Avatar'}
+              </UploadButton>
+            </AvatarContainer>
+          </div>
+        </Col>
+
+        <Col xs={24} sm={12}>
+          <Form.Item
+            label="Nhóm quyền"
+            name="roleGroup"
+            rules={[{ required: true, message: 'Vui lòng chọn nhóm quyền!' }]}
+          >
+            <Select 
+              placeholder="Chọn nhóm quyền"
+              disabled={!canUpdateRoleGroup}
+            >
+              {roleOptions}
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
+    );
+  }
+
+  // In create mode, show all fields
   return (
     <>
       <Row gutter={[16, 16]}>

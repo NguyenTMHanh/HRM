@@ -48,6 +48,11 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
     (p) => p.moduleId === "profilePersonel" && p.actionId === "create"
   );
 
+  // Check permission for updating role group
+  const canUpdateRoleGroup = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "HrPersonel" && p.actionId === "update"
+  );
+
   const fetchBreakTime = useCallback(async () => {
     try {
       const response = await axios.get("/api/CheckInOutSetting/GetBreakTime");
@@ -334,37 +339,35 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
             />
           </div>
 
-          <div className="collapse-container">
-            <Collapse
-              item={{
-                key: "2",
-                header: "Thông tin công việc",
-                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
-              }}
-            />
-          </div>
-
-
-          {!initialData && (
-
             <div className="collapse-container">
               <Collapse
                 item={{
-                  key: "3",
-                  header: "Thông tin tài khoản",
-                  children: (
-                    <AccountInfo
-                      form={form}
-                      setAvatarImage={setAvatarImage}
-                      avatarImage={avatarImage}
-                      onAvatarUpload={handleAvatarUpload}
-                    />
-                  ),
+                  key: "2",
+                  header: "Thông tin công việc",
+                  children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
                 }}
               />
             </div>
-          )}
 
+          {/* Always show AccountInfo, but with different props based on context */}
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: "3",
+                header: "Thông tin tài khoản",
+                children: (
+                  <AccountInfo
+                    form={form}
+                    setAvatarImage={setAvatarImage}
+                    avatarImage={avatarImage}
+                    onAvatarUpload={handleAvatarUpload}
+                    isEditMode={!!initialData}
+                    canUpdateRoleGroup={canUpdateRoleGroup}
+                  />
+                ),
+              }}
+            />
+          </div>
         </div>
       </Form>
 

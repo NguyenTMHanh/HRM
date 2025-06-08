@@ -96,11 +96,6 @@ function InsuranceInfoProfile() {
     return status; // Trạng thái đã được API trả về tiếng Việt
   };
 
-  // Hàm format tình trạng tham gia BHXH
-  const formatHasJoined = (hasJoined) => {
-    return hasJoined ? 'Có tham gia' : 'Không tham gia';
-  };
-
   const formatGender = (gender) => {
     if (!gender) return '';
     return gender.toLowerCase() === 'female' ? 'Nữ' :
@@ -109,7 +104,6 @@ function InsuranceInfoProfile() {
 
   // Hàm ánh xạ dữ liệu API sang định dạng component
   const mapApiDataToComponentFormat = (apiData) => {
-
     return {
       employeeCode: apiData.employeeCode || " ",
       fullName: apiData.nameEmployee || " ",
@@ -119,7 +113,7 @@ function InsuranceInfoProfile() {
       bhytRate: formatInsuranceRate(apiData.rateBHYTEmpt, apiData.rateBHYTBussiness) || "",
       registeredHospital: apiData.registerMedical || "",
       bhytStartDate: formatDate(apiData.dateStartParticipateBHYT) || "",
-      hasJoined: formatHasJoined(apiData.hasBHXH) || "",
+      hasJoined: apiData.hasBHXH || false,
       bhxhCode: apiData.codeBHXH || "",
       bhxhRate: formatInsuranceRate(apiData.rateBHXHEmpt, apiData.rateBHXHBussiness) || "",
       bhxhStartDate: formatDate(apiData.dateStartParticipateBHXH) || "",
@@ -349,6 +343,7 @@ function InsuranceInfoProfile() {
             onSave={handleSave}
             onCancel={handleModalClose}
             isModalFooter={true}
+            isEditMode={true}
           />
         </Modal>
       </div>

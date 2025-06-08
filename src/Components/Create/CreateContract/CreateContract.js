@@ -31,7 +31,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }) {
+function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -61,16 +61,19 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
   const canCreateContract = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileContract' && p.actionId === 'create'
   );
+  const canUpdateContract = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'profileContract' && p.actionId === 'update'
+  );
 
   const fetchEmployees = useCallback(async () => {
-    try {
+    try { 
       const response = await axios.get('/api/Employee/CodeNameEmployeeUnContract');
       setEmployees(response.data);
     } catch (err) {
-      console.error('Error fetching employees without contract:', err);
+      console.error('Error fetching employees:', err);
       message.error('Không thể tải danh sách nhân viên.');
     }
-  }, []);
+  }, [isEditMode]);
 
   const fetchContractCode = useCallback(async (employeeCode) => {
     try {
@@ -135,7 +138,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
       message.error('Không thể tải thông tin vị trí và lương.');
       form.setFieldsValue({
         position: undefined,
-        salaryCoefficientlib: undefined,
+        salaryCoefficient: undefined,
         hourlyWage: undefined,
         workHoursPerDay: undefined,
         standardWorkingDays: undefined,
@@ -148,8 +151,11 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
     () =>
       debounce((employeeCode) => {
         if (employeeCode) {
-          fetchContractCode(employeeCode);
-          fetchPositionAndCoefficient(employeeCode);
+          // Only fetch contract code and position info in create mode or when employee changes in edit mode
+          if (!isEditMode || !initialData) {
+            fetchContractCode(employeeCode);
+            fetchPositionAndCoefficient(employeeCode);
+          }
         } else {
           form.setFieldsValue({
             contractId: undefined,
@@ -162,7 +168,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
           });
         }
       }, 300),
-    [fetchContractCode, fetchPositionAndCoefficient, form]
+    [fetchContractCode, fetchPositionAndCoefficient, form, isEditMode, initialData]
   );
 
   useEffect(() => {
@@ -170,23 +176,30 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
   }, [fetchEmployees]);
 
   useEffect(() => {
-    if (selectedEmployee && typeof selectedEmployee === 'string') {
+    if (!isEditMode && selectedEmployee && typeof selectedEmployee === 'string') {
       const employeeCode = selectedEmployee.split(' - ')[0];
       debouncedFetch(employeeCode);
-    } else {
+    } else if (!isEditMode) {
       debouncedFetch(null);
     }
 
     return () => {
       debouncedFetch.cancel();
     };
-  }, [selectedEmployee, debouncedFetch]);
+  }, [selectedEmployee, debouncedFetch, isEditMode]);
 
   useEffect(() => {
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
         : null;
+      
+      // Parse formatted values back to raw values for editing
+      const parseFormattedValue = (formattedValue) => {
+        if (!formattedValue) return undefined;
+        return formattedValue.toString().replace(/[^\d.]/g, '');
+      };
+
       form.setFieldsValue({
         fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
@@ -200,13 +213,16 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
           ? moment(initialData.endDate, 'DD/MM/YYYY')
           : null,
         status: initialData.status,
-        hourlyWage: initialData.hourlyWage,
-        workHoursPerDay: initialData.workHoursPerDay,
+        hourlyWage: parseFormattedValue(initialData.hourlyWage),
+        workHoursPerDay: parseFormattedValue(initialData.workHoursPerDay),
         position: initialData.position,
-        salaryCoefficient: initialData.salaryCoefficient,
-        standardWorkingDays: initialData.standardWorkingDays,
-        basicSalary: initialData.basicSalary,
-        allowances: initialData.allowances || initialValues.allowances,
+        salaryCoefficient: parseFormattedValue(initialData.salaryCoefficient),
+        standardWorkingDays: parseFormattedValue(initialData.standardWorkingDays),
+        basicSalary: parseFormattedValue(initialData.basicSalary),
+        allowances: initialData.allowances?.map(allowance => ({
+          name: allowance.name,
+          amount: parseFormattedValue(allowance.amount)
+        })) || initialValues.allowances,
       });
     } else {
       form.setFieldsValue(initialValues);
@@ -220,7 +236,6 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
       form.resetFields();
       setIsSavedSuccessfully(false);
     }
-
   };
 
   const parseNumber = (value) => {
@@ -229,7 +244,13 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
   };
 
   const handleSave = async () => {
-    if (!canCreateContract) {
+    // Check permissions based on mode
+    if (isEditMode && !canUpdateContract) {
+      message.error('Bạn không có quyền cập nhật hợp đồng lao động.');
+      return;
+    }
+    
+    if (!isEditMode && !canCreateContract) {
       message.error('Bạn không có quyền tạo hợp đồng lao động.');
       return;
     }
@@ -263,21 +284,37 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
         })),
       };
 
+      console.log('Data to send:', dataToSend);
 
-      const response = await axios.post('/api/Employee/CreateContract', dataToSend);
+      let response;
+      let successMessage;
+
+      if (isEditMode) {
+        // Update contract
+        response = await axios.put('/api/Employee/UpdateContract', dataToSend);
+        successMessage = 'Cập nhật hợp đồng lao động thành công!';
+      } else {
+        // Create contract
+        response = await axios.post('/api/Employee/CreateContract', dataToSend);
+        successMessage = 'Tạo mới hợp đồng lao động thành công!';
+      }
 
       if (response.status === 200 && response.data.code === 0) {
         message.destroy();
-        message.success('Tạo mới hợp đồng lao động thành công!');
+        message.success(successMessage);
         setIsSavedSuccessfully(true);
-        form.resetFields();
-        fetchEmployees();
+        
+        if (!isEditMode) {
+          form.resetFields();
+          fetchEmployees();
+        }
+        
         if (typeof onSave === 'function') {
           onSave(dataToSend);
         }
       } else {
         message.destroy();
-        message.error(response.data.message || 'Tạo hợp đồng lao động thất bại!');
+        message.error(response.data.message || `${isEditMode ? 'Cập nhật' : 'Tạo'} hợp đồng lao động thất bại!`);
       }
     } catch (err) {
       message.destroy();
@@ -286,7 +323,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
         return;
       }
 
-      console.error('Create contract employee error:', err);
+      console.error(`${isEditMode ? 'Update' : 'Create'} contract employee error:`, err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
@@ -355,7 +392,13 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false }
               item={{
                 key: '1',
                 header: 'Thông tin cơ bản',
-                children: <BasicInfo form={form} initialData={initialData} employees={employees} isModalFooter={isModalFooter}/>,
+                children: <BasicInfo 
+                  form={form} 
+                  initialData={initialData} 
+                  employees={employees} 
+                  isModalFooter={isModalFooter}
+                  isEditMode={isEditMode}
+                />,
               }}
             />
           </div>

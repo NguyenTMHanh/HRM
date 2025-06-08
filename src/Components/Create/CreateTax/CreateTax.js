@@ -23,10 +23,11 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
+function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const navigate = useNavigate();
 
   const initialValues = useMemo(
@@ -41,51 +42,65 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
     []
   );
 
+  // Permission check
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  const hasAllModuleAuthority = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  );
+  const canCreateTax = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'profileTax' && p.actionId === 'create'
+  );
+  const canUpdateTax = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'profileTax' && p.actionId === 'update'
+  );
+
   // Fetch employees without tax information
   const fetchEmployees = useCallback(async () => {
     try {
       const response = await axios.get('/api/Employee/CodeNameEmployeeUnTax');
-      setEmployees(response.data);
+      setEmployees(response.data || []);
     } catch (err) {
       console.error('Error fetching employees without tax info:', err);
       message.error('Không thể tải danh sách nhân viên.');
+      setEmployees([]);
     }
   }, []);
 
   useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+    if (!isEditMode) {
+      fetchEmployees();
+    }
+  }, [fetchEmployees, isEditMode]);
 
   useEffect(() => {
     if (initialData) {
       console.log('InitialData received:', initialData); // Debug
-      
       const fullName = initialData.employeeCode && initialData.fullName
-        ? `${initialData.employeeCode} - ${initialData.fullName}`
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(' - ')[1] || initialData.fullName}`
         : null;
-      
+
       const formValues = {
         fullName,
-        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, 'DD/MM/YYYY') : null,
         gender: initialData.gender,
-        // FIX: Sử dụng đúng tên field
         hasTax: initialData.hasTax || initialValues.hasTax,
         taxCode: initialData.taxCode || initialValues.taxCode,
         dependents: initialData.dependents
           ? initialData.dependents.map((dependent) => ({
-              registered: dependent.registered, // FIX: Sử dụng đúng tên field
-              taxCode: dependent.taxCode,
-              fullName: dependent.fullName, // FIX: Sử dụng đúng tên field
-              // FIX: Xử lý ngày sinh đúng format
-              birthDate: dependent.birthDate
-                ? moment(dependent.birthDate, 'DD/MM/YYYY')
-                : null,
-              relationship: dependent.relationship,
+              registered: dependent.registered || '',
+              taxCode: dependent.taxCode || '',
+              fullName: dependent.fullName || '',
+              birthDate: dependent.birthDate ? moment(dependent.birthDate, 'DD/MM/YYYY') : null,
+              relationship: dependent.relationship || '',
               proofFile: dependent.proofFile || [],
             }))
           : initialValues.dependents,
       };
-      
+
       console.log('Form values to set:', formValues); // Debug
       form.setFieldsValue(formValues);
     } else {
@@ -96,14 +111,23 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
   const handleCancel = () => {
     if (typeof onCancel === 'function') {
       onCancel();
-    }
-    else {
+    } else {
       form.resetFields();
       setIsSavedSuccessfully(false);
     }
   };
 
   const handleSave = async () => {
+    // Check permissions based on mode
+    if (isEditMode && !canUpdateTax) {
+      message.error('Bạn không có quyền cập nhật thông tin thuế.');
+      return;
+    }
+    if (!isEditMode && !canCreateTax) {
+      message.error('Bạn không có quyền tạo thông tin thuế.');
+      return;
+    }
+
     try {
       const formData = await form.validateFields();
 
@@ -112,13 +136,15 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
 
       const processedDependents = formData.dependents
         ? formData.dependents.map((dependent) => ({
-          registerDependentStatus: dependent.registered || '',
-          taxCode: dependent.taxCode || '',
-          nameDependent: dependent.fullName || '',
-          dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
-          relationship: dependent.relationship || '',
-          evidencePath: dependent.proofFile || '', // Use file ID directly
-        }))
+            registerDependentStatus: dependent.registered || '',
+            taxCode: dependent.taxCode || '',
+            nameDependent: dependent.fullName || '',
+            dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
+            relationship: dependent.relationship || '',
+            evidencePath: dependent.proofFile && dependent.proofFile.length > 0
+              ? dependent.proofFile[0].fileId || dependent.proofFile[0].name || ''
+              : '',
+          }))
         : [];
 
       const dataToSend = {
@@ -131,27 +157,44 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
         dependents: processedDependents,
       };
 
-      console.log("Data send: ", dataToSend);
-      const response = await axios.post('/api/Employee/CreateTax', dataToSend);
+      console.log('Data to send:', dataToSend);
+
+      let response;
+      let successMessage;
+
+      if (isEditMode) {
+        // Update tax
+        response = await axios.put('/api/Employee/UpdateTax', dataToSend);
+        successMessage = 'Cập nhật thông tin thuế thành công!';
+      } else {
+        // Create tax
+        response = await axios.post('/api/Employee/CreateTax', dataToSend);
+        successMessage = 'Tạo mới thông tin thuế thành công!';
+      }
 
       if (response.status === 200 && response.data.code === 0) {
-        message.success('Tạo mới thông tin thuế thành công!');
+        message.destroy();
+        message.success(successMessage);
         setIsSavedSuccessfully(true);
-        form.resetFields();
-        fetchEmployees();
+        if (!isEditMode) {
+          form.resetFields();
+          fetchEmployees();
+        }
         if (typeof onSave === 'function') {
           onSave(dataToSend);
         }
       } else {
-        message.error(response.data.message || 'Tạo thông tin thuế thất bại!');
+        message.destroy();
+        message.error(response.data.message || `${isEditMode ? 'Cập nhật' : 'Tạo'} thông tin thuế thất bại!`);
       }
     } catch (err) {
+      message.destroy();
       if (err.errorFields) {
         message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
         return;
       }
 
-      console.error('Create tax info error:', err);
+      console.error(`${isEditMode ? 'Update' : 'Create'} tax info error:`, err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
@@ -160,10 +203,10 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
         switch (status) {
           case 400:
             switch (code) {
-              case 1022: // EmployeeNotFound
+              case 1022:
                 message.error('Nhân viên không tồn tại! Vui lòng tạo thông tin cá nhân trước!');
                 break;
-              case 1026: // DuplicateTax
+              case 1026:
                 message.error('Thông tin thuế đã tồn tại trong hệ thống!');
                 break;
               default:
@@ -206,7 +249,15 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false }) {
               item={{
                 key: '1',
                 header: 'Thông tin cơ bản',
-                children: <BasicInfo form={form} initialData={initialData} employees={employees} isModalFooter={isModalFooter}/>,
+                children: (
+                  <BasicInfo
+                    form={form}
+                    initialData={initialData}
+                    employees={employees}
+                    isModalFooter={isModalFooter}
+                    isEditMode={isEditMode}
+                  />
+                ),
               }}
             />
           </div>

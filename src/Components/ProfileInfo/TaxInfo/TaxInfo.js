@@ -301,6 +301,7 @@ function TaxInfoProfile() {
             onSave={handleSave}
             onCancel={handleModalClose}
             isModalFooter={true}
+            isEditMode={true} 
           />
         </Modal>
       </div>

@@ -97,7 +97,7 @@ function ContractInfoProfile() {
     switch (type) {
       case 'NoLimitedContract':
         return 'HĐLĐ không xác định thời hạn';
-      case 'FixedTermContract':
+      case 'LimitedContract':
         return 'HĐLĐ xác định thời hạn';
       default:
         return type;
@@ -109,7 +109,6 @@ function ContractInfoProfile() {
     return gender.toLowerCase() === 'female' ? 'Nữ' :
       gender.toLowerCase() === 'male' ? 'Nam' : gender;
   };
-
   // Hàm format trạng thái hợp đồng
   const formatContractStatus = (status) => {
     if (!status) return '';
@@ -334,6 +333,7 @@ function ContractInfoProfile() {
             onSave={handleSave}
             onCancel={handleModalClose}
             isModalFooter={true}
+            isEditMode={true}
           />
         </Modal>
       </div>

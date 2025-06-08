@@ -13,7 +13,7 @@ const BHXHInfo = ({
     return typeof date === 'string' ? date : date.format('DD/MM/YYYY');
 };
   const infoItems = [
-    { label: 'Đã từng tham gia BHXH', value: hasJoined === true ? 'Có' : 'Không' },
+    { label: 'Đã từng tham gia BHXH', value: hasJoined === true ? 'Có tham gia' : 'Không tham gia' },
     { label: 'Mã số BHXH', value: bhxhCode || 'N/A' },
     { label: 'Tỷ lệ đóng BHXH', value: bhxhRate || 'N/A' },
     { label: 'Ngày bắt đầu tham gia BHXH', value: formatDate(bhxhStartDate)},

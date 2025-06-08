@@ -27,7 +27,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }) {
+function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [bhxhCode, setBhxhCode] = useState('');
@@ -48,16 +48,16 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
       bhytCode: '',
       bhytRate: insuranceRates
         ? formatRate(insuranceRates.bhytEmpRate, insuranceRates.bhytBusinessRate)
-        : "",
+        : '',
       bhytStartDate: moment(),
       bhxhStartDate: moment(),
       bhxhRate: insuranceRates
         ? formatRate(insuranceRates.bhxhEmpRate, insuranceRates.bhxhBusinessRate)
-        : "",
+        : '',
       bhtnStartDate: moment(),
       bhtnRate: insuranceRates
         ? formatRate(insuranceRates.bhtnEmpRate, insuranceRates.bhtnBusinessRate)
-        : "",
+        : '',
       bhEndDate: moment(),
       bhxhCode: '',
       fullName: null,
@@ -76,6 +76,9 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
   );
   const canCreateInsurance = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileInsurance' && p.actionId === 'create'
+  );
+  const canUpdateInsurance = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'update'
   );
 
   // Fetch employees
@@ -112,35 +115,43 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
   }, [form]);
 
   useEffect(() => {
-    fetchEmployees();
+    if (!isEditMode) {
+      fetchEmployees();
+    }
     fetchInsuranceRates();
-  }, [fetchEmployees, fetchInsuranceRates]);
+  }, [fetchEmployees, fetchInsuranceRates, isEditMode]);
 
   useEffect(() => {
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
-        ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
+        ? `${initialData.employeeCode} - ${initialData.fullName.split(' - ')[1] || initialData.fullName}`
         : null;
       const bhxhCodeFromBHYT = getBHXHCodeFromBHYT(initialData.bhytCode);
       setBhxhCode(initialData.bhxhCode || bhxhCodeFromBHYT);
 
+      // Parse formatted values back to raw values for editing
+      const parseFormattedRate = (rateString) => {
+        if (!rateString) return '';
+        return rateString; // Keep as is since rates are formatted as strings
+      };
+
       form.setFieldsValue({
         fullName,
-        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
+        dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, 'DD/MM/YYYY') : null,
         gender: initialData.gender,
         bhytCode: initialData.bhytCode || initialValues.bhytCode,
-        bhytRate: initialData.bhytRate || initialValues.bhytRate,
+        bhytRate: parseFormattedRate(initialData.bhytRate) || initialValues.bhytRate,
         registeredHospital: initialData.registeredHospital,
         bhytStartDate: initialData.bhytStartDate
           ? moment(initialData.bhytStartDate, 'DD/MM/YYYY')
           : initialValues.bhytStartDate,
-        hasJoined: initialData.hasJoined,
+        hasJoined: initialData.hasJoined === 'Có tham gia' ? true : false,
         bhxhCode: initialData.bhxhCode || bhxhCodeFromBHYT,
-        bhxhRate: initialData.bhxhRate || initialValues.bhxhRate,
+        bhxhRate: parseFormattedRate(initialData.bhxhRate) || initialValues.bhxhRate,
         bhxhStartDate: initialData.bhxhStartDate
           ? moment(initialData.bhxhStartDate, 'DD/MM/YYYY')
           : initialValues.bhxhStartDate,
-        bhtnRate: initialData.bhtnRate || initialValues.bhtnRate,
+        bhtnRate: parseFormattedRate(initialData.bhtnRate) || initialValues.bhtnRate,
         bhtnStartDate: initialData.bhtnStartDate
           ? moment(initialData.bhtnStartDate, 'DD/MM/YYYY')
           : initialValues.bhtnStartDate,
@@ -172,12 +183,11 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
   };
 
   const handleCancel = () => {
-        if (typeof onCancel === "function") {
-      onCancel(); 
-    }
-    else{
-    form.resetFields();
-    setIsSavedSuccessfully(false);
+    if (typeof onCancel === 'function') {
+      onCancel();
+    } else {
+      form.resetFields();
+      setIsSavedSuccessfully(false);
     }
   };
 
@@ -188,7 +198,12 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
   };
 
   const handleSave = async () => {
-    if (!canCreateInsurance) {
+    // Check permissions based on mode
+    if (isEditMode && !canUpdateInsurance) {
+      message.error('Bạn không có quyền cập nhật thông tin bảo hiểm.');
+      return;
+    }
+    if (!isEditMode && !canCreateInsurance) {
       message.error('Bạn không có quyền tạo thông tin bảo hiểm.');
       return;
     }
@@ -200,8 +215,7 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
       const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
       const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-
-      // Phân tích tỷ lệ bảo hiểm
+      // Parse insurance rates
       const bhytRates = parseRate(formData.bhytRate);
       const bhxhRates = parseRate(formData.bhxhRate);
       const bhtnRates = parseRate(formData.bhtnRate);
@@ -228,21 +242,35 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
         dateEndParticipateInsurance: formData.bhEndDate ? formData.bhEndDate.toISOString() : null,
       };
 
+      console.log('Data to send:', dataToSend);
 
-      const response = await axios.post('/api/Employee/CreateInsurance', dataToSend);
+      let response;
+      let successMessage;
+
+      if (isEditMode) {
+        // Update insurance
+        response = await axios.put('/api/Employee/UpdateInsurance', dataToSend);
+        successMessage = 'Cập nhật thông tin bảo hiểm thành công!';
+      } else {
+        // Create insurance
+        response = await axios.post('/api/Employee/CreateInsurance', dataToSend);
+        successMessage = 'Tạo mới thông tin bảo hiểm thành công!';
+      }
 
       if (response.status === 200 && response.data.code === 0) {
         message.destroy();
-        message.success('Tạo mới thông tin bảo hiểm thành công!');
+        message.success(successMessage);
         setIsSavedSuccessfully(true);
-        form.resetFields();
-        fetchEmployees();
+        if (!isEditMode) {
+          form.resetFields();
+          fetchEmployees();
+        }
         if (typeof onSave === 'function') {
           onSave(dataToSend);
         }
       } else {
         message.destroy();
-        message.error(response.data.message || 'Tạo thông tin bảo hiểm thất bại!');
+        message.error(response.data.message || `${isEditMode ? 'Cập nhật' : 'Tạo'} thông tin bảo hiểm thất bại!`);
       }
     } catch (err) {
       message.destroy();
@@ -251,7 +279,7 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
         return;
       }
 
-      console.error('Create insurance error:', err);
+      console.error(`${isEditMode ? 'Update' : 'Create'} insurance error:`, err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
@@ -318,7 +346,15 @@ function CreateInsurance({ initialData, onSave,onCancel, isModalFooter = false }
               item={{
                 key: '1',
                 header: 'Thông tin cơ bản',
-                children: <BasicInfo form={form} initialData={initialData} employees={employees} isModalFooter={isModalFooter}/>,
+                children: (
+                  <BasicInfo
+                    form={form}
+                    initialData={initialData}
+                    employees={employees}
+                    isModalFooter={isModalFooter}
+                    isEditMode={isEditMode}
+                  />
+                ),
               }}
             />
           </div>

@@ -29,12 +29,14 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }) {
+function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
-  const [frontImageId, setFrontImageId] = useState(null); // Store front image ID
-  const [backImageId, setBackImageId] = useState(null);   // Store back image ID
+  const [frontImageId, setFrontImageId] = useState(null);
+  const [backImageId, setBackImageId] = useState(null);
+  const [originalFrontImageId, setOriginalFrontImageId] = useState(null);
+  const [originalBackImageId, setOriginalBackImageId] = useState(null);
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [provinceMap, setProvinceMap] = useState({});
   const [districtMap, setDistrictMap] = useState({});
@@ -55,6 +57,9 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
   const canCreate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "profilePersonal" && p.actionId === "create"
   );
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "profilePersonal" && p.actionId === "update"
+  );
 
   // Handle image upload callback
   const handleImageUpload = (imageId, type) => {
@@ -65,11 +70,23 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
     }
   };
 
+  // Extract image ID from URL
+  const extractImageIdFromUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    const match = imageUrl.match(/\/GetFile\/([^/?]+)/);
+    return match ? match[1] : null;
+  };
+
   useEffect(() => {
     if (initialData) {
+      // Convert gender display back to API format
+      let apiGender = initialData.gender;
+      if (initialData.gender === 'Nữ') apiGender = 'Female';
+      else if (initialData.gender === 'Nam') apiGender = 'Male';
+
       form.setFieldsValue({
         fullName: initialData.fullName,
-        gender: initialData.gender,
+        gender: apiGender,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
         nationality: initialData.nationality,
         ethnicity: initialData.ethnicity,
@@ -92,21 +109,49 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
         bank: initialData.bank,
         bankBranch: initialData.bankBranch,
       });
-      // Set initial images and IDs if provided
+
+      // Set initial images and IDs
       if (initialData.frontImage) {
         setFrontImage(initialData.frontImage);
-        if (typeof initialData.frontImage === 'string' && initialData.frontImage.length <= 50) {
-          setFrontImageId(initialData.frontImage);
-        }
+        const frontId = extractImageIdFromUrl(initialData.frontImage);
+        setFrontImageId(frontId);
+        setOriginalFrontImageId(frontId);
       }
       if (initialData.backImage) {
         setBackImage(initialData.backImage);
-        if (typeof initialData.backImage === 'string' && initialData.backImage.length <= 50) {
-          setBackImageId(initialData.backImage);
-        }
+        const backId = extractImageIdFromUrl(initialData.backImage);
+        setBackImageId(backId);
+        setOriginalBackImageId(backId);
       }
     }
   }, [initialData, form]);
+
+  // Function to delete old image
+  const deleteOldImage = async (imageId) => {
+    if (!imageId) return;
+    try {
+      await axios.delete(`/api/FileUpload/DeleteFile/${imageId}`);
+      console.log(`Successfully deleted image: ${imageId}`);
+    } catch (error) {
+      console.error('Error deleting old image:', error);
+      // Don't throw error as this shouldn't stop the update process
+    }
+  };
+
+  // Function to get employee code from userId
+  const getEmployeeCode = async (userId) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
+      if (response.data.code === 0) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to get employee code');
+      }
+    } catch (error) {
+      console.error('Error getting employee code:', error);
+      throw error;
+    }
+  };
 
   const handleCancel = () => {
     if (typeof onCancel === "function") {
@@ -118,12 +163,19 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
       setBackImage(null);
       setFrontImageId(null);
       setBackImageId(null);
+      setOriginalFrontImageId(null);
+      setOriginalBackImageId(null);
       setIsSavedSuccessfully(false);
     }
   };
 
   const handleSave = async () => {
-    if (!canCreate) {
+    // Check permissions based on mode
+    if (isEditMode && !canUpdate) {
+      message.error("Bạn không có quyền cập nhật thông tin cá nhân.");
+      return;
+    }
+    if (!isEditMode && !canCreate) {
       message.error("Bạn không có quyền tạo mới nhân viên.");
       return;
     }
@@ -132,48 +184,88 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
       setIsLoading(true);
       const formData = await form.validateFields();
 
+      // Handle image changes for update mode
+      if (isEditMode) {
+        // Check if front image changed
+        if (frontImageId !== originalFrontImageId && originalFrontImageId) {
+          await deleteOldImage(originalFrontImageId);
+        }
+        
+        // Check if back image changed
+        if (backImageId !== originalBackImageId && originalBackImageId) {
+          await deleteOldImage(originalBackImageId);
+        }
+      }
+
       const dataToSend = {
-        NameEmployee: formData.fullName,
-        Gender: formData.gender,
-        DateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
-        Nationality: formData.nationality || "",
-        Ethnicity: formData.ethnicity || "",
-        NumberIdentification: formData.identityNumber,
-        DateIssueIdentification: formData.issuedDate ? formData.issuedDate.toISOString() : null,
-        PlaceIssueIdentification: formData.issuedPlace || "",
-        FrontIdentificationPath: frontImageId || formData.frontImage || "",
-        BackIdentificationPath: backImageId || formData.backImage || "",
-        ProvinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || "",
-        DistrictResidence: districtMap[formData.districtResident] || formData.districtResident || "",
-        WardResidence: wardMap[formData.wardResident] || formData.wardResident || "",
-        HouseNumberResidence: formData.houseNumberResident || "",
-        ProvinceContact: provinceMap[formData.provinceContact] || formData.provinceContact || "",
-        DistrictContact: districtMap[formData.districtContact] || formData.districtContact || "",
-        WardContact: wardMap[formData.wardContact] || formData.wardContact || "",
-        HouseNumberContact: formData.houseNumberContact || "",
-        Email: formData.email,
-        PhoneNumber: formData.phoneNumber,
-        BankNumber: formData.accountNumber,
-        NameBank: formData.bank,
-        BranchBank: formData.bankBranch,
+        nameEmployee: formData.fullName,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
+        nationality: formData.nationality || "",
+        ethnicity: formData.ethnicity || "",
+        numberIdentification: formData.identityNumber,
+        dateIssueIdentification: formData.issuedDate ? formData.issuedDate.toISOString() : null,
+        placeIssueIdentification: formData.issuedPlace || "",
+        frontIdentificationPath: frontImageId || "",
+        backIdentificationPath: backImageId || "",
+        provinceResidence: provinceMap[formData.provinceResident] || formData.provinceResident || "",
+        districtResidence: districtMap[formData.districtResident] || formData.districtResident || "",
+        wardResidence: wardMap[formData.wardResident] || formData.wardResident || "",
+        houseNumberResidence: formData.houseNumberResident || "",
+        provinceContact: provinceMap[formData.provinceContact] || formData.provinceContact || "",
+        districtContact: districtMap[formData.districtContact] || formData.districtContact || "",
+        wardContact: wardMap[formData.wardContact] || formData.wardContact || "",
+        houseNumberContact: formData.houseNumberContact || "",
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        bankNumber: formData.accountNumber,
+        nameBank: formData.bank,
+        branchBank: formData.bankBranch,
       };
 
-      const response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
-
+      let response;
+      
+      if (isEditMode) {
+        // Update mode - get employee code first
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+          return;
+        }
+        
+        const employeeCode = await getEmployeeCode(userId);
+        response = await axios.put(`/api/Employee/UpdatePersonal/${employeeCode}`, dataToSend);
+      } else {
+        // Create mode
+        response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
+      }
+console.log("response: ", response);
       if (response.status === 200 && response.data.code === 0) {
-        message.success("Tạo mới thông tin cá nhân thành công!");
+        const successMessage = isEditMode ? 
+          "Cập nhật thông tin cá nhân thành công!" : 
+          "Tạo mới thông tin cá nhân thành công!";
+        
+        message.success(successMessage);
         setIsSavedSuccessfully(true);
-        form.resetFields();
-        setFrontImage(null);
-        setBackImage(null);
-        setFrontImageId(null);
-        setBackImageId(null);
+        
+        if (!isEditMode) {
+          form.resetFields();
+          setFrontImage(null);
+          setBackImage(null);
+          setFrontImageId(null);
+          setBackImageId(null);
+          setOriginalFrontImageId(null);
+          setOriginalBackImageId(null);
+        }
 
         if (typeof onSave === "function") {
-          onSave(dataToSend);
+          onSave(response.data.data || dataToSend);
         }
       } else {
-        message.error(response.data.message || "Tạo nhân viên thất bại!");
+        const errorMessage = isEditMode ? 
+          "Cập nhật thông tin thất bại!" : 
+          "Tạo nhân viên thất bại!";
+        message.error(response.data.message || errorMessage);
       }
     } catch (err) {
       if (err.errorFields) {
@@ -181,11 +273,12 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
         return;
       }
 
-      console.error("Create employee error:", err);
+      console.error("Save employee error:", err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
         const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
+        
         switch (status) {
           case 400:
             switch (code) {
@@ -197,6 +290,9 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false }
                 break;
               case 1014:
                 message.error("Số CCCD/CMND không hợp lệ.");
+                break;
+              case 1022:
+                message.error("Không tìm thấy nhân viên.");
                 break;
               default:
                 message.error(errorMsg);

@@ -15,6 +15,7 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN123456',
       dependents: 2,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'IT002',
@@ -25,6 +26,7 @@ const HRTax = () => {
       hasTaxCode: false,
       taxCode: 'TNCN789012',
       dependents: 1,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'FIN003',
@@ -35,6 +37,7 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN345678',
       dependents: 0,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR004',
@@ -45,6 +48,7 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN901234',
       dependents: 3,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'IT005',
@@ -55,6 +59,7 @@ const HRTax = () => {
       hasTaxCode: false,
       taxCode: 'TNCN567890',
       dependents: 2,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'FIN006',
@@ -65,6 +70,7 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN234567',
       dependents: 1,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR007',
@@ -75,6 +81,7 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN890123',
       dependents: 0,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'IT008',
@@ -85,6 +92,7 @@ const HRTax = () => {
       hasTaxCode: false,
       taxCode: 'TNCN456789',
       dependents: 2,
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'FIN009',
@@ -95,11 +103,29 @@ const HRTax = () => {
       hasTaxCode: true,
       taxCode: 'TNCN012345',
       dependents: 1,
+      avatar: '/avatar.jpg', // Added avatar
     },
-  ];
+  ].map((item, index) => ({
+    ...item,
+    stt: index + 1, // Added stt
+  }));
 
   const columns = [
-    { label: 'Mã số nhân sự', key: 'employeeId' },
+    { label: 'STT', key: 'stt' }, // Added STT column
+    {
+      label: 'Mã số nhân sự',
+      key: 'avatar',
+      render: (value, item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src={value}
+            alt={`${item.fullName}'s avatar`}
+            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+          />
+          <span>{item.employeeId}</span>
+        </div>
+      ),
+    }, // Added avatar column with custom rendering
     { label: 'Họ và tên NLĐ', key: 'fullName' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
@@ -116,7 +142,7 @@ const HRTax = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['employeeId', 'fullName', 'branch', 'department', 'position'],
+      columns: ['stt', 'avatar', 'fullName', 'branch', 'department', 'position'], // Added stt and avatar to group
     },
     {
       label: 'Thông tin thuế TNCN',
@@ -145,7 +171,7 @@ const HRTax = () => {
   };
 
   const handleCreate = () => {
-    navigate('/create/personal'); 
+    navigate('/create/personal');
   };
 
   return (
@@ -154,7 +180,7 @@ const HRTax = () => {
       columns={columns}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      onAdd={handleAdd}
+      showAdd={false}
       filterData={filterData}
       groupBy={columnGroups}
       onCreate={handleCreate}

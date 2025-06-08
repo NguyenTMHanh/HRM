@@ -10,6 +10,7 @@ const HRContract = () => {
       contractId: 'HD001',
       name: 'Nguyen Van A',
       employeeId: 'HR001',
+      avatar: '/avatar.jpg',
       branch: 'Hà Nội',
       department: 'HR',
       position: 'Manager',
@@ -27,6 +28,7 @@ const HRContract = () => {
       contractId: 'HD002',
       name: 'Tran Thi B',
       employeeId: 'IT002',
+      avatar: '/avatar.jpg',
       branch: 'Hồ Chí Minh',
       department: 'IT',
       position: 'Developer',
@@ -44,6 +46,7 @@ const HRContract = () => {
       contractId: 'HD003',
       name: 'Le Van C',
       employeeId: 'FIN003',
+      avatar: '/avatar.jpg',
       branch: 'Đà Nẵng',
       department: 'Finance',
       position: 'Accountant',
@@ -61,6 +64,7 @@ const HRContract = () => {
       contractId: 'HD004',
       name: 'Pham Thi D',
       employeeId: 'MK004',
+      avatar: '/avatar.jpg',
       branch: 'Cần Thơ',
       department: 'Marketing',
       position: 'Content Specialist',
@@ -78,6 +82,7 @@ const HRContract = () => {
       contractId: 'HD005',
       name: 'Hoang Van E',
       employeeId: 'SL005',
+      avatar: '/avatar.jpg',
       branch: 'Hải Phòng',
       department: 'Sales',
       position: 'Sales Executive',
@@ -95,6 +100,7 @@ const HRContract = () => {
       contractId: 'HD006',
       name: 'Tran Van F',
       employeeId: 'PR006',
+      avatar: '/avatar.jpg',
       branch: 'Nghệ An',
       department: 'Public Relations',
       position: 'PR Manager',
@@ -112,6 +118,7 @@ const HRContract = () => {
       contractId: 'HD007',
       name: 'Vo Thi G',
       employeeId: 'QA007',
+      avatar: '/avatar.jpg',
       branch: 'Bình Dương',
       department: 'Quality Assurance',
       position: 'QA Tester',
@@ -129,6 +136,7 @@ const HRContract = () => {
       contractId: 'HD008',
       name: 'Nguyen Van H',
       employeeId: 'IT008',
+      avatar: '/avatar.jpg',
       branch: 'Hà Nội',
       department: 'IT',
       position: 'Backend Developer',
@@ -142,11 +150,23 @@ const HRContract = () => {
       validFrom: '01-02-2023',
       validTo: '01-02-2027',
     },
-  ];
-  
+  ].map((item, index) => ({
+    ...item,
+    stt: index + 1, 
+  }));
 
   const columns = [
-    { label: 'Mã nhân sự', key: 'employeeId' },
+    { label: 'STT', key: 'stt' },
+    {    
+      label: 'Mã nhân sự',
+      key: 'avatar',
+      render: (value, item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src={value} alt={`${item.name}'s avatar`} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+          <span>{item.employeeId}</span>
+        </div>
+      ),
+    },
     { label: 'Họ và tên NLĐ', key: 'name' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
@@ -166,7 +186,7 @@ const HRContract = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['employeeId', 'name', 'branch', 'department', 'position'],
+      columns: ['avatar', 'stt', 'name', 'branch', 'department', 'position'],
     },
     {
       label: 'Thông tin HĐLĐ',
@@ -195,7 +215,7 @@ const HRContract = () => {
   };
 
   const handleCreate = () => {
-    navigate('/create/personal'); 
+    navigate('/create/personal');
   };
 
   return (
@@ -204,7 +224,7 @@ const HRContract = () => {
       columns={columns}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      onAdd={handleAdd}
+      showAdd={false}
       filterData={filterData}
       groupBy={columnGroups}
       onCreate={handleCreate}

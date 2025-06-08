@@ -20,6 +20,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2026',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR002',
@@ -35,6 +36,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2027',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR003',
@@ -50,6 +52,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Chưa đóng',
       endDate: 'N/A',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR004',
@@ -65,6 +68,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2025',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR005',
@@ -80,6 +84,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2028',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR006',
@@ -95,6 +100,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2029',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR007',
@@ -110,6 +116,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2027',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR008',
@@ -125,6 +132,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Chưa đóng',
       endDate: 'N/A',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR009',
@@ -140,6 +148,7 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2026',
+      avatar: '/avatar.jpg', // Added avatar
     },
     {
       employeeId: 'HR010',
@@ -155,13 +164,31 @@ const HRInsurance = () => {
       bhtnRate: '1%',
       insuranceStatus: 'Đang đóng',
       endDate: '01-01-2027',
+      avatar: '/avatar.jpg', // Added avatar
     },
-  ];
+  ].map((item, index) => ({
+    ...item,
+    stt: index + 1, // Added stt
+  }));
 
   const columns = [
-    { label: 'Mã nhân sự', key: 'employeeId' },
+    { label: 'STT', key: 'stt' }, // Added STT column
+    {
+      label: 'Mã nhân sự',
+      key: 'avatar',
+      render: (value, item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src={value}
+            alt={`${item.fullName}'s avatar`}
+            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+          />
+          <span>{item.employeeId}</span>
+        </div>
+      ),
+    }, // Added avatar column with custom rendering
     { label: 'Họ và tên NLĐ', key: 'fullName' },
-    { label: 'Chi nhánh', key: 'branch' }, // Added branch column
+    { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
     { label: 'Vị trí', key: 'position' },
     { label: 'Mã số BHYT', key: 'bhytId' },
@@ -177,7 +204,7 @@ const HRInsurance = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['employeeId', 'fullName', 'branch', 'department', 'position'], // Added branch to group
+      columns: ['stt', 'avatar', 'fullName', 'branch', 'department', 'position'], // Added stt and avatar to group
     },
     { label: 'Thông tin BHYT', columns: ['bhytId', 'bhytRate'] },
     { label: 'Thông tin BHXH', columns: ['hasBhxh', 'bhxhId', 'bhxhRate'] },
@@ -206,7 +233,7 @@ const HRInsurance = () => {
   };
 
   const handleCreate = () => {
-    navigate('/create/personal'); 
+    navigate('/create/personal');
   };
 
   return (
@@ -215,7 +242,7 @@ const HRInsurance = () => {
       columns={columns}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      onAdd={handleAdd}
+      showAdd={false}
       filterData={filterData}
       groupBy={columnGroups}
       onCreate={handleCreate}

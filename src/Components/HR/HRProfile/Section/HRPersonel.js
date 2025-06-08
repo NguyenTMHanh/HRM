@@ -2,13 +2,14 @@ import React from 'react';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 
-const HRPersonal = () => {
+const HRPersonel = () => {
   const navigate = useNavigate();
 
   const personelData = [
     {
       id: 'HR001',
       name: 'Nguyen Van A',
+      avatar: '/avatar.jpg', 
       branch: 'Hà Nội',
       department: 'HR',
       jobTitle: 'Trưởng phòng',
@@ -24,6 +25,7 @@ const HRPersonal = () => {
     {
       id: 'IT002',
       name: 'Tran Thi B',
+      avatar: '/avatar.jpg', 
       branch: 'Hồ Chí Minh',
       department: 'IT',
       jobTitle: 'Lập trình viên',
@@ -39,6 +41,7 @@ const HRPersonal = () => {
     {
       id: 'FIN003',
       name: 'Le Van C',
+      avatar: '/avatar.jpg',
       branch: 'Đà Nẵng',
       department: 'Finance',
       jobTitle: 'Kế toán viên',
@@ -54,6 +57,7 @@ const HRPersonal = () => {
     {
       id: 'MKT004',
       name: 'Pham Thi D',
+      avatar: '/avatar.jpg',
       branch: 'Hà Nội',
       department: 'Marketing',
       jobTitle: 'Chuyên viên Marketing',
@@ -66,130 +70,21 @@ const HRPersonal = () => {
       email: 'phamthid@company.com',
       phoneNumber: '0932145678',
     },
-    {
-      id: 'HR005',
-      name: 'Hoang Van E',
-      branch: 'Hà Nội',
-      department: 'HR',
-      jobTitle: 'Trợ lý nhân sự',
-      rank: 'Cấp 1',
-      position: 'Assistant',
-      joinDate: '03-02-2025',
-      managedBy: 'Nguyen Van X',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'hoangvane@company.com',
-      phoneNumber: '0123456790',
-    },
-    {
-      id: 'IT006',
-      name: 'Nguyen Thi F',
-      branch: 'Hồ Chí Minh',
-      department: 'IT',
-      jobTitle: 'Kiểm thử viên',
-      rank: 'Cấp 1',
-      position: 'Tester',
-      joinDate: '03-02-2025',
-      managedBy: 'Le Van Y',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'nguyenthif@company.com',
-      phoneNumber: '0987654322',
-    },
-    {
-      id: 'FIN007',
-      name: 'Tran Van G',
-      branch: 'Đà Nẵng',
-      department: 'Finance',
-      jobTitle: 'Chuyên viên phân tích',
-      rank: 'Cấp 2',
-      position: 'Analyst',
-      joinDate: '03-02-2025',
-      managedBy: 'Pham Thi Z',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'tranvang@company.com',
-      phoneNumber: '0912345679',
-    },
-    {
-      id: 'MKT008',
-      name: 'Le Thi H',
-      branch: 'Hà Nội',
-      department: 'Marketing',
-      jobTitle: 'Điều phối viên',
-      rank: 'Cấp 1',
-      position: 'Coordinator',
-      joinDate: '03-02-2025',
-      managedBy: 'Nguyen Van X',
-      workType: 'Bán thời gian',
-      lunchBreak: '1 giờ',
-      email: 'lethih@company.com',
-      phoneNumber: '0932145679',
-    },
-    {
-      id: 'HR009',
-      name: 'Pham Van I',
-      branch: 'Hà Nội',
-      department: 'HR',
-      jobTitle: 'Chuyên viên tuyển dụng',
-      rank: 'Cấp 2',
-      position: 'Recruiter',
-      joinDate: '03-02-2025',
-      managedBy: 'Nguyen Van X',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'phamvani@company.com',
-      phoneNumber: '0123456791',
-    },
-    {
-      id: 'IT010',
-      name: 'Nguyen Van K',
-      branch: 'Hồ Chí Minh',
-      department: 'IT',
-      jobTitle: 'Kỹ sư DevOps',
-      rank: 'Cấp 3',
-      position: 'DevOps',
-      joinDate: '03-02-2025',
-      managedBy: 'Le Van Y',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'nguyenvank@company.com',
-      phoneNumber: '0987654323',
-    },
-    {
-      id: 'FIN011',
-      name: 'Tran Thi L',
-      branch: 'Đà Nẵng',
-      department: 'Finance',
-      jobTitle: 'Trưởng phòng tài chính',
-      rank: 'Cấp 4',
-      position: 'Manager',
-      joinDate: '03-02-2025',
-      managedBy: 'Pham Thi Z',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'tranthil@company.com',
-      phoneNumber: '0912345680',
-    },
-    {
-      id: 'MKT012',
-      name: 'Le Van M',
-      branch: 'Hà Nội',
-      department: 'Marketing',
-      jobTitle: 'Nhà thiết kế',
-      rank: 'Cấp 2',
-      position: 'Designer',
-      joinDate: '03-02-2025',
-      managedBy: 'Nguyen Van X',
-      workType: 'Toàn thời gian',
-      lunchBreak: '1 giờ',
-      email: 'levanm@company.com',
-      phoneNumber: '0932145680',
-    },
-  ];
+  ].map((item, index) => ({
+    ...item,
+    stt: index + 1,
+  }));
 
   const columns = [
-    { label: 'Mã nhân sự', key: 'id' },
+    { label: 'STT', key: 'stt' },
+    {
+      label: 'Mã nhân sự', key: 'avatar', render: (value, item) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src={value} alt={`${item.name}'s avatar`} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+          <span>{item.id}</span>
+        </div>
+      )
+    },
     { label: 'Họ và tên NLĐ', key: 'name' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
@@ -207,19 +102,7 @@ const HRPersonal = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: [
-        'id',
-        'name',
-        'branch',
-        'department',
-        'jobTitle',
-        'rank',
-        'position',
-        'joinDate',
-        'managedBy',
-        'workType',
-        'lunchBreak',
-      ],
+      columns: ['avatar', 'stt', 'name', 'branch', 'department', 'jobTitle', 'rank', 'position', 'joinDate', 'managedBy', 'workType', 'lunchBreak'],
     },
     {
       label: 'Thông tin liên hệ',
@@ -244,7 +127,7 @@ const HRPersonal = () => {
   };
 
   const handleCreate = () => {
-    navigate('/create/personal'); 
+    navigate('/create/personal');
   };
 
   return (
@@ -255,10 +138,10 @@ const HRPersonal = () => {
       onDelete={handleDelete}
       filterData={filterData}
       showAdd={false}
-      groupBy={columnGroups} 
+      groupBy={columnGroups}
       onCreate={handleCreate}
     />
   );
 };
 
-export default HRPersonal;
+export default HRPersonel;

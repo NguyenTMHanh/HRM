@@ -1,6 +1,8 @@
 import React from 'react';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
+import Status from '../../../../Shared/Status/Status';
+
 
 const HRContract = () => {
   const navigate = useNavigate();
@@ -155,42 +157,63 @@ const HRContract = () => {
     stt: index + 1, 
   }));
 
-  const columns = [
-    { label: 'STT', key: 'stt' },
-    {    
-      label: 'Mã nhân sự',
-      key: 'avatar',
+   const columns = [
+    { label: "STT", key: "stt" },
+    {
+      label: "Mã nhân sự",
+      key: "avatar",
       render: (value, item) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src={value} alt={`${item.name}'s avatar`} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <img
+            src={value}
+            alt={`${item.name}'s avatar`}
+            style={{ width: "30px", height: "30px", borderRadius: "50%", objectFit: "cover" }}
+          />
           <span>{item.employeeId}</span>
         </div>
       ),
     },
-    { label: 'Họ và tên NLĐ', key: 'name' },
-    { label: 'Chi nhánh', key: 'branch' },
-    { label: 'Bộ phận', key: 'department' },
-    { label: 'Vị trí', key: 'position' },
-    { label: 'Mã HĐLĐ', key: 'contractId' },
-    { label: 'Loại hợp đồng', key: 'contractType' },
-    { label: 'Tình trạng', key: 'status' },
-    { label: 'Mức lương /1h', key: 'hourlyRate' },
-    { label: 'Số giờ làm việc chuẩn/1 ngày', key: 'standardHoursPerDay' },
-    { label: 'Hệ số lương', key: 'salaryCoefficient' },
-    { label: 'Ngày công chuẩn', key: 'standardWorkingDays' },
-    { label: 'Lương cơ bản', key: 'basicSalary' },
-    { label: 'Hiệu lực từ', key: 'validFrom' },
-    { label: 'Hiệu lực đến', key: 'validTo' },
+    { label: "Họ và tên NLĐ", key: "name" },
+    { label: "Chi nhánh", key: "branch" },
+    { label: "Bộ phận", key: "department" },
+    { label: "Vị trí", key: "position" },
+    { label: "Mã HĐLĐ", key: "contractId" },
+    { label: "Loại hợp đồng", key: "contractType" },
+    {
+      label: "Tình trạng",
+      key: "status",
+      render: (status) => (
+        <Status status={status === "Còn hiệu lực" ? "active" : "inactive"} type="contract" />
+      ),
+    },
+    { label: "Mức lương /1h", key: "hourlyRate" },
+    { label: "Số giờ làm việc chuẩn/1 ngày", key: "standardHoursPerDay" },
+    { label: "Hệ số lương", key: "salaryCoefficient" },
+    { label: "Ngày công chuẩn", key: "standardWorkingDays" },
+    { label: "Lương cơ bản", key: "basicSalary" },
+    { label: "Hiệu lực từ", key: "validFrom" },
+    { label: "Hiệu lực đến", key: "validTo" },
   ];
 
   const columnGroups = [
     {
-      label: 'Thông tin hồ sơ nhân sự',
-      columns: ['avatar', 'stt', 'name', 'branch', 'department', 'position'],
+      label: "Thông tin hồ sơ nhân sự",
+      columns: ["avatar", "stt", "name", "branch", "department", "position"],
     },
     {
-      label: 'Thông tin HĐLĐ',
-      columns: ['contractId', 'contractType', 'status', 'hourlyRate', 'standardHoursPerDay', 'salaryCoefficient', 'standardWorkingDays', 'basicSalary', 'validFrom', 'validTo'],
+      label: "Thông tin HĐLĐ",
+      columns: [
+        "contractId",
+        "contractType",
+        "status",
+        "hourlyRate",
+        "standardHoursPerDay",
+        "salaryCoefficient",
+        "standardWorkingDays",
+        "basicSalary",
+        "validFrom",
+        "validTo",
+      ],
     },
   ];
 
@@ -203,11 +226,11 @@ const HRContract = () => {
   };
 
   const handleAdd = () => {
-    navigate('/create/contract');
+    navigate("/create/contract");
   };
 
   const filterData = (data, searchTerm) => {
-    return data.filter(item =>
+    return data.filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.contractId.toLowerCase().includes(searchTerm.toLowerCase())
@@ -215,7 +238,7 @@ const HRContract = () => {
   };
 
   const handleCreate = () => {
-    navigate('/create/personal');
+    navigate("/create/personal");
   };
 
   return (

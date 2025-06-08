@@ -1,7 +1,7 @@
 import React from 'react';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
-
+import Status from '../../../../Shared/Status/Status';
 const HRInsurance = () => {
   const navigate = useNavigate();
 
@@ -18,7 +18,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67890',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: '01-01-2026',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -34,7 +34,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67891',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: '01-01-2027',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -50,7 +50,7 @@ const HRInsurance = () => {
       bhxhId: '',
       bhxhRate: '0%',
       bhtnRate: '1%',
-      insuranceStatus: 'Chưa đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: 'N/A',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -66,7 +66,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67892',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: '01-01-2025',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -82,7 +82,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67893',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Dừng đóng',
       endDate: '01-01-2028',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -98,7 +98,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67894',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Dừng đóng',
       endDate: '01-01-2029',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -114,7 +114,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67895',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: '01-01-2027',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -130,7 +130,7 @@ const HRInsurance = () => {
       bhxhId: '',
       bhxhRate: '0%',
       bhtnRate: '1%',
-      insuranceStatus: 'Chưa đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: 'N/A',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -146,7 +146,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67896',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Đang tham gia',
       endDate: '01-01-2026',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -162,7 +162,7 @@ const HRInsurance = () => {
       bhxhId: 'BHXH67897',
       bhxhRate: '8%',
       bhtnRate: '1%',
-      insuranceStatus: 'Đang đóng',
+      insuranceStatus: 'Dừng đóng',
       endDate: '01-01-2027',
       avatar: '/avatar.jpg', // Added avatar
     },
@@ -198,6 +198,13 @@ const HRInsurance = () => {
     { label: 'Tỷ lệ đóng BHXH', key: 'bhxhRate' },
     { label: 'Tỷ lệ đóng BHTN', key: 'bhtnRate' },
     { label: 'Tình trạng đóng BH', key: 'insuranceStatus' },
+    {
+      label: "Tình trạng đóng BH",
+      key: "insuranceStatus",
+      render: (status) => (
+        <Status status={status === "Đang tham gia" ? "active" : "inactive"} type="insurance" />
+      ),
+    },
     { label: 'Ngày kết thúc đóng', key: 'endDate' },
   ];
 

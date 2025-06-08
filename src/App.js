@@ -43,6 +43,7 @@ import Rank from './Components/Setting/StructureSetting/Page/Rank/Rank';
 import Department from './Components/Setting/StructureSetting/Page/Department/Department';
 import JobTitle from './Components/Setting/StructureSetting/Page/JobTitle/JobTitle';
 import Position from './Components/Setting/StructureSetting/Page/Position/Position';
+import HRPersonal from './Components/HR/HRProfile/Section/HRPersonal';
 import { Navigate } from 'react-router-dom'; 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -67,6 +68,7 @@ function App() {
                   <Route path="/checkin/daily" element={<DailyCheckin />} />
                   <Route path="/checkin/history" element={<HistoryCheckin />} />
                   <Route path="/hr/profile" element={<HRProfile />}>
+                    <Route path="personal" element={<HRPersonal/>} />
                     <Route path="personel" element={<HRPersonel />} />
                     <Route path="insurance" element={<HRInsurance />} />
                     <Route path="contract" element={<HRContract />} />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CustomTabs from "../../../Shared/Tabs/Tabs";
+import HRPersonal from "./Section/HRPersonal";
 import HRPersonel from "./Section/HRPersonel";
 import HRContract from "./Section/HRContract";
 import HRInsurance from "./Section/HRInsurance";
@@ -12,9 +13,10 @@ const ProfileInfo = () => {
     const navigate = useNavigate();
     const location = useLocation();
     
-    const tabFromUrl = location.pathname.split("/")[3] || "personel";
+    const tabFromUrl = location.pathname.split("/")[3] || "personal";
     
     const items = [
+        { key: "personal", label: "Danh sách Thông tin cá nhân", children: <HRPersonal /> },
         { key: "personel", label: "Danh sách Hồ sơ nhân sự", children: <HRPersonel /> },       
         { key: "contract", label: "Danh sách HDLĐ", children: <HRContract />},
         { key: "insurance", label: "Danh Bảo hiểm", children: <HRInsurance/> },

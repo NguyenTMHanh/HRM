@@ -239,7 +239,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
         // Create mode
         response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
       }
-console.log("response: ", response);
       if (response.status === 200 && response.data.code === 0) {
         const successMessage = isEditMode ? 
           "Cập nhật thông tin cá nhân thành công!" : 
@@ -335,9 +334,7 @@ console.log("response: ", response);
   };
 
   const handleNext = () => {
-    if (isSavedSuccessfully) {
-      navigate("/create/personel");
-    }
+    navigate("/create/personel");
   };
 
   return (

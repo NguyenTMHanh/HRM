@@ -216,7 +216,6 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
-console.log('Data: ', dataToSend);
       let response;
 
       if (isEditMode) {
@@ -342,9 +341,7 @@ console.log('Data: ', dataToSend);
   };
 
   const handleNext = () => {
-    if (isSavedSuccessfully) {
-      navigate("/create/contract");
-    }
+    navigate("/create/contract");
   };
 
   const handleBack = () => {

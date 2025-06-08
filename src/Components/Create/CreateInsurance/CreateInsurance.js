@@ -322,13 +322,11 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
   };
 
   const handleNext = () => {
-    if (isSavedSuccessfully) {
-      navigate('/forms/tax');
-    }
+    navigate('/create/tax');
   };
 
   const handleBack = () => {
-    navigate('/form/contract');
+    navigate('/create/contract');
   };
 
   return (

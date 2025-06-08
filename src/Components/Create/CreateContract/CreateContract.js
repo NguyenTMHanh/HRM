@@ -172,8 +172,10 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
   );
 
   useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+    if (!isEditMode) {
+      fetchEmployees();
+    }
+  }, [fetchEmployees, isEditMode]);
 
   useEffect(() => {
     if (!isEditMode && selectedEmployee && typeof selectedEmployee === 'string') {
@@ -369,9 +371,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
   };
 
   const handleNext = () => {
-    if (isSavedSuccessfully) {
-      navigate('/create/insurance');
-    }
+    navigate('/create/insurance');
   };
 
   const handleBack = () => {

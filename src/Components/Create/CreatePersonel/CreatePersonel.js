@@ -30,6 +30,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
   const [avatarId, setAvatarId] = useState(null);
+  const [originalAvatarId, setOriginalAvatarId] = useState(null);
   const [breakTime, setBreakTime] = useState("");
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,14 +45,19 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
   const hasAllModuleAuthority = permissions.some(
     (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
   );
-  const canCreatePersonel = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === "profilePersonel" && p.actionId === "create"
+  const canUpdate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "profilePersonel" && p.actionId === "update"
   );
-
-  // Check permission for updating role group
   const canUpdateRoleGroup = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "HrPersonel" && p.actionId === "update"
   );
+
+  // Extract image ID from URL
+  const extractImageIdFromUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    const match = imageUrl.match(/\/GetFile\/([^/?]+)/);
+    return match ? match[1] : null;
+  };
 
   const fetchBreakTime = useCallback(async () => {
     try {
@@ -85,6 +91,21 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
     }
   }, []);
 
+  // Function to get employee code from userId
+  const getEmployeeCode = async (userId) => {
+    try {
+      const response = await axios.get(`/api/Employee/GetEmployeeCodeToUserId?userId=${userId}`);
+      if (response.data.code === 0) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to get employee code');
+      }
+    } catch (error) {
+      console.error('Error getting employee code:', error);
+      throw error;
+    }
+  };
+
   const initialValues = {
     joinDate: moment(),
     fullName: null,
@@ -96,7 +117,6 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
 
   useEffect(() => {
     if (initialData) {
-      // Ensure fullName is in the format "employeeCode - employeeName"
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
         : null;
@@ -122,9 +142,9 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
 
       if (initialData.avatarUrl || initialData.avatar) {
         setAvatarImage(initialData.avatarUrl || initialData.avatar);
-        if (typeof (initialData.avatarUrl || initialData.avatar) === 'string' && (initialData.avatarUrl || initialData.avatar).length <= 50) {
-          setAvatarId(initialData.avatarUrl || initialData.avatar);
-        }
+        const avatarId = extractImageIdFromUrl(initialData.avatarUrl || initialData.avatar);
+        setAvatarId(avatarId);
+        setOriginalAvatarId(avatarId);
       }
     } else {
       form.setFieldsValue({
@@ -141,6 +161,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
       form.resetFields();
       setAvatarImage(null);
       setAvatarId(null);
+      setOriginalAvatarId(null);
       setIsSavedSuccessfully(false);
     }
   };
@@ -150,8 +171,8 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
   }, []);
 
   const handleSave = async () => {
-    if (!canCreatePersonel) {
-      message.error("Bạn không có quyền tạo hồ sơ nhân sự.");
+    if (!canUpdate) {
+      message.error("Bạn không có quyền cập nhật hồ sơ nhân sự.");
       return;
     }
 
@@ -159,6 +180,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
       setIsLoading(true);
 
       const formData = await form.validateFields();
+
       // In edit mode, skip validation for WorkInfo fields if not displayed
       const fieldsToSkipInEdit = [
         'joinDate', 'workLocation', 'department', 'jobTitle',
@@ -171,47 +193,53 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         });
       }
 
-      const employeeCode = formData.fullName ? formData.fullName.split(" - ")[0] : null;
-      const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        return;
+      }
 
+      const employeeCode = await getEmployeeCode(userId);
+      const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
       const dataToSend = {
         employeeCode,
         nameEmployee: formData.fullName ? formData.fullName.split(" - ")[1] : null,
         dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
         gender: formData.gender,
-        username: formData.username,
-        password: formData.password,
-        dateJoinCompany: initialData ? initialData.joinDate : (formData.joinDate ? formData.joinDate.toISOString() : null),
-        departmentName: initialData ? initialData.department : formData.department,
-        jobtitleName: initialData ? initialData.jobTitle : formData.jobTitle,
-        rankName: initialData ? initialData.level : formData.level,
-        positionName: initialData ? initialData.position : formData.position,
-        managerId: initialData ? (initialData.managedBy ? initialData.managedBy.split(" - ")[0] : null) : managerCode,
-        branchName: initialData ? initialData.workLocation : formData.workLocation,
-        jobTypeName: initialData ? initialData.workMode : formData.workMode,
-        breakLunch: initialData ? parseBreakLunch(initialData.lunchBreak) : parseBreakLunch(breakTime || formData.lunchBreak),
+        username: "",
+        password: "",
+        dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
+        departmentName:formData.department,
+        jobtitleName: formData.jobTitle,
+        rankName: formData.level,
+        positionName: formData.position,
+        managerId: managerCode,
+        branchName: formData.workLocation,
+        jobTypeName: formData.workMode,
+        breakLunch: 0,
         avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
-
-      const response = await axios.post("/api/Employee/CreatePersonel", dataToSend);
+console.log('data:',dataToSend )
+      const response = await axios.put("/api/Employee/UpdatePersonel", dataToSend);
 
       if (response.status === 200 && response.data.code === 0) {
         message.destroy();
-        message.success("Tạo mới hồ sơ nhân sự thành công!");
+        message.success("Cập nhật hồ sơ nhân sự thành công!");
         setIsSavedSuccessfully(true);
         form.resetFields();
         fetchEmployees();
         fetchBreakTime();
         setAvatarImage(null);
         setAvatarId(null);
+        setOriginalAvatarId(null);
 
         if (typeof onSave === "function") {
           onSave(dataToSend);
         }
       } else {
         message.destroy();
-        message.error(response.data.message || "Tạo hồ sơ nhân sự thất bại!");
+        message.error(response.data.message || "Cập nhật hồ sơ nhân sự thất bại!");
       }
     } catch (err) {
       message.destroy();
@@ -220,7 +248,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
         return;
       }
 
-      console.error("Create personel employee error:", err);
+      console.error("Update personel employee error:", err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
@@ -339,17 +367,16 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false }
             />
           </div>
 
-            <div className="collapse-container">
-              <Collapse
-                item={{
-                  key: "2",
-                  header: "Thông tin công việc",
-                  children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
-                }}
-              />
-            </div>
+          <div className="collapse-container">
+            <Collapse
+              item={{
+                key: "2",
+                header: "Thông tin công việc",
+                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
+              }}
+            />
+          </div>
 
-          {/* Always show AccountInfo, but with different props based on context */}
           <div className="collapse-container">
             <Collapse
               item={{

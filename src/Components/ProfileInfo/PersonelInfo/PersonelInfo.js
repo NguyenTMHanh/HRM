@@ -117,6 +117,7 @@ function PersonelInfoProfile() {
       workMode: apiData.jobTypeName || " ",
       lunchBreak: formatLunchBreak(apiData.breakLunch),
       avatarUrl: getImageUrl(apiData.avatarPath),
+      roleGroup: apiData.roleName || " ",
     };
   };
 

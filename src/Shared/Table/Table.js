@@ -1,6 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaArrowLeft, FaArrowRight, FaSearch, FaPlus, FaEye } from 'react-icons/fa';
+import { message } from 'antd';
+import axios from 'axios';
 import './styles.css';
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const TableComponent = ({
   data,
@@ -22,31 +40,103 @@ const TableComponent = ({
   canUpdate = true,
   canDelete = true,
   canView = true,
+  branchFieldName = 'branch', // Field name for branch in data
+  departmentFieldName = 'department', // Field name for department in data
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState('All');
-  const [sortOrder, setSortOrder] = useState('asc'); // State for sort order: 'asc' or 'desc'
+  const [sortOrder, setSortOrder] = useState('asc');
+  
+  // API data states
+  const [branches, setBranches] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
 
-  // Get unique branches
-  const uniqueBranches = [...new Set(data.map(item => item.branch))];
+  // Fetch branches from API
+  const fetchBranches = async () => {
+    try {
+      setLoadingBranches(true);
+      const response = await axios.get('/api/Branch');
+      
+      if (response.data && Array.isArray(response.data)) {
+        setBranches(response.data);
+      } else {
+        console.error('Invalid branches data format:', response.data);
+        setBranches([]);
+      }
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      message.error('Không thể tải danh sách chi nhánh');
+      setBranches([]);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
 
-  // Get unique departments filtered by selected branch
-  const uniqueDepartments = selectedBranch === 'All'
-    ? [...new Set(data.map(item => item.department))]
-    : [...new Set(data.filter(item => item.branch === selectedBranch).map(item => item.department))];
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    try {
+      setLoadingDepartments(true);
+      const response = await axios.get('/api/Department');
+      
+      if (response.data && Array.isArray(response.data)) {
+        setDepartments(response.data);
+      } else {
+        console.error('Invalid departments data format:', response.data);
+        setDepartments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      message.error('Không thể tải danh sách bộ phận');
+      setDepartments([]);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  // Load API data on component mount
+  useEffect(() => {
+    if (onBranchShow) {
+      fetchBranches();
+    }
+    if (onDepartmentShow) {
+      fetchDepartments();
+    }
+  }, [onBranchShow, onDepartmentShow]);
+
+  // Get departments filtered by selected branch
+  const getFilteredDepartments = () => {
+    if (selectedBranch === 'All') {
+      return departments;
+    }
+    
+    // Find the selected branch
+    const selectedBranchData = branches.find(branch => branch.branchName === selectedBranch);
+    if (selectedBranchData && selectedBranchData.departmentName) {
+      // Filter departments that exist in the selected branch
+      return departments.filter(dept => 
+        selectedBranchData.departmentName.includes(dept.departmentName)
+      );
+    }
+    
+    return departments;
+  };
+
+  const filteredDepartments = getFilteredDepartments();
 
   // Filter data by branch
   const branchFilteredData = selectedBranch === 'All'
     ? data
-    : data.filter(item => item.branch === selectedBranch);
+    : data.filter(item => item[branchFieldName] === selectedBranch);
 
   // Filter data by department
   const departmentFilteredData = selectedDepartment === 'All'
     ? branchFilteredData
-    : branchFilteredData.filter(item => item.department === selectedDepartment);
+    : branchFilteredData.filter(item => item[departmentFieldName] === selectedDepartment);
 
   // Apply search filter
   const filteredData = filterData ? filterData(departmentFilteredData, searchTerm) : departmentFilteredData;
@@ -80,10 +170,16 @@ const TableComponent = ({
     setCurrentPage(1);
   };
 
-  // Reset department to 'All' when branch changes
+  // Handle branch change - reset department filter
   const handleBranchChange = (e) => {
     setSelectedBranch(e.target.value);
     setSelectedDepartment('All'); // Reset department filter
+    setCurrentPage(1); // Reset to first page
+  };
+
+  // Handle department change
+  const handleDepartmentChange = (e) => {
+    setSelectedDepartment(e.target.value);
     setCurrentPage(1); // Reset to first page
   };
 
@@ -110,7 +206,7 @@ const TableComponent = ({
             </button>
           </div>
 
-          {/* Branch Filter - Chỉ hiển thị nếu onBranchShow là true */}
+          {/* Branch Filter - Load from API */}
           {onBranchShow && (
             <div className="branch-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <label htmlFor="branch-select" style={{ fontSize: '14px' }}>Chi nhánh: </label>
@@ -118,29 +214,51 @@ const TableComponent = ({
                 id="branch-select"
                 value={selectedBranch}
                 onChange={handleBranchChange}
-                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+                disabled={loadingBranches}
+                style={{ 
+                  padding: '6px', 
+                  fontSize: '14px', 
+                  borderRadius: '4px', 
+                  border: '1px solid #ccc',
+                  opacity: loadingBranches ? 0.6 : 1
+                }}
               >
-                <option value="All">Tất cả</option>
-                {uniqueBranches.map(branch => (
-                  <option key={branch} value={branch}>{branch}</option>
+                <option value="All">
+                  {loadingBranches ? 'Đang tải...' : 'Tất cả'}
+                </option>
+                {branches.map(branch => (
+                  <option key={branch.id} value={branch.branchName}>
+                    {branch.branchName}
+                  </option>
                 ))}
               </select>
             </div>
           )}
 
-          {/* Department Filter - Chỉ hiển thị nếu onDepartmentShow là true */}
+          {/* Department Filter - Load from API and filter by branch */}
           {onDepartmentShow && (
             <div className="department-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <label htmlFor="department-select" style={{ fontSize: '14px' }}>Bộ phận: </label>
               <select
                 id="department-select"
                 value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+                onChange={handleDepartmentChange}
+                disabled={loadingDepartments}
+                style={{ 
+                  padding: '6px', 
+                  fontSize: '14px', 
+                  borderRadius: '4px', 
+                  border: '1px solid #ccc',
+                  opacity: loadingDepartments ? 0.6 : 1
+                }}
               >
-                <option value="All">Tất cả</option>
-                {uniqueDepartments.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
+                <option value="All">
+                  {loadingDepartments ? 'Đang tải...' : 'Tất cả'}
+                </option>
+                {filteredDepartments.map(dept => (
+                  <option key={dept.id} value={dept.departmentName}>
+                    {dept.departmentName}
+                  </option>
                 ))}
               </select>
             </div>
@@ -156,7 +274,7 @@ const TableComponent = ({
             </select>
           </div>
 
-          {/* Sort Combobox - Moved after items-per-page */}
+          {/* Sort Combobox */}
           {sortField && (
             <div className="sort-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <label htmlFor="sort-select" style={{ fontSize: '14px' }}>Sắp xếp: </label>
@@ -166,12 +284,13 @@ const TableComponent = ({
                 onChange={handleSortChange}
                 style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
               >
-                <option value="asc">Cao → Thấp</option>
-                <option value="desc">Thấp → Cao</option>
+                <option value="asc">A → Z</option>
+                <option value="desc">Z → A</option>
               </select>
             </div>
           )}
         </div>
+        
         {showCreate && (
           <button
             className="create-new-btn"
@@ -209,77 +328,93 @@ const TableComponent = ({
             </tr>
           </thead>
           <tbody>
-            {currentData.map((item, index) => (
-              <tr key={item.employeeId || index}>
-                {columns.map((column) => (
-                  <td key={column.key}>
-                    {column.type === 'checkbox' ? (
-                      <input
-                        type="checkbox"
-                        checked={item[column.key] || false}
-                        readOnly
-                      />
-                    ) : column.render ? (
-                      column.render(item[column.key], item)
-                    ) : (
-                      item[column.key]
-                    )}
+            {currentData.length > 0 ? (
+              currentData.map((item, index) => (
+                <tr key={item.employeeId || item.id || index}>
+                  {columns.map((column) => (
+                    <td key={column.key}>
+                      {column.type === 'checkbox' ? (
+                        <input
+                          type="checkbox"
+                          checked={item[column.key] || false}
+                          readOnly
+                        />
+                      ) : column.render ? (
+                        column.render(item[column.key], item)
+                      ) : (
+                        item[column.key] || ''
+                      )}
+                    </td>
+                  ))}
+                  <td>
+                    <div className="action-buttons">
+                      {showView && onView && (
+                        <button
+                          onClick={() => onView(item)}
+                          className="btn btn-view"
+                          disabled={!canView}
+                          style={{
+                            opacity: canView ? 1 : 0.5,
+                            cursor: canView ? 'pointer' : 'not-allowed',
+                          }}
+                          title="Xem chi tiết"
+                        >
+                          <FaEye />
+                        </button>
+                      )}
+                      {showAdd && onAdd && (
+                        <button
+                          onClick={() => onAdd(item)}
+                          className="btn btn-add"
+                          disabled={!canCreate}
+                          style={{
+                            opacity: canCreate ? 1 : 0.5,
+                            cursor: canCreate ? 'pointer' : 'not-allowed',
+                          }}
+                          title="Thêm"
+                        >
+                          <FaPlus />
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          onClick={() => onEdit(item)}
+                          className="btn btn-edit"
+                          disabled={!canUpdate}
+                          style={{
+                            opacity: canUpdate ? 1 : 0.5,
+                            cursor: canUpdate ? 'pointer' : 'not-allowed',
+                          }}
+                          title="Chỉnh sửa"
+                        >
+                          <FaEdit />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={() => onDelete(item)}
+                          className="btn btn-delete"
+                          disabled={!canDelete}
+                          style={{
+                            opacity: canDelete ? 1 : 0.5,
+                            cursor: canDelete ? 'pointer' : 'not-allowed',
+                          }}
+                          title="Xóa"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
                   </td>
-                ))}
-                <td>
-                  <div className="action-buttons">
-                    {showView && (
-                      <button
-                        onClick={() => onView(item)}
-                        className="btn btn-view"
-                        disabled={!canView}
-                        style={{
-                          opacity: canView ? 1 : 0.5,
-                          cursor: canView ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        <FaEye />
-                      </button>
-                    )}
-                    {showAdd && (
-                      <button
-                        onClick={() => onAdd(item)}
-                        className="btn btn-add"
-                        disabled={!canCreate} // Assuming "Add" requires create permission
-                        style={{
-                          opacity: canCreate ? 1 : 0.5,
-                          cursor: canCreate ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        <FaPlus />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="btn btn-edit"
-                      disabled={!canUpdate}
-                      style={{
-                        opacity: canUpdate ? 1 : 0.5,
-                        cursor: canUpdate ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => onDelete(item)}
-                      className="btn btn-delete"
-                      disabled={!canDelete}
-                      style={{
-                        opacity: canDelete ? 1 : 0.5,
-                        cursor: canDelete ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
+                  Không có dữ liệu để hiển thị
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

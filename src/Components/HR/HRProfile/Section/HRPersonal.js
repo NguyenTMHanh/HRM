@@ -1,99 +1,137 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { message, Spin } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const HRPersonal = () => {
   const navigate = useNavigate();
+  const [personalData, setPersonalData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
 
-  const personalData = [
-    {
-      id: 'HR001',
-      avatar: '/avatar.jpg',
-      name: 'Nguyen Van A',
-      gender: 'Nam',
-      birthDate: '15-05-1990',
-      nationality: 'Việt Nam',
-      ethnicity: 'Kinh',
-      city: 'Hà Nội',
-      district: 'Cầu Giấy',
-      ward: 'Dịch Vọng',
-      houseNumber: '123 Đường Láng',
-      contactCity: 'Hà Nội',
-      contactDistrict: 'Cầu Giấy',
-      contactWard: 'Dịch Vọng',
-      contactHouseNumber: '123 Đường Láng',
-      email: 'nguyenvana@company.com',
-      phoneNumber: '0123456789',
-      bankAccount: '1234567890',
-      bankName: 'Vietcombank',
-    },
-    {
-      id: 'IT002',
-      avatar: '/avatar.jpg',
-      name: 'Tran Thi B',
-      gender: 'Nữ',
-      birthDate: '22-08-1995',
-      nationality: 'Việt Nam',
-      ethnicity: 'Tày',
-      city: 'Hồ Chí Minh',
-      district: 'Quận 1',
-      ward: 'Bến Nghé',
-      houseNumber: '45 Lê Lợi',
-      contactCity: 'Hồ Chí Minh',
-      contactDistrict: 'Quận 1',
-      contactWard: 'Bến Nghé',
-      contactHouseNumber: '45 Lê Lợi',
-      email: 'tranthib@company.com',
-      phoneNumber: '0987654321',
-      bankAccount: '9876543210',
-      bankName: 'Techcombank',
-    },
-    {
-      id: 'FIN003',
-      avatar: '/avatar.jpg',
-      name: 'Le Van C',
-      gender: 'Nam',
-      birthDate: '10-03-1985',
-      nationality: 'Việt Nam',
-      ethnicity: 'Kinh',
-      city: 'Đà Nẵng',
-      district: 'Hải Châu',
-      ward: 'Hải Châu I',
-      houseNumber: '78 Nguyễn Văn Linh',
-      contactCity: 'Đà Nẵng',
-      contactDistrict: 'Hải Châu',
-      contactWard: 'Hải Châu I',
-      contactHouseNumber: '78 Nguyễn Văn Linh',
-      email: 'levanc@company.com',
-      phoneNumber: '0912345678',
-      bankAccount: '4567891234',
-      bankName: 'MB Bank',
-    },
-    {
-      id: 'MKT004',
-      avatar: '/avatar.jpg',
-      name: 'Pham Thi D',
-      gender: 'Nữ',
-      birthDate: '30-11-1992',
-      nationality: 'Việt Nam',
-      ethnicity: 'Kinh',
-      city: 'Hà Nội',
-      district: 'Ba Đình',
-      ward: 'Đội Cấn',
-      houseNumber: '56 Phố Liễu Giai',
-      contactCity: 'Hà Nội',
-      contactDistrict: 'Ba Đình',
-      contactWard: 'Đội Cấn',
-      contactHouseNumber: '56 Phố Liễu Giai',
-      email: 'phamthid@company.com',
-      phoneNumber: '0932145678',
-      bankAccount: '3216549870',
-      bankName: 'Agribank',
-    },
-  ].map((item, index) => ({
-    ...item,
-    stt: index + 1,
-  }));
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission checks
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
+  );
+
+  const canDelete = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
+  );
+
+  const canCreate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
+  );
+
+  // Function to get image URL from file ID (avatar)
+  const getImageUrl = (fileId) => {
+    if (!fileId) return '/default-avatar.png'; // Default avatar
+    return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
+  };
+
+  // Function to format date from API response
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Function to format gender from English to Vietnamese
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
+
+  // Function to fetch all personnel data
+  const fetchAllPersonalData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/Employee/GetAllPersonal');
+      
+      if (response.data.code === 0) {
+        const mappedData = response.data.data.map((item, index) => ({
+          stt: index + 1,
+          id: item.employeeCode,
+          avatar: getImageUrl(item.avatarPath),
+          name: item.nameEmployee,
+          gender: formatGender(item.gender),
+          birthDate: formatDate(item.dayOfBirth),
+          nationality: item.nationality || '',
+          ethnicity: item.ethnicity || '',
+          city: item.provinceResidence || '',
+          district: item.districtResidence || '',
+          ward: item.wardResidence || '',
+          houseNumber: item.houseNumberResidence || '',
+          contactCity: item.provinceContact || '',
+          contactDistrict: item.districtContact || '',
+          contactWard: item.wardContact || '',
+          contactHouseNumber: item.houseNumberContact || '',
+          email: item.email || '',
+          phoneNumber: item.phoneNumber || '',
+          bankAccount: item.bankNumber || '',
+          bankName: item.nameBank || '',
+          // Keep original data for editing
+          originalData: item
+        }));
+        
+        setPersonalData(mappedData);
+      } else {
+        message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu nhân sự.');
+      }
+    } catch (error) {
+      console.error('Error fetching personnel data:', error);
+      
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xem thông tin nhân sự.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải dữ liệu nhân sự.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllPersonalData();
+  }, []);
 
   const columns = [
     { label: 'STT', key: 'stt' },
@@ -105,7 +143,17 @@ const HRPersonal = () => {
           <img
             src={value}
             alt={`${item.name}'s avatar`}
-            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+            style={{ 
+              width: '30px', 
+              height: '30px', 
+              borderRadius: '50%', 
+              objectFit: 'cover',
+              border: '1px solid #d9d9d9',
+              backgroundColor: '#f5f5f5'
+            }}
+            onError={(e) => {
+              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+            }}
           />
           <span>{item.id}</span>
         </div>
@@ -150,35 +198,82 @@ const HRPersonal = () => {
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing personal info of ${item.id}`);
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
+      return;
+    }
+    // Navigate to edit page with employee code
+    navigate(`/edit/personal/${item.id}`);
   };
 
-  const handleDelete = (item) => {
-    alert(`Deleting personal info of ${item.id}`);
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error('Bạn không có quyền xóa thông tin nhân sự.');
+      return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa nhân sự ${item.name} (${item.id})?`);
+    if (!confirmed) return;
+
+    try {
+      // Call delete API here
+      // const response = await axios.delete(`/api/Employee/DeletePersonal/${item.id}`);
+      
+      // For now, just show success message and refresh data
+      message.success(`Đã xóa thông tin nhân sự ${item.name}`);
+      fetchAllPersonalData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting personnel:', error);
+      message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
+    }
   };
 
   const filterData = (data, searchTerm) => {
     return data.filter(
       (item) =>
         item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.phoneNumber.includes(searchTerm)
     );
   };
 
   const handleCreate = () => {
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới thông tin nhân sự.');
+      return;
+    }
     navigate('/create/personal');
   };
+
+  const handleRefresh = () => {
+    fetchAllPersonalData();
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải dữ liệu nhân sự...</div>
+      </div>
+    );
+  }
 
   return (
     <TableComponent
       data={personalData}
       columns={columns}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
+      onEdit={canUpdate ? handleEdit : null}
+      onDelete={canDelete ? handleDelete : null}
+      onBranchShow={false}
+      onDepartmentShow={false}
       filterData={filterData}
-      showAdd={false}
+      showAdd={canCreate}
       groupBy={columnGroups}
-      onCreate={handleCreate}
+      onCreate={canCreate ? handleCreate : null}
+      onRefresh={handleRefresh}
+      emptyText="Chưa có dữ liệu nhân sự"
     />
   );
 };

@@ -1,178 +1,141 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { message, Spin } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
-import { useNavigate } from 'react-router-dom';
 import Status from '../../../../Shared/Status/Status';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const HRInsurance = () => {
   const navigate = useNavigate();
+  const [insuranceData, setInsuranceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
 
-  const insuranceData = [
-    {
-      employeeId: 'HR001',
-      fullName: 'Nguyễn Văn A',
-      branch: 'Hà Nội',
-      department: 'Nhân sự',
-      position: 'Chuyên viên',
-      bhytId: 'BHYT12345',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67890',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: '01-01-2026',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR002',
-      fullName: 'Trần Thị B',
-      branch: 'Hồ Chí Minh',
-      department: 'Kế toán',
-      position: 'Kế toán trưởng',
-      bhytId: 'BHYT12346',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67891',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: '01-01-2027',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR003',
-      fullName: 'Lê Minh C',
-      branch: 'Đà Nẵng',
-      department: 'IT',
-      position: 'Lập trình viên',
-      bhytId: 'BHYT12347',
-      bhytRate: '4.5%',
-      hasBhxh: false,
-      bhxhId: '',
-      bhxhRate: '0%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: 'N/A',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR004',
-      fullName: 'Phan Thị D',
-      branch: 'Hà Nội',
-      department: 'Marketing',
-      position: 'Giám đốc marketing',
-      bhytId: 'BHYT12348',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67892',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: '01-01-2025',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR005',
-      fullName: 'Vũ Hoàng E',
-      branch: 'Hồ Chí Minh',
-      department: 'Sản xuất',
-      position: 'Quản lý sản xuất',
-      bhytId: 'BHYT12349',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67893',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Dừng đóng',
-      endDate: '01-01-2028',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR006',
-      fullName: 'Nguyễn Minh F',
-      branch: 'Đà Nẵng',
-      department: 'Nhân sự',
-      position: 'Chuyên viên',
-      bhytId: 'BHYT12350',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67894',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Dừng đóng',
-      endDate: '01-01-2029',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR007',
-      fullName: 'Trương Thị G',
-      branch: 'Hà Nội',
-      department: 'Hành chính',
-      position: 'Trưởng phòng hành chính',
-      bhytId: 'BHYT12351',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67895',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: '01-01-2027',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR008',
-      fullName: 'Đặng Ngọc H',
-      branch: 'Hồ Chí Minh',
-      department: 'Kỹ thuật',
-      position: 'Kỹ sư',
-      bhytId: 'BHYT12352',
-      bhytRate: '4.5%',
-      hasBhxh: false,
-      bhxhId: '',
-      bhxhRate: '0%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: 'N/A',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR009',
-      fullName: 'Hoàng Thị I',
-      branch: 'Đà Nẵng',
-      department: 'Tài chính',
-      position: 'Kế toán',
-      bhytId: 'BHYT12353',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67896',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Đang tham gia',
-      endDate: '01-01-2026',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-    {
-      employeeId: 'HR010',
-      fullName: 'Lý Minh J',
-      branch: 'Hà Nội',
-      department: 'Bán hàng',
-      position: 'Nhân viên bán hàng',
-      bhytId: 'BHYT12354',
-      bhytRate: '4.5%',
-      hasBhxh: true,
-      bhxhId: 'BHXH67897',
-      bhxhRate: '8%',
-      bhtnRate: '1%',
-      insuranceStatus: 'Dừng đóng',
-      endDate: '01-01-2027',
-      avatar: '/avatar.jpg', // Added avatar
-    },
-  ].map((item, index) => ({
-    ...item,
-    stt: index + 1, // Added stt
-  }));
+  // Load permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
+
+  // Permission checks
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
+  );
+
+  const canDelete = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
+  );
+
+  const canCreate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
+  );
+
+  // Function to get image URL from file ID (avatar)
+  const getImageUrl = (fileId) => {
+    if (!fileId) return '/default-avatar.png'; // Default avatar
+    return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
+  };
+
+  // Function to format date from API response
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === '0001-01-01T00:00:00Z') return 'N/A'; // Handle invalid or empty dates
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Function to format rate as percentage
+  const formatRate = (businessRate, employeeRate) => {
+    if (!businessRate && !employeeRate) return '0%';
+    return ` ${employeeRate || 0}% NLĐ / ${businessRate || 0}% DN`;
+  };
+
+  // Function to format hasBhxh
+  const formatHasBhxh = (hasBhxh) => {
+    return hasBhxh ? 'Có' : 'Không';
+  };
+
+  // Function to fetch all insurance data from API
+  const fetchAllInsuranceData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/Employee/GetAllInsurance');
+
+      if (response.data.code === 0) {
+        const mappedData = response.data.data.map((item, index) => ({
+          stt: index + 1,
+          employeeId: item.employeeCode,
+          fullName: item.nameEmployee,
+          avatar: getImageUrl(item.avatarPath),
+          branch: item.branchName,
+          department: item.departmentName,
+          position: item.positionName,
+          bhytId: item.codeBHYT,
+          bhytRate: formatRate(item.businessRateBHYT, item.emptRateBHYT),
+          hasBhxh: formatHasBhxh(item.hasBHXH),
+          bhxhId: item.codeBHXH || '',
+          bhxhRate: formatRate(item.bussinessRateBHXH, item.emptRateBHXH),
+          bhtnRate: formatRate(item.businessRateBHTN, item.emptRateBHTN),
+          insuranceStatus: item.statusInsurance,
+          endDate: formatDate(item.endInsurance),
+          // Keep original data for editing
+          originalData: item
+        }));
+
+        setInsuranceData(mappedData);
+      } else {
+        message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu bảo hiểm.');
+      }
+    } catch (error) {
+      console.error('Error fetching insurance data:', error);
+
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xem thông tin bảo hiểm.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải dữ liệu bảo hiểm.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllInsuranceData();
+  }, []);
 
   const columns = [
-    { label: 'STT', key: 'stt' }, // Added STT column
+    { label: 'STT', key: 'stt' },
     {
       label: 'Mã nhân sự',
       key: 'avatar',
@@ -181,28 +144,37 @@ const HRInsurance = () => {
           <img
             src={value}
             alt={`${item.fullName}'s avatar`}
-            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '1px solid #d9d9d9',
+              backgroundColor: '#f5f5f5'
+            }}
+            onError={(e) => {
+              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+            }}
           />
           <span>{item.employeeId}</span>
         </div>
       ),
-    }, // Added avatar column with custom rendering
+    },
     { label: 'Họ và tên NLĐ', key: 'fullName' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
     { label: 'Vị trí', key: 'position' },
     { label: 'Mã số BHYT', key: 'bhytId' },
-    { label: 'Tỷ lệ đóng BHYT', key: 'bhytRate' },
-    { label: 'Đã tham gia BHXH', key: 'hasBhxh', type: 'checkbox' },
+    { label: 'Tỷ lệ đóng BHYT (NLĐ/DN)', key: 'bhytRate' },
+    { label: 'Đã tham gia BHXH', key: 'hasBhxh' },
     { label: 'Mã số BHXH', key: 'bhxhId' },
-    { label: 'Tỷ lệ đóng BHXH', key: 'bhxhRate' },
-    { label: 'Tỷ lệ đóng BHTN', key: 'bhtnRate' },
-    { label: 'Tình trạng đóng BH', key: 'insuranceStatus' },
+    { label: 'Tỷ lệ đóng BHXH (NLĐ/DN)', key: 'bhxhRate' },
+    { label: 'Tỷ lệ đóng BHTN (NLĐ/DN)', key: 'bhtnRate' },
     {
-      label: "Tình trạng đóng BH",
-      key: "insuranceStatus",
+      label: 'Tình trạng đóng BH',
+      key: 'insuranceStatus',
       render: (status) => (
-        <Status status={status === "Đang tham gia" ? "active" : "inactive"} type="insurance" />
+        <Status status={status === 'Đang tham gia' ? 'active' : 'inactive'} type="insurance" />
       ),
     },
     { label: 'Ngày kết thúc đóng', key: 'endDate' },
@@ -211,48 +183,99 @@ const HRInsurance = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['stt', 'avatar', 'fullName', 'branch', 'department', 'position'], // Added stt and avatar to group
+      columns: ['stt', 'avatar', 'fullName', 'branch', 'department', 'position'],
     },
-    { label: 'Thông tin BHYT', columns: ['bhytId', 'bhytRate'] },
-    { label: 'Thông tin BHXH', columns: ['hasBhxh', 'bhxhId', 'bhxhRate'] },
-    { label: 'Thông tin BHTN', columns: ['bhtnRate'] },
-    { label: 'Thông tin chung đóng BH', columns: ['insuranceStatus', 'endDate'] },
+    {
+      label: 'Thông tin BHYT',
+      columns: ['bhytId', 'bhytRate'],
+    },
+    {
+      label: 'Thông tin BHXH',
+      columns: ['hasBhxh', 'bhxhId', 'bhxhRate'],
+    },
+    {
+      label: 'Thông tin BHTN',
+      columns: ['bhtnRate'],
+    },
+    {
+      label: 'Thông tin chung đóng BH',
+      columns: ['insuranceStatus', 'endDate'],
+    },
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing insurance info of ${item.employeeId}`);
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin bảo hiểm.');
+      return;
+    }
+    navigate(`/edit/insurance/${item.employeeId}`);
   };
 
-  const handleDelete = (item) => {
-    alert(`Deleting insurance info of ${item.employeeId}`);
-  };
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error('Bạn không có quyền xóa thông tin bảo hiểm.');
+      return;
+    }
 
-  const handleAdd = () => {
-    navigate('/create/insurance');
+    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa thông tin bảo hiểm của ${item.fullName} (${item.employeeId})?`);
+    if (!confirmed) return;
+
+    try {
+      // Placeholder for delete API call
+      // const response = await axios.delete(`/api/Employee/DeleteInsurance/${item.employeeId}`);
+      message.success(`Đã xóa thông tin bảo hiểm của ${item.fullName}`);
+      fetchAllInsuranceData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting insurance:', error);
+      message.error('Có lỗi xảy ra khi xóa thông tin bảo hiểm.');
+    }
   };
 
   const filterData = (data, searchTerm) => {
     return data.filter(
       (item) =>
         item.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+        item.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.bhytId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.bhxhId.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   const handleCreate = () => {
-    navigate('/create/personal');
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới thông tin bảo hiểm.');
+      return;
+    }
+    navigate('/create/insurance');
   };
+
+  const handleRefresh = () => {
+    fetchAllInsuranceData();
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải dữ liệu bảo hiểm...</div>
+      </div>
+    );
+  }
 
   return (
     <TableComponent
       data={insuranceData}
       columns={columns}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      showAdd={false}
+      onEdit={canUpdate ? handleEdit : null}
+      onDelete={canDelete ? handleDelete : null}
+      onBranchShow={true}
+      onDepartmentShow={true}
       filterData={filterData}
+      showAdd={canCreate}
       groupBy={columnGroups}
-      onCreate={handleCreate}
+      onCreate={canCreate ? handleCreate : null}
+      onRefresh={handleRefresh}
+      emptyText="Chưa có dữ liệu bảo hiểm"
     />
   );
 };

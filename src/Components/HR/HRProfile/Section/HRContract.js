@@ -1,256 +1,284 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { message, Spin } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
-import { useNavigate } from 'react-router-dom';
 import Status from '../../../../Shared/Status/Status';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const HRContract = () => {
   const navigate = useNavigate();
+  const [contractData, setContractData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
 
-  const contractData = [
-    {
-      contractId: 'HD001',
-      name: 'Nguyen Van A',
-      employeeId: 'HR001',
-      avatar: '/avatar.jpg',
-      branch: 'Hà Nội',
-      department: 'HR',
-      position: 'Manager',
-      hourlyRate: 100000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.0,
-      standardWorkingDays: 22,
-      basicSalary: 5000000,
-      contractType: 'Không xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-01-2023',
-      validTo: '31-12-2025',
-    },
-    {
-      contractId: 'HD002',
-      name: 'Tran Thi B',
-      employeeId: 'IT002',
-      avatar: '/avatar.jpg',
-      branch: 'Hồ Chí Minh',
-      department: 'IT',
-      position: 'Developer',
-      hourlyRate: 120000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.2,
-      standardWorkingDays: 22,
-      basicSalary: 6000000,
-      contractType: 'Xác định thời hạn',
-      status: 'Hết hiệu lực',
-      validFrom: '01-01-2022',
-      validTo: '31-12-2023',
-    },
-    {
-      contractId: 'HD003',
-      name: 'Le Van C',
-      employeeId: 'FIN003',
-      avatar: '/avatar.jpg',
-      branch: 'Đà Nẵng',
-      department: 'Finance',
-      position: 'Accountant',
-      hourlyRate: 90000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 0.9,
-      standardWorkingDays: 22,
-      basicSalary: 4500000,
-      contractType: 'Không xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '15-03-2023',
-      validTo: '15-03-2026',
-    },
-    {
-      contractId: 'HD004',
-      name: 'Pham Thi D',
-      employeeId: 'MK004',
-      avatar: '/avatar.jpg',
-      branch: 'Cần Thơ',
-      department: 'Marketing',
-      position: 'Content Specialist',
-      hourlyRate: 85000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 0.95,
-      standardWorkingDays: 22,
-      basicSalary: 4700000,
-      contractType: 'Xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-06-2023',
-      validTo: '01-06-2025',
-    },
-    {
-      contractId: 'HD005',
-      name: 'Hoang Van E',
-      employeeId: 'SL005',
-      avatar: '/avatar.jpg',
-      branch: 'Hải Phòng',
-      department: 'Sales',
-      position: 'Sales Executive',
-      hourlyRate: 95000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.1,
-      standardWorkingDays: 22,
-      basicSalary: 5200000,
-      contractType: 'Không xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-05-2022',
-      validTo: '01-05-2026',
-    },
-    {
-      contractId: 'HD006',
-      name: 'Tran Van F',
-      employeeId: 'PR006',
-      avatar: '/avatar.jpg',
-      branch: 'Nghệ An',
-      department: 'Public Relations',
-      position: 'PR Manager',
-      hourlyRate: 105000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.3,
-      standardWorkingDays: 22,
-      basicSalary: 6500000,
-      contractType: 'Không xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-09-2023',
-      validTo: '01-09-2026',
-    },
-    {
-      contractId: 'HD007',
-      name: 'Vo Thi G',
-      employeeId: 'QA007',
-      avatar: '/avatar.jpg',
-      branch: 'Bình Dương',
-      department: 'Quality Assurance',
-      position: 'QA Tester',
-      hourlyRate: 90000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.0,
-      standardWorkingDays: 22,
-      basicSalary: 5000000,
-      contractType: 'Xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-07-2023',
-      validTo: '01-07-2025',
-    },
-    {
-      contractId: 'HD008',
-      name: 'Nguyen Van H',
-      employeeId: 'IT008',
-      avatar: '/avatar.jpg',
-      branch: 'Hà Nội',
-      department: 'IT',
-      position: 'Backend Developer',
-      hourlyRate: 130000,
-      standardHoursPerDay: 8,
-      salaryCoefficient: 1.4,
-      standardWorkingDays: 22,
-      basicSalary: 7000000,
-      contractType: 'Không xác định thời hạn',
-      status: 'Còn hiệu lực',
-      validFrom: '01-02-2023',
-      validTo: '01-02-2027',
-    },
-  ].map((item, index) => ({
-    ...item,
-    stt: index + 1, 
-  }));
+  // Load permissions from localStorage
+  useEffect(() => {
+    const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    setPermissions(storedPermissions);
+  }, []);
 
-   const columns = [
-    { label: "STT", key: "stt" },
+  // Permission checks
+  const canUpdate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
+  );
+
+  const canDelete = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
+  );
+
+  const canCreate = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
+  );
+
+  // Function to get image URL from file ID (avatar)
+  const getImageUrl = (fileId) => {
+    if (!fileId) return '/default-avatar.png'; // Default avatar
+    return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
+  };
+
+  // Function to format date from API response
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === '0001-01-01T00:00:00Z') return ''; // Handle invalid or empty dates
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  // Function to format contract type
+  const formatContractType = (type) => {
+    if (!type) return '';
+    return type === 'LimitedContract' ? 'Xác định thời hạn' : 'Không xác định thời hạn';
+  };
+
+  // Function to format contract status
+  const formatContractStatus = (status) => {
+    if (!status) return '';
+    return status === 'Valid' ? 'Còn hiệu lực' : status;
+  };
+
+  // Function to format hourly salary
+  const formatHourlySalary = (salary) => {
+    if (!salary) return '';
+    return salary.toLocaleString('vi-VN') + ' VNĐ';
+  };
+
+  // Function to fetch all contract data from API
+  const fetchAllContractData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/Employee/GetAllContract');
+
+      if (response.data.code === 0) {
+        const mappedData = response.data.data.map((item, index) => ({
+          stt: index + 1,
+          contractId: item.contractCode,
+          name: item.nameEmployee,
+          employeeId: item.employeeCode,
+          avatar: getImageUrl(item.avatarPath),
+          branch: item.branchName,
+          department: item.departmentName,
+          position: item.positionName,
+          contractType: formatContractType(item.typeContract),
+          status: formatContractStatus(item.statusContract),
+          hourlyRate: formatHourlySalary(item.hourlySalary),
+          standardHoursPerDay: item.hourWorkStandard,
+          salaryCoefficient: item.coefficientSalary,
+          validFrom: formatDate(item.startContract),
+          validTo: formatDate(item.endContract),
+          // Keep original data for editing
+          originalData: item
+        }));
+
+        setContractData(mappedData);
+      } else {
+        message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu hợp đồng.');
+      }
+    } catch (error) {
+      console.error('Error fetching contract data:', error);
+
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xem thông tin hợp đồng.');
+            break;
+          default:
+            message.error(errorData?.message || 'Có lỗi xảy ra khi tải dữ liệu hợp đồng.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllContractData();
+  }, []);
+
+  const columns = [
+    { label: 'STT', key: 'stt' },
     {
-      label: "Mã nhân sự",
-      key: "avatar",
+      label: 'Mã nhân sự',
+      key: 'avatar',
       render: (value, item) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img
             src={value}
             alt={`${item.name}'s avatar`}
-            style={{ width: "30px", height: "30px", borderRadius: "50%", objectFit: "cover" }}
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '1px solid #d9d9d9',
+              backgroundColor: '#f5f5f5'
+            }}
+            onError={(e) => {
+              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+            }}
           />
           <span>{item.employeeId}</span>
         </div>
       ),
     },
-    { label: "Họ và tên NLĐ", key: "name" },
-    { label: "Chi nhánh", key: "branch" },
-    { label: "Bộ phận", key: "department" },
-    { label: "Vị trí", key: "position" },
-    { label: "Mã HĐLĐ", key: "contractId" },
-    { label: "Loại hợp đồng", key: "contractType" },
+    { label: 'Họ và tên NLĐ', key: 'name' },
+    { label: 'Chi nhánh', key: 'branch' },
+    { label: 'Bộ phận', key: 'department' },
+    { label: 'Vị trí', key: 'position' },
+    { label: 'Mã HĐLĐ', key: 'contractId' },
+    { label: 'Loại hợp đồng', key: 'contractType' },
     {
-      label: "Tình trạng",
-      key: "status",
+      label: 'Tình trạng',
+      key: 'status',
       render: (status) => (
-        <Status status={status === "Còn hiệu lực" ? "active" : "inactive"} type="contract" />
+        <Status status={status === 'Còn hiệu lực' ? 'active' : 'inactive'} type="contract" />
       ),
     },
-    { label: "Mức lương /1h", key: "hourlyRate" },
-    { label: "Số giờ làm việc chuẩn/1 ngày", key: "standardHoursPerDay" },
-    { label: "Hệ số lương", key: "salaryCoefficient" },
-    { label: "Ngày công chuẩn", key: "standardWorkingDays" },
-    { label: "Lương cơ bản", key: "basicSalary" },
-    { label: "Hiệu lực từ", key: "validFrom" },
-    { label: "Hiệu lực đến", key: "validTo" },
+    { label: 'Mức lương /1h', key: 'hourlyRate' },
+    { label: 'Số giờ làm việc chuẩn/1 ngày', key: 'standardHoursPerDay' },
+    { label: 'Hệ số lương', key: 'salaryCoefficient' },
+    { label: 'Hiệu lực từ', key: 'validFrom' },
+    { label: 'Hiệu lực đến', key: 'validTo' },
   ];
 
   const columnGroups = [
     {
-      label: "Thông tin hồ sơ nhân sự",
-      columns: ["avatar", "stt", "name", "branch", "department", "position"],
+      label: 'Thông tin hồ sơ nhân sự',
+      columns: ['stt', 'avatar', 'name', 'branch', 'department', 'position'],
     },
     {
-      label: "Thông tin HĐLĐ",
+      label: 'Thông tin HĐLĐ',
       columns: [
-        "contractId",
-        "contractType",
-        "status",
-        "hourlyRate",
-        "standardHoursPerDay",
-        "salaryCoefficient",
-        "standardWorkingDays",
-        "basicSalary",
-        "validFrom",
-        "validTo",
+        'contractId',
+        'contractType',
+        'status',
+        'hourlyRate',
+        'standardHoursPerDay',
+        'salaryCoefficient',
+        'validFrom',
+        'validTo',
       ],
     },
   ];
 
   const handleEdit = (item) => {
-    alert(`Editing contract info of ${item.contractId}`);
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin hợp đồng.');
+      return;
+    }
+    navigate(`/edit/contract/${item.contractId}`);
   };
 
-  const handleDelete = (item) => {
-    alert(`Deleting contract info of ${item.contractId}`);
-  };
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      message.error('Bạn không có quyền xóa thông tin hợp đồng.');
+      return;
+    }
 
-  const handleAdd = () => {
-    navigate("/create/contract");
+    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa hợp đồng ${item.contractId} của ${item.name}?`);
+    if (!confirmed) return;
+
+    try {
+      // Placeholder for delete API call
+      // const response = await axios.delete(`/api/Employee/DeleteContract/${item.contractId}`);
+      message.success(`Đã xóa hợp đồng ${item.contractId}`);
+      fetchAllContractData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting contract:', error);
+      message.error('Có lỗi xảy ra khi xóa thông tin hợp đồng.');
+    }
   };
 
   const filterData = (data, searchTerm) => {
-    return data.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.contractId.toLowerCase().includes(searchTerm.toLowerCase())
+    return data.filter(
+      (item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.contractId.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   const handleCreate = () => {
-    navigate("/create/personal");
+    if (!canCreate) {
+      message.error('Bạn không có quyền tạo mới thông tin hợp đồng.');
+      return;
+    }
+    navigate('/create/contract');
   };
+
+  const handleRefresh = () => {
+    fetchAllContractData();
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Đang tải dữ liệu hợp đồng...</div>
+      </div>
+    );
+  }
 
   return (
     <TableComponent
       data={contractData}
       columns={columns}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      showAdd={false}
+      onEdit={canUpdate ? handleEdit : null}
+      onDelete={canDelete ? handleDelete : null}
+      onBranchShow={true}
+      onDepartmentShow={true}
       filterData={filterData}
+      showAdd={canCreate}
       groupBy={columnGroups}
-      onCreate={handleCreate}
+      onCreate={canCreate ? handleCreate : null}
+      onRefresh={handleRefresh}
+      emptyText="Chưa có dữ liệu hợp đồng"
     />
   );
 };

@@ -20,7 +20,6 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Only set Content-Type for non-FormData requests
     if (!(config.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json";
     }
@@ -29,7 +28,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
+function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -79,7 +78,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
 
   useEffect(() => {
     if (initialData) {
-      // Convert gender display back to API format
       let apiGender = initialData.gender;
       if (initialData.gender === 'Nữ') apiGender = 'Female';
       else if (initialData.gender === 'Nam') apiGender = 'Male';
@@ -110,7 +108,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
         bankBranch: initialData.bankBranch,
       });
 
-      // Set initial images and IDs
       if (initialData.frontImage) {
         setFrontImage(initialData.frontImage);
         const frontId = extractImageIdFromUrl(initialData.frontImage);
@@ -134,7 +131,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
       console.log(`Successfully deleted image: ${imageId}`);
     } catch (error) {
       console.error('Error deleting old image:', error);
-      // Don't throw error as this shouldn't stop the update process
     }
   };
 
@@ -155,9 +151,8 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
 
   const handleCancel = () => {
     if (typeof onCancel === "function") {
-      onCancel(); 
-    }
-    else {
+      onCancel();
+    } else {
       form.resetFields();
       setFrontImage(null);
       setBackImage(null);
@@ -170,7 +165,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
   };
 
   const handleSave = async () => {
-    // Check permissions based on mode
     if (isEditMode && !canUpdate) {
       message.error("Bạn không có quyền cập nhật thông tin cá nhân.");
       return;
@@ -184,14 +178,11 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
       setIsLoading(true);
       const formData = await form.validateFields();
 
-      // Handle image changes for update mode
       if (isEditMode) {
-        // Check if front image changed
         if (frontImageId !== originalFrontImageId && originalFrontImageId) {
           await deleteOldImage(originalFrontImageId);
         }
         
-        // Check if back image changed
         if (backImageId !== originalBackImageId && originalBackImageId) {
           await deleteOldImage(originalBackImageId);
         }
@@ -226,7 +217,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
       let response;
       
       if (isEditMode) {
-        // Update mode - get employee code first
         const userId = localStorage.getItem('userId');
         if (!userId) {
           message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
@@ -236,7 +226,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
         const employeeCode = await getEmployeeCode(userId);
         response = await axios.put(`/api/Employee/UpdatePersonal/${employeeCode}`, dataToSend);
       } else {
-        // Create mode
         response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
       }
       if (response.status === 200 && response.data.code === 0) {
@@ -339,14 +328,14 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
 
   return (
     <div className="modal-content-wrapper" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Form form={form} layout="vertical" style={{ flex: "1 1 auto", overflowY: "auto" }}>
+      <Form form={form} layout="vertical" style={{ flex: "1 1 auto", overflowY: "auto" }} disabled={isViewMode}>
         <div className="scroll-container">
           <div className="collapse-container">
             <Collapse
               item={{
                 key: "1",
                 header: "Thông tin cá nhân",
-                children: <PersonalInfo form={form} />,
+                children: <PersonalInfo form={form} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -364,6 +353,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
                     frontImage={frontImage}
                     backImage={backImage}
                     onImageUpload={handleImageUpload}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -381,6 +371,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
                     setProvinceMap={setProvinceMap}
                     setDistrictMap={setDistrictMap}
                     setWardMap={setWardMap}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -398,6 +389,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
                     setProvinceMap={setProvinceMap}
                     setDistrictMap={setDistrictMap}
                     setWardMap={setWardMap}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -409,24 +401,26 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
               item={{
                 key: "5",
                 header: "Thông tin tài khoản ngân hàng",
-                children: <Bank form={form} />,
+                children: <Bank form={form} disabled={isViewMode} />,
               }}
             />
           </div>
         </div>
       </Form>
 
-      <FooterBar
-        onSave={handleSave}
-        onCancel={handleCancel}
-        onNext={handleNext}
-        showNext={!isModalFooter} 
-        showCancel={true}
-        showSave={true}
-        isModalFooter={isModalFooter}
-        loading={isLoading}
-        style={{ flexShrink: 0 }}
-      />
+      {!isViewMode && (
+        <FooterBar
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onNext={handleNext}
+          showNext={!isModalFooter}
+          showCancel={true}
+          showSave={true}
+          isModalFooter={isModalFooter}
+          loading={isLoading}
+          style={{ flexShrink: 0 }}
+        />
+      )}
     </div>
   );
 }

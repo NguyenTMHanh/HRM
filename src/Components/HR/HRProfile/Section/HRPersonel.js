@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { message, Spin } from 'antd';
+import { message, Spin, Modal } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import CreatePersonel from '../../../Create/CreatePersonel/CreatePersonel'; // Import CreatePersonel
 
-// Axios configuration (assuming it's globally set as in HRPersonal)
+// Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
 axios.interceptors.request.use(
   (config) => {
@@ -25,6 +26,12 @@ const HRPersonel = () => {
   const [personelData, setPersonelData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState([]);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -51,9 +58,15 @@ const HRPersonel = () => {
     (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
 
+  const canView = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'view'
+  );
+
   // Function to get image URL from file ID (avatar)
   const getImageUrl = (fileId) => {
-    if (!fileId) return '/default-avatar.png'; // Default avatar
+    if (!fileId) return '/default-avatar.png';
     return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
   };
 
@@ -68,6 +81,37 @@ const HRPersonel = () => {
   const formatBreakLunch = (hours) => {
     if (!hours) return '';
     return `${hours} giờ`;
+  };
+
+  // Function to format gender
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
+
+  // Function to map API data to component format for view/edit
+  const mapApiDataToComponentFormat = (apiData) => {
+    const displayGender = apiData.gender === 'Female' ? 'Nữ' : apiData.gender === 'Male' ? 'Nam' : '';
+    return {
+      employeeCode: apiData.employeeCode || '',
+      fullName: apiData.nameEmployee || '',
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      gender: displayGender,
+      username: apiData.username || '',
+      password: '', // Password should not be fetched for security
+      joinDate: formatDate(apiData.dateJoinCompany),
+      department: apiData.departmentName || '',
+      jobTitle: apiData.jobtitleName || '',
+      level: apiData.rankName || '',
+      position: apiData.positionName || '',
+      managedBy: apiData.managerId ? `${apiData.managerId} - ${apiData.nameManager}` : '',
+      workLocation: apiData.branchName || '',
+      workMode: apiData.jobTypeName || '',
+      lunchBreak: formatBreakLunch(apiData.breakLunch),
+      avatar: getImageUrl(apiData.avatarPath),
+      roleGroup: apiData.roleName || '',
+    };
   };
 
   // Function to fetch all personnel data from API
@@ -89,11 +133,10 @@ const HRPersonel = () => {
           position: item.positionName,
           joinDate: formatDate(item.dateJoinCompany),
           managedBy: item.nameManager,
-          workType: item.jobtypeName,
+          workType: item.jobTypeName,
           lunchBreak: formatBreakLunch(item.breakLunch),
           phoneNumber: item.phoneNumber,
-          // Keep original data for editing
-          originalData: item
+          originalData: item,
         }));
 
         setPersonelData(mappedData);
@@ -123,6 +166,69 @@ const HRPersonel = () => {
     }
   };
 
+  // Function to fetch personnel information by employee code
+  const fetchPersonnelInformation = async (employeeCode, isEdit = false) => {
+    try {
+      if (isEdit) setEditLoading(true);
+      else setViewLoading(true);
+      const response = await axios.get(`/api/Employee/GetPersonelInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        const mappedData = mapApiDataToComponentFormat(response.data.data);
+        if (isEdit) {
+          setEditData(mappedData);
+          setIsEditModalVisible(true);
+        } else {
+          setViewData(mappedData);
+          setIsViewModalVisible(true);
+        }
+      } else {
+        message.error(response.data.message || 'Không thể tải thông tin nhân sự.');
+      }
+    } catch (error) {
+      console.error('Error fetching personnel information:', error);
+      message.error('Có lỗi xảy ra khi tải thông tin nhân sự.');
+    } finally {
+      if (isEdit) setEditLoading(false);
+      else setViewLoading(false);
+    }
+  };
+
+  // Handle View action
+  const handleView = (item) => {
+    if (!canView) {
+      message.error('Bạn không có quyền xem thông tin nhân sự.');
+      return;
+    }
+    fetchPersonnelInformation(item.id);
+  };
+
+  // Handle Edit action
+  const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
+      return;
+    }
+    fetchPersonnelInformation(item.id, true);
+  };
+
+  // Handle Save action from Edit modal
+  const handleEditSave = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
+    fetchAllPersonelData(); // Refresh table data after save
+  };
+
+  // Handle modal close
+  const handleViewModalClose = () => {
+    setIsViewModalVisible(false);
+    setViewData(null);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
+  };
+
   useEffect(() => {
     fetchAllPersonelData();
   }, []);
@@ -143,10 +249,10 @@ const HRPersonel = () => {
               borderRadius: '50%',
               objectFit: 'cover',
               border: '1px solid #d9d9d9',
-              backgroundColor: '#f5f5f5'
+              backgroundColor: '#f5f5f5',
             }}
             onError={(e) => {
-              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+              e.target.src = '/default-avatar.png';
             }}
           />
           <span>{item.id}</span>
@@ -177,14 +283,6 @@ const HRPersonel = () => {
     },
   ];
 
-  const handleEdit = (item) => {
-    if (!canUpdate) {
-      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
-      return;
-    }
-    navigate(`/edit/personel/${item.id}`);
-  };
-
   const handleDelete = async (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin nhân sự.');
@@ -198,7 +296,7 @@ const HRPersonel = () => {
       // Placeholder for delete API call
       // const response = await axios.delete(`/api/Employee/DeletePersonel/${item.id}`);
       message.success(`Đã xóa thông tin nhân sự ${item.name}`);
-      fetchAllPersonelData(); // Refresh data
+      fetchAllPersonelData();
     } catch (error) {
       console.error('Error deleting personnel:', error);
       message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
@@ -236,20 +334,76 @@ const HRPersonel = () => {
   }
 
   return (
-    <TableComponent
-      data={personelData}
-      columns={columns}
-      onEdit={canUpdate ? handleEdit : null}
-      onDelete={canDelete ? handleDelete : null}
-      onBranchShow={true}
-      onDepartmentShow={true}
-      filterData={filterData}
-      showAdd={canCreate}
-      groupBy={columnGroups}
-      onCreate={canCreate ? handleCreate : null}
-      onRefresh={handleRefresh}
-      emptyText="Chưa có dữ liệu nhân sự"
-    />
+    <>
+      <TableComponent
+        data={personelData}
+        columns={columns}
+        onEdit={canUpdate ? handleEdit : null}
+        onDelete={canDelete ? handleDelete : null}
+        onView={canView ? handleView : null} // Add onView prop
+        onBranchShow={true}
+        onDepartmentShow={true}
+        filterData={filterData}
+        showAdd={canCreate}
+        showView={true} // Enable view button
+        groupBy={columnGroups}
+        onCreate={canCreate ? handleCreate : null}
+        onRefresh={handleRefresh}
+        emptyText="Chưa có dữ liệu nhân sự"
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
+      />
+      {/* View Modal */}
+      <Modal
+        title="Xem thông tin hồ sơ nhân sự"
+        open={isViewModalVisible}
+        onCancel={handleViewModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {viewLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : viewData ? (
+          <CreatePersonel
+            initialData={viewData}
+            isViewMode={true}
+            onCancel={handleViewModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+      {/* Edit Modal */}
+      <Modal
+        title="Chỉnh sửa thông tin hồ sơ nhân sự"
+        open={isEditModalVisible}
+        onCancel={handleEditModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {editLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : editData ? (
+          <CreatePersonel
+            initialData={editData}
+            isEditMode={true}
+            isViewMode={false}
+            onSave={handleEditSave}
+            onCancel={handleEditModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+    </>
   );
 };
 

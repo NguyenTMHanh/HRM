@@ -348,7 +348,7 @@ const TableComponent = ({
                   ))}
                   <td>
                     <div className="action-buttons">
-                      {showView && onView && (
+                      {showView && (
                         <button
                           onClick={() => onView(item)}
                           className="btn btn-view"

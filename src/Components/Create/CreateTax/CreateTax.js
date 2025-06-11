@@ -23,11 +23,12 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
+function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [permissions, setPermissions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const initialValues = useMemo(
@@ -71,17 +72,16 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
   }, []);
 
   useEffect(() => {
-    if (!isEditMode) {
+    if (!isEditMode && !isViewMode) {
       fetchEmployees();
     }
-  }, [fetchEmployees, isEditMode]);
+  }, [fetchEmployees, isEditMode, isViewMode]);
 
   useEffect(() => {
     if (initialData) {
-      console.log('InitialData received:', initialData); // Debug
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(' - ')[1] || initialData.fullName}`
-        : null;
+        : initialData.fullName || null;
 
       const formValues = {
         fullName,
@@ -101,7 +101,6 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
           : initialValues.dependents,
       };
 
-      console.log('Form values to set:', formValues); // Debug
       form.setFieldsValue(formValues);
     } else {
       form.setFieldsValue(initialValues);
@@ -118,7 +117,6 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
   };
 
   const handleSave = async () => {
-    // Check permissions based on mode
     if (isEditMode && !canUpdateTax) {
       message.error('Bạn không có quyền cập nhật thông tin thuế.');
       return;
@@ -129,6 +127,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
     }
 
     try {
+      setIsLoading(true);
       const formData = await form.validateFields();
 
       const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
@@ -157,23 +156,18 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
         dependents: processedDependents,
       };
 
-      console.log('Data to send:', dataToSend);
-
       let response;
       let successMessage;
 
       if (isEditMode) {
-        // Update tax
         response = await axios.put('/api/Employee/UpdateTax', dataToSend);
         successMessage = 'Cập nhật thông tin thuế thành công!';
       } else {
-        // Create tax
         response = await axios.post('/api/Employee/CreateTax', dataToSend);
         successMessage = 'Tạo mới thông tin thuế thành công!';
       }
 
       if (response.status === 200 && response.data.code === 0) {
-        message.destroy();
         message.success(successMessage);
         setIsSavedSuccessfully(true);
         if (!isEditMode) {
@@ -184,11 +178,9 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
           onSave(dataToSend);
         }
       } else {
-        message.destroy();
         message.error(response.data.message || `${isEditMode ? 'Cập nhật' : 'Tạo'} thông tin thuế thất bại!`);
       }
     } catch (err) {
-      message.destroy();
       if (err.errorFields) {
         message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
         return;
@@ -225,9 +217,10 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
             break;
         }
       } else {
-        console.error('Network error:', err.message);
         message.error('Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng!');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -242,6 +235,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
         layout="vertical"
         initialValues={initialValues}
         style={{ flex: '1 1 auto', overflowY: 'auto' }}
+        disabled={isViewMode}
       >
         <div className="scroll-container">
           <div className="collapse-container">
@@ -256,6 +250,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
                     employees={employees}
                     isModalFooter={isModalFooter}
                     isEditMode={isEditMode}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -267,7 +262,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
               item={{
                 key: '2',
                 header: 'Thông tin Thuế TNCN',
-                children: <TaxInfo form={form} />,
+                children: <TaxInfo form={form} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -277,23 +272,26 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
               item={{
                 key: '3',
                 header: 'Thông tin người phụ thuộc',
-                children: <Dependent form={form} />,
+                children: <Dependent form={form} disabled={isViewMode} />,
               }}
             />
           </div>
         </div>
       </Form>
 
-      <FooterBar
-        onSave={handleSave}
-        onCancel={handleCancel}
-        onBack={handleBack}
-        showBack={!isModalFooter}
-        showCancel={true}
-        showSave={true}
-        isModalFooter={isModalFooter}
-        style={{ flexShrink: 0 }}
-      />
+      {!isViewMode && (
+        <FooterBar
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onBack={handleBack}
+          showBack={!isModalFooter}
+          showCancel={true}
+          showSave={true}
+          isModalFooter={isModalFooter}
+          loading={isLoading}
+          style={{ flexShrink: 0 }}
+        />
+      )}
     </div>
   );
 }

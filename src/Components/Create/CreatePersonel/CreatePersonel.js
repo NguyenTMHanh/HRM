@@ -25,7 +25,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false , isEditMode = false}) {
+function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
@@ -119,12 +119,12 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
-        : null;
+        : initialData.fullName || null;
 
       form.setFieldsValue({
         fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
-        gender: initialData.gender,
+        gender: initialData.gender === 'Nữ' ? 'Female' : initialData.gender === 'Nam' ? 'Male' : initialData.gender,
         username: initialData.username,
         password: initialData.password,
         joinDate: initialData.joinDate ? moment(initialData.joinDate, "DD/MM/YYYY") : null,
@@ -135,7 +135,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         managedBy: initialData.managedBy,
         workLocation: initialData.workLocation,
         workMode: initialData.workMode,
-        lunchBreak: initialData.lunchBreak,
+        lunchBreak: initialData.lunchBreak || breakTime,
         avatar: initialData.avatarUrl || initialData.avatar,
         roleGroup: initialData.roleGroup,
       });
@@ -171,14 +171,17 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
   }, []);
 
   const handleSave = async () => {
-    if (!canUpdate) {
+    if (!canUpdate && isEditMode) {
       message.error("Bạn không có quyền cập nhật hồ sơ nhân sự.");
+      return;
+    }
+    if (!canUpdate && !isEditMode) {
+      message.error("Bạn không có quyền tạo mới hồ sơ nhân sự.");
       return;
     }
 
     try {
       setIsLoading(true);
-
       const formData = await form.validateFields();
 
       // In edit mode, skip validation for WorkInfo fields if not displayed
@@ -187,13 +190,11 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         'level', 'position', 'managedBy', 'workMode', 'lunchBreak'
       ];
 
-      if (initialData) {
+      if (isEditMode) {
         fieldsToSkipInEdit.forEach(field => {
           form.setFields([{ name: field, errors: [], value: form.getFieldValue(field) }]);
         });
       }
-
-
 
       const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
       const managerCode = formData.managedBy ? formData.managedBy.split(" - ")[0] : null;
@@ -205,57 +206,50 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         username: formData.username || "",
         password: formData.password || "",
         dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
-        departmentName:formData.department,
+        departmentName: formData.department,
         jobtitleName: formData.jobTitle,
         rankName: formData.level,
         positionName: formData.position,
         managerId: managerCode,
         branchName: formData.workLocation,
         jobTypeName: formData.workMode,
-        breakLunch: 0,
+        breakLunch: parseBreakLunch(formData.lunchBreak),
         avatarPath: avatarId || "",
         roleName: formData.roleGroup,
       };
-      let response;
 
+      let response;
       if (isEditMode) {
         response = await axios.put("/api/Employee/UpdatePersonel", dataToSend);
       } else {
-        // Create mode
         response = await axios.post("/api/Employee/CreatePersonel", dataToSend);
       }
 
       if (response.status === 200 && response.data.code === 0) {
-        message.destroy();
-        message.success("Cập nhật hồ sơ nhân sự thành công!");
+        message.success(isEditMode ? "Cập nhật hồ sơ nhân sự thành công!" : "Tạo mới hồ sơ nhân sự thành công!");
         setIsSavedSuccessfully(true);
-        form.resetFields();
-        fetchEmployees();
-        fetchBreakTime();
-        setAvatarImage(null);
-        setAvatarId(null);
-        setOriginalAvatarId(null);
-
+        if (!isEditMode) {
+          form.resetFields();
+          setAvatarImage(null);
+          setAvatarId(null);
+          setOriginalAvatarId(null);
+        }
         if (typeof onSave === "function") {
           onSave(dataToSend);
         }
       } else {
-        message.destroy();
-        message.error(response.data.message || "Cập nhật hồ sơ nhân sự thất bại!");
+        message.error(response.data.message || (isEditMode ? "Cập nhật hồ sơ nhân sự thất bại!" : "Tạo mới hồ sơ nhân sự thất bại!"));
       }
     } catch (err) {
-      message.destroy();
       if (err.errorFields) {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");
         return;
       }
-
-      console.error("Update personel employee error:", err);
+      console.error("Error saving personnel:", err);
       if (err.response) {
         const { status, data } = err.response;
         const { code, errors } = data || {};
         const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
-
         switch (status) {
           case 400:
             if (errors) {
@@ -263,16 +257,11 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
                 message.error("Ngày sinh không hợp lệ. Vui lòng kiểm tra!");
               } else if (errors["$.dateJoinCompany"]) {
                 message.error("Ngày gia nhập không hợp lệ. Vui lòng kiểm tra!");
-              } else if (errors.model) {
-                message.error("Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra các trường bắt buộc!");
               } else {
                 message.error(errorMsg);
               }
             } else {
               switch (code) {
-                case 5:
-                  message.error("Yêu cầu không hợp lệ.");
-                  break;
                 case 1002:
                   message.error("Tên đăng nhập đã tồn tại trong hệ thống!");
                   break;
@@ -326,7 +315,6 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
             break;
         }
       } else {
-        console.error("Network error:", err.message);
         message.error("Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng!");
       }
     } finally {
@@ -355,6 +343,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         layout="vertical"
         initialValues={initialValues}
         style={{ flex: "1 1 auto", overflowY: "auto" }}
+        disabled={isViewMode}
       >
         <div className="scroll-container">
           <div className="collapse-container">
@@ -362,7 +351,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
               item={{
                 key: "1",
                 header: "Thông tin cơ bản",
-                children: <BasicInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} isModalFooter={isModalFooter} />,
+                children: <BasicInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} isModalFooter={isModalFooter} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -372,7 +361,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
               item={{
                 key: "2",
                 header: "Thông tin công việc",
-                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} />,
+                children: <WorkInfo form={form} initialData={initialData} breakTime={breakTime} employees={employees} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -388,8 +377,9 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
                     setAvatarImage={setAvatarImage}
                     avatarImage={avatarImage}
                     onAvatarUpload={handleAvatarUpload}
-                    isEditMode={!!initialData}
+                    isEditMode={isEditMode}
                     canUpdateRoleGroup={canUpdateRoleGroup}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -398,19 +388,21 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false ,
         </div>
       </Form>
 
-      <FooterBar
-        onSave={handleSave}
-        onCancel={handleCancel}
-        onNext={handleNext}
-        onBack={handleBack}
-        showNext={!isModalFooter}
-        showBack={!isModalFooter}
-        showCancel={true}
-        showSave={true}
-        isModalFooter={isModalFooter}
-        loading={isLoading}
-        style={{ flexShrink: 0 }}
-      />
+      {!isViewMode && (
+        <FooterBar
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onNext={handleNext}
+          onBack={handleBack}
+          showNext={!isModalFooter}
+          showBack={!isModalFooter}
+          showCancel={true}
+          showSave={true}
+          isModalFooter={isModalFooter}
+          loading={isLoading}
+          style={{ flexShrink: 0 }}
+        />
+      )}
     </div>
   );
 }

@@ -27,14 +27,14 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false }) {
+function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [bhxhCode, setBhxhCode] = useState('');
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [permissions, setPermissions] = useState([]);
-  const [insuranceRates, setInsuranceRates] = useState(null); // Store API rates
+  const [insuranceRates, setInsuranceRates] = useState(null);
   const navigate = useNavigate();
   const selectedEmployee = Form.useWatch('fullName', form);
 
@@ -99,7 +99,6 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
       const response = await axios.get('/api/Employee/GetRateInsurance');
       if (response.status === 200) {
         setInsuranceRates(response.data);
-        // Update form with fetched rates
         form.setFieldsValue({
           bhytRate: formatRate(response.data.bhytEmpRate, response.data.bhytBusinessRate),
           bhxhRate: formatRate(response.data.bhxhEmpRate, response.data.bhxhBusinessRate),
@@ -115,43 +114,37 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
   }, [form]);
 
   useEffect(() => {
-    if (!isEditMode) {
+    if (!isEditMode && !isViewMode) {
       fetchEmployees();
     }
     fetchInsuranceRates();
-  }, [fetchEmployees, fetchInsuranceRates, isEditMode]);
+  }, [fetchEmployees, fetchInsuranceRates, isEditMode, isViewMode]);
 
   useEffect(() => {
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(' - ')[1] || initialData.fullName}`
-        : null;
+        : initialData.fullName || null;
       const bhxhCodeFromBHYT = getBHXHCodeFromBHYT(initialData.bhytCode);
       setBhxhCode(initialData.bhxhCode || bhxhCodeFromBHYT);
-
-      // Parse formatted values back to raw values for editing
-      const parseFormattedRate = (rateString) => {
-        if (!rateString) return '';
-        return rateString; // Keep as is since rates are formatted as strings
-      };
 
       form.setFieldsValue({
         fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, 'DD/MM/YYYY') : null,
         gender: initialData.gender,
         bhytCode: initialData.bhytCode || initialValues.bhytCode,
-        bhytRate: parseFormattedRate(initialData.bhytRate) || initialValues.bhytRate,
+        bhytRate: initialData.bhytRate || initialValues.bhytRate,
         registeredHospital: initialData.registeredHospital,
         bhytStartDate: initialData.bhytStartDate
           ? moment(initialData.bhytStartDate, 'DD/MM/YYYY')
           : initialValues.bhytStartDate,
         hasJoined: initialData.hasJoined === 'Có tham gia' ? true : false,
         bhxhCode: initialData.bhxhCode || bhxhCodeFromBHYT,
-        bhxhRate: parseFormattedRate(initialData.bhxhRate) || initialValues.bhxhRate,
+        bhxhRate: initialData.bhxhRate || initialValues.bhxhRate,
         bhxhStartDate: initialData.bhxhStartDate
           ? moment(initialData.bhxhStartDate, 'DD/MM/YYYY')
           : initialValues.bhxhStartDate,
-        bhtnRate: parseFormattedRate(initialData.bhtnRate) || initialValues.bhtnRate,
+        bhtnRate: initialData.bhtnRate || initialValues.bhtnRate,
         bhtnStartDate: initialData.bhtnStartDate
           ? moment(initialData.bhtnStartDate, 'DD/MM/YYYY')
           : initialValues.bhtnStartDate,
@@ -169,7 +162,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
   }, [initialData, form, initialValues]);
 
   const handleBHYTCodeChange = (changedValues, allValues) => {
-    if (changedValues.bhytCode) {
+    if (changedValues.bhytCode && !isViewMode) {
       const code = getBHXHCodeFromBHYT(changedValues.bhytCode);
       setBhxhCode(code);
       form.setFieldsValue({ bhxhCode: code });
@@ -198,7 +191,6 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
   };
 
   const handleSave = async () => {
-    // Check permissions based on mode
     if (isEditMode && !canUpdateInsurance) {
       message.error('Bạn không có quyền cập nhật thông tin bảo hiểm.');
       return;
@@ -215,7 +207,6 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
       const employeeCode = formData.fullName ? formData.fullName.split(' - ')[0] : null;
       const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
-      // Parse insurance rates
       const bhytRates = parseRate(formData.bhytRate);
       const bhxhRates = parseRate(formData.bhxhRate);
       const bhtnRates = parseRate(formData.bhtnRate);
@@ -242,23 +233,18 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
         dateEndParticipateInsurance: formData.bhEndDate ? formData.bhEndDate.toISOString() : null,
       };
 
-      console.log('Data to send:', dataToSend);
-
       let response;
       let successMessage;
 
       if (isEditMode) {
-        // Update insurance
         response = await axios.put('/api/Employee/UpdateInsurance', dataToSend);
         successMessage = 'Cập nhật thông tin bảo hiểm thành công!';
       } else {
-        // Create insurance
         response = await axios.post('/api/Employee/CreateInsurance', dataToSend);
         successMessage = 'Tạo mới thông tin bảo hiểm thành công!';
       }
 
       if (response.status === 200 && response.data.code === 0) {
-        message.destroy();
         message.success(successMessage);
         setIsSavedSuccessfully(true);
         if (!isEditMode) {
@@ -269,11 +255,9 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
           onSave(dataToSend);
         }
       } else {
-        message.destroy();
         message.error(response.data.message || `${isEditMode ? 'Cập nhật' : 'Tạo'} thông tin bảo hiểm thất bại!`);
       }
     } catch (err) {
-      message.destroy();
       if (err.errorFields) {
         message.error('Vui lòng nhập đầy đủ các trường bắt buộc!');
         return;
@@ -313,7 +297,6 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
             break;
         }
       } else {
-        console.error('Network error:', err.message);
         message.error('Không thể kết nối đến server! Vui lòng kiểm tra kết nối mạng.');
       }
     } finally {
@@ -337,6 +320,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
         initialValues={initialValues}
         onValuesChange={handleBHYTCodeChange}
         style={{ flex: '1 auto', overflowY: 'auto' }}
+        disabled={isViewMode}
       >
         <div className="scroll-container">
           <div className="collapse-container">
@@ -351,6 +335,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
                     employees={employees}
                     isModalFooter={isModalFooter}
                     isEditMode={isEditMode}
+                    disabled={isViewMode}
                   />
                 ),
               }}
@@ -362,7 +347,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
               item={{
                 key: '2',
                 header: 'Thông tin BHYT',
-                children: <BHYTInfo form={form} />,
+                children: <BHYTInfo form={form} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -372,7 +357,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
               item={{
                 key: '3',
                 header: 'Thông tin BHXH',
-                children: <BHXHInfo bhxhCode={bhxhCode} form={form} />,
+                children: <BHXHInfo bhxhCode={bhxhCode} form={form} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -382,7 +367,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
               item={{
                 key: '4',
                 header: 'Thông tin BHTN',
-                children: <BHTNInfo form={form} />,
+                children: <BHTNInfo form={form} disabled={isViewMode} />,
               }}
             />
           </div>
@@ -392,26 +377,28 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
               item={{
                 key: '5',
                 header: 'Thông tin BH chung',
-                children: <GeneralInfo form={form} />,
+                children: <GeneralInfo form={form} disabled={isViewMode} />,
               }}
             />
           </div>
         </div>
       </Form>
 
-      <FooterBar
-        onSave={handleSave}
-        onCancel={handleCancel}
-        onNext={handleNext}
-        onBack={handleBack}
-        showNext={!isModalFooter}
-        showBack={!isModalFooter}
-        showCancel={true}
-        showSave={true}
-        isModalFooter={isModalFooter}
-        loading={isLoading}
-        style={{ flexShrink: 0 }}
-      />
+      {!isViewMode && (
+        <FooterBar
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onNext={handleNext}
+          onBack={handleBack}
+          showNext={!isModalFooter}
+          showBack={!isModalFooter}
+          showCancel={true}
+          showSave={true}
+          isModalFooter={isModalFooter}
+          loading={isLoading}
+          style={{ flexShrink: 0 }}
+        />
+      )}
     </div>
   );
 }

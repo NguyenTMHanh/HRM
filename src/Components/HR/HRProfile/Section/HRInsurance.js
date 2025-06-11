@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { message, Spin } from 'antd';
+import { message, Spin, Modal } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
 import Status from '../../../../Shared/Status/Status';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import CreateInsurance from '../../../Create/CreateInsurance/CreateInsurance';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -26,6 +27,12 @@ const HRInsurance = () => {
   const [insuranceData, setInsuranceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState([]);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -37,30 +44,36 @@ const HRInsurance = () => {
   const canUpdate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
+    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'update'
   );
 
   const canDelete = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
+    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'delete'
   );
 
   const canCreate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
+    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'create'
+  );
+
+  const canView = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'view'
   );
 
   // Function to get image URL from file ID (avatar)
   const getImageUrl = (fileId) => {
-    if (!fileId) return '/default-avatar.png'; // Default avatar
+    if (!fileId) return '/default-avatar.png';
     return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
   };
 
   // Function to format date from API response
   const formatDate = (dateString) => {
-    if (!dateString || dateString === '0001-01-01T00:00:00Z') return 'N/A'; // Handle invalid or empty dates
+    if (!dateString || dateString === '0001-01-01T00:00:00Z') return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
   };
@@ -68,12 +81,35 @@ const HRInsurance = () => {
   // Function to format rate as percentage
   const formatRate = (businessRate, employeeRate) => {
     if (!businessRate && !employeeRate) return '0%';
-    return ` ${employeeRate || 0}% NLĐ / ${businessRate || 0}% DN`;
+    return `${employeeRate || 0}% NLĐ / ${businessRate || 0}% DN`;
   };
 
   // Function to format hasBhxh
   const formatHasBhxh = (hasBhxh) => {
-    return hasBhxh ? 'Có' : 'Không';
+    return hasBhxh ? 'Có tham gia' : 'Không tham gia';
+  };
+
+  // Function to map API data to component format for view/edit
+  const mapApiDataToComponentFormat = (apiData) => {
+    return {
+      employeeCode: apiData.employeeCode || '',
+      fullName: apiData.nameEmployee || '',
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      gender: apiData.gender || '',
+      bhytCode: apiData.codeBHYT || '',
+      bhytRate: formatRate(apiData.rateBHYTBussiness, apiData.rateBHYTEmpt),
+      registeredHospital: apiData.registerMedical || '',
+      bhytStartDate: formatDate(apiData.dateStartParticipateBHYT),
+      hasJoined: formatHasBhxh(apiData.hasBHXH),
+      bhxhCode: apiData.codeBHXH || '',
+      bhxhRate: formatRate(apiData.rateBHXHBussiness, apiData.rateBHXHEmpt),
+      bhxhStartDate: formatDate(apiData.dateStartParticipateBHXH),
+      bhtnRate: formatRate(apiData.rateBHTNBussiness, apiData.rateBHTNEmpt),
+      bhtnStartDate: formatDate(apiData.dateStartParticipateBHTN),
+      bhStatus: apiData.insuranceStatus || '',
+      bhEndDate: formatDate(apiData.dateEndParticipateInsurance),
+      avatar: getImageUrl(apiData.avatarPath),
+    };
   };
 
   // Function to fetch all insurance data from API
@@ -109,7 +145,6 @@ const HRInsurance = () => {
       }
     } catch (error) {
       console.error('Error fetching insurance data:', error);
-
       if (error.response) {
         const { status, data: errorData } = error.response;
         switch (status) {
@@ -128,6 +163,69 @@ const HRInsurance = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to fetch insurance information by employee code
+  const fetchInsuranceInformation = async (employeeCode, isEdit = false) => {
+    try {
+      if (isEdit) setEditLoading(true);
+      else setViewLoading(true);
+      const response = await axios.get(`/api/Employee/GetInsuranceInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        const mappedData = mapApiDataToComponentFormat(response.data.data);
+        if (isEdit) {
+          setEditData(mappedData);
+          setIsEditModalVisible(true);
+        } else {
+          setViewData(mappedData);
+          setIsViewModalVisible(true);
+        }
+      } else {
+        message.error(response.data.message || 'Không thể tải thông tin bảo hiểm.');
+      }
+    } catch (error) {
+      console.error('Error fetching insurance information:', error);
+      message.error('Có lỗi xảy ra khi tải thông tin bảo hiểm.');
+    } finally {
+      if (isEdit) setEditLoading(false);
+      else setViewLoading(false);
+    }
+  };
+
+  // Handle View action
+  const handleView = (item) => {
+    if (!canView) {
+      message.error('Bạn không có quyền xem thông tin bảo hiểm.');
+      return;
+    }
+    fetchInsuranceInformation(item.employeeId);
+  };
+
+  // Handle Edit action
+  const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin bảo hiểm.');
+      return;
+    }
+    fetchInsuranceInformation(item.employeeId, true);
+  };
+
+  // Handle Save action from Edit modal
+  const handleEditSave = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
+    fetchAllInsuranceData(); // Refresh table data after save
+  };
+
+  // Handle modal close
+  const handleViewModalClose = () => {
+    setIsViewModalVisible(false);
+    setViewData(null);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
   };
 
   useEffect(() => {
@@ -150,10 +248,10 @@ const HRInsurance = () => {
               borderRadius: '50%',
               objectFit: 'cover',
               border: '1px solid #d9d9d9',
-              backgroundColor: '#f5f5f5'
+              backgroundColor: '#f5f5f5',
             }}
             onError={(e) => {
-              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+              e.target.src = '/default-avatar.png';
             }}
           />
           <span>{item.employeeId}</span>
@@ -203,14 +301,6 @@ const HRInsurance = () => {
     },
   ];
 
-  const handleEdit = (item) => {
-    if (!canUpdate) {
-      message.error('Bạn không có quyền chỉnh sửa thông tin bảo hiểm.');
-      return;
-    }
-    navigate(`/edit/insurance/${item.employeeId}`);
-  };
-
   const handleDelete = async (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin bảo hiểm.');
@@ -221,10 +311,13 @@ const HRInsurance = () => {
     if (!confirmed) return;
 
     try {
-      // Placeholder for delete API call
-      // const response = await axios.delete(`/api/Employee/DeleteInsurance/${item.employeeId}`);
-      message.success(`Đã xóa thông tin bảo hiểm của ${item.fullName}`);
-      fetchAllInsuranceData(); // Refresh data
+      const response = await axios.delete(`/api/Employee/DeleteInsurance/${item.employeeId}`);
+      if (response.data.code === 0) {
+        message.success(`Đã xóa thông tin bảo hiểm của ${item.fullName}`);
+        fetchAllInsuranceData();
+      } else {
+        message.error(response.data.message || 'Xóa thông tin bảo hiểm thất bại.');
+      }
     } catch (error) {
       console.error('Error deleting insurance:', error);
       message.error('Có lỗi xảy ra khi xóa thông tin bảo hiểm.');
@@ -263,20 +356,76 @@ const HRInsurance = () => {
   }
 
   return (
-    <TableComponent
-      data={insuranceData}
-      columns={columns}
-      onEdit={canUpdate ? handleEdit : null}
-      onDelete={canDelete ? handleDelete : null}
-      onBranchShow={true}
-      onDepartmentShow={true}
-      filterData={filterData}
-      showAdd={canCreate}
-      groupBy={columnGroups}
-      onCreate={canCreate ? handleCreate : null}
-      onRefresh={handleRefresh}
-      emptyText="Chưa có dữ liệu bảo hiểm"
-    />
+    <>
+      <TableComponent
+        data={insuranceData}
+        columns={columns}
+        onEdit={canUpdate ? handleEdit : null}
+        onDelete={canDelete ? handleDelete : null}
+        onView={canView ? handleView : null}
+        onBranchShow={true}
+        onDepartmentShow={true}
+        filterData={filterData}
+        showAdd={canCreate}
+        showView={true}
+        groupBy={columnGroups}
+        onCreate={canCreate ? handleCreate : null}
+        onRefresh={handleRefresh}
+        emptyText="Chưa có dữ liệu bảo hiểm"
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
+      />
+      {/* View Modal */}
+      <Modal
+        title="Xem thông tin bảo hiểm"
+        open={isViewModalVisible}
+        onCancel={handleViewModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {viewLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : viewData ? (
+          <CreateInsurance
+            initialData={viewData}
+            isViewMode={true}
+            onCancel={handleViewModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+      {/* Edit Modal */}
+      <Modal
+        title="Chỉnh sửa thông tin bảo hiểm"
+        open={isEditModalVisible}
+        onCancel={handleEditModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {editLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : editData ? (
+          <CreateInsurance
+            initialData={editData}
+            isEditMode={true}
+            isViewMode={false}
+            onSave={handleEditSave}
+            onCancel={handleEditModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+    </>
   );
 };
 

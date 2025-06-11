@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { message, Spin } from 'antd';
+import { message, Spin, Modal } from 'antd';
 import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import CreatePersonal from '../../../Create/CreatePersonal/CreatePersonal';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -25,6 +26,12 @@ const HRPersonal = () => {
   const [personalData, setPersonalData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState([]);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
@@ -50,9 +57,15 @@ const HRPersonal = () => {
     (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
 
+  const canView = permissions.some(
+    (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'view'
+  );
+
   // Function to get image URL from file ID (avatar)
   const getImageUrl = (fileId) => {
-    if (!fileId) return '/default-avatar.png'; // Default avatar
+    if (!fileId) return '/default-avatar.png';
     return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
   };
 
@@ -68,6 +81,37 @@ const HRPersonal = () => {
     if (!gender) return '';
     return gender.toLowerCase() === 'female' ? 'Nữ' :
       gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
+
+  // Function to map API data to component format
+  const mapApiDataToComponentFormat = (apiData) => {
+    const displayGender = apiData.gender === 'Female' ? 'Nữ' : apiData.gender === 'Male' ? 'Nam' : " ";
+    return {
+      fullName: apiData.nameEmployee || " ",
+      gender: displayGender,
+      dateOfBirth: formatDate(apiData.dateOfBirth),
+      nationality: apiData.nationality || " ",
+      ethnicity: apiData.ethnicity || " ",
+      identityNumber: apiData.numberIdentification || " ",
+      issuedDate: formatDate(apiData.dateIssueIdentification),
+      issuedPlace: apiData.placeIssueIdentification || " ",
+      frontImage: getImageUrl(apiData.frontIdentificationPath),
+      backImage: getImageUrl(apiData.backIdentificationPath),
+      provinceResident: apiData.provinceResidence || " ",
+      districtResident: apiData.districtResidence || " ",
+      wardResident: apiData.wardResidence || " ",
+      houseNumberResident: apiData.houseNumberResidence || " ",
+      provinceContact: apiData.provinceContact || " ",
+      districtContact: apiData.districtContact || " ",
+      wardContact: apiData.wardContact || " ",
+      houseNumberContact: apiData.houseNumberContact || " ",
+      phoneNumber: apiData.phoneNumber || " ",
+      email: apiData.email || " ",
+      accountNumber: apiData.bankNumber || " ",
+      bank: apiData.nameBank || " ",
+      bankBranch: apiData.branchBank || " ",
+      employeeCode: apiData.employeeCode || " ",
+    };
   };
 
   // Function to fetch all personnel data
@@ -98,7 +142,6 @@ const HRPersonal = () => {
           phoneNumber: item.phoneNumber || '',
           bankAccount: item.bankNumber || '',
           bankName: item.nameBank || '',
-          // Keep original data for editing
           originalData: item
         }));
         
@@ -129,6 +172,58 @@ const HRPersonal = () => {
     }
   };
 
+  // Function to fetch personal information by employee code
+  const fetchPersonalInformation = async (employeeCode, isEdit = false) => {
+    try {
+      if (isEdit) setEditLoading(true);
+      else setViewLoading(true);
+      const response = await axios.get(`/api/Employee/GetPersonalInformation?employeeCode=${employeeCode}`);
+      if (response.data.code === 0) {
+        const mappedData = mapApiDataToComponentFormat(response.data.data);
+        if (isEdit) {
+          setEditData(mappedData);
+          setIsEditModalVisible(true);
+        } else {
+          setViewData(mappedData);
+          setIsViewModalVisible(true);
+        }
+      } else {
+        message.error(response.data.message || 'Không thể tải thông tin nhân sự.');
+      }
+    } catch (error) {
+      console.error('Error fetching personal information:', error);
+      message.error('Có lỗi xảy ra khi tải thông tin nhân sự.');
+    } finally {
+      if (isEdit) setEditLoading(false);
+      else setViewLoading(false);
+    }
+  };
+
+  // Handle View action
+  const handleView = (item) => {
+    if (!canView) {
+      message.error('Bạn không có quyền xem thông tin nhân sự.');
+      return;
+    }
+    fetchPersonalInformation(item.id);
+  };
+
+  // Handle Edit action
+  const handleEdit = (item) => {
+    if (!canUpdate) {
+      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
+      return;
+    }
+    fetchPersonalInformation(item.id, true);
+  };
+
+  // Handle Save action from Edit modal
+  const handleEditSave = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
+    fetchAllPersonalData(); // Refresh table data after save
+  };
+
   useEffect(() => {
     fetchAllPersonalData();
   }, []);
@@ -152,7 +247,7 @@ const HRPersonal = () => {
               backgroundColor: '#f5f5f5'
             }}
             onError={(e) => {
-              e.target.src = '/default-avatar.png'; // Fallback to default avatar
+              e.target.src = '/default-avatar.png';
             }}
           />
           <span>{item.id}</span>
@@ -197,32 +292,18 @@ const HRPersonal = () => {
     },
   ];
 
-  const handleEdit = (item) => {
-    if (!canUpdate) {
-      message.error('Bạn không có quyền chỉnh sửa thông tin nhân sự.');
-      return;
-    }
-    // Navigate to edit page with employee code
-    navigate(`/edit/personal/${item.id}`);
-  };
-
   const handleDelete = async (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin nhân sự.');
       return;
     }
     
-    // Show confirmation dialog
     const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa nhân sự ${item.name} (${item.id})?`);
     if (!confirmed) return;
 
     try {
-      // Call delete API here
-      // const response = await axios.delete(`/api/Employee/DeletePersonal/${item.id}`);
-      
-      // For now, just show success message and refresh data
       message.success(`Đã xóa thông tin nhân sự ${item.name}`);
-      fetchAllPersonalData(); // Refresh data
+      fetchAllPersonalData();
     } catch (error) {
       console.error('Error deleting personnel:', error);
       message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
@@ -251,6 +332,16 @@ const HRPersonal = () => {
     fetchAllPersonalData();
   };
 
+  const handleViewModalClose = () => {
+    setIsViewModalVisible(false);
+    setViewData(null);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    setEditData(null);
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -261,20 +352,76 @@ const HRPersonal = () => {
   }
 
   return (
-    <TableComponent
-      data={personalData}
-      columns={columns}
-      onEdit={canUpdate ? handleEdit : null}
-      onDelete={canDelete ? handleDelete : null}
-      onBranchShow={false}
-      onDepartmentShow={false}
-      filterData={filterData}
-      showAdd={canCreate}
-      groupBy={columnGroups}
-      onCreate={canCreate ? handleCreate : null}
-      onRefresh={handleRefresh}
-      emptyText="Chưa có dữ liệu nhân sự"
-    />
+    <>
+      <TableComponent
+        data={personalData}
+        columns={columns}
+        onEdit={canUpdate ? handleEdit : null}
+        onDelete={canDelete ? handleDelete : null}
+        onView={canView ? handleView : null}
+        onBranchShow={false}
+        onDepartmentShow={false}
+        filterData={filterData}
+        showAdd={canCreate}
+        showView={true}
+        groupBy={columnGroups}
+        onCreate={canCreate ? handleCreate : null}
+        onRefresh={handleRefresh}
+        emptyText="Chưa có dữ liệu nhân sự"
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        canView={canView}
+      />
+      {/* View Modal */}
+      <Modal
+        title="Xem thông tin cá nhân"
+        open={isViewModalVisible}
+        onCancel={handleViewModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {viewLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : viewData ? (
+          <CreatePersonal
+            initialData={viewData}
+            isViewMode={true}
+            onCancel={handleViewModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+      {/* Edit Modal */}
+      <Modal
+        title="Chỉnh sửa thông tin cá nhân"
+        open={isEditModalVisible}
+        onCancel={handleEditModalClose}
+        footer={null}
+        width={1000}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        {editLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          </div>
+        ) : editData ? (
+          <CreatePersonal
+            initialData={editData}
+            isEditMode={true}
+            isViewMode={false}
+            onSave={handleEditSave}
+            onCancel={handleEditModalClose}
+            isModalFooter={true}
+          />
+        ) : null}
+      </Modal>
+    </>
   );
 };
 

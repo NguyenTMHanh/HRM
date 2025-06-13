@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Dropdown } from 'antd';
+import { Layout, Button, Dropdown, message } from 'antd';
 import { useNavigate } from 'react-router-dom'; 
 import { 
   MenuUnfoldOutlined, 
@@ -10,27 +10,85 @@ import {
   LockOutlined,      
   LogoutOutlined    
 } from '@ant-design/icons';
+import axios from 'axios';
 import './styles.css';
 
 const { Header } = Layout;
 
+// Axios configuration
+axios.defaults.baseURL = "https://localhost:7239";
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 function HeaderBar({ collapsed, toggleCollapse }) {
-  const [username, setUsername] = useState('');
-  const navigate = useNavigate(); 
+  const [userName, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('/default-avatar.png'); // Default avatar
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsername = async () => {
+    const fetchUserInfo = async () => {
       try {
-        const response = { data: { username: 'Nguyenthimyhanh' } }; 
-        setUsername(response.data.username);
+        // Retrieve userId from localStorage
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+          return;
+        }
+
+        // Call GetInfoAccount API
+        const response = await axios.get(`/api/Account/GetInfoAccount?userId=${userId}`);
+        
+        if (response.data.code === 0) {
+          const { userName, avatarPath } = response.data.data;          
+          setUsername(userName);
+
+          // If avatarPath exists, call GetFile API to get the avatar URL
+          if (avatarPath) {
+            const avatarResponse = await axios.get(`/api/FileUpload/GetFile/${avatarPath}`, {
+              responseType: 'blob' // Important for handling binary image data
+            });
+            // Create a URL for the blob
+            const imageUrl = URL.createObjectURL(avatarResponse.data);
+            setAvatarUrl(imageUrl);
+          }
+        } else {
+          message.error(response.data.message || 'Không thể lấy thông tin tài khoản.');
+        }
       } catch (error) {
-        console.error('Error fetching username:', error);
+        console.error('Error fetching user info:', error);
+        if (error.response) {
+          const { status, data } = error.response;
+          if (status === 400 && data.code === 1009) {
+            message.error('Không tìm thấy người dùng.');
+          } else {
+            message.error('Có lỗi xảy ra khi lấy thông tin tài khoản.');
+          }
+        } else {
+          message.error('Không thể kết nối đến server.');
+        }
       }
     };
 
-    fetchUsername();
-  }, []);
+    fetchUserInfo();
 
+    // Cleanup the object URL to prevent memory leaks
+    return () => {
+      if (avatarUrl !== '/default-avatar.png') {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
 
   const handleMenuClick = ({ key }) => {
     if (key === '1') {
@@ -45,7 +103,7 @@ function HeaderBar({ collapsed, toggleCollapse }) {
   const userMenuItems = [
     {
       key: 'username',
-      label: username || 'Loading...',
+      label: userName ? `username: ${userName}` : 'Loading...',
       disabled: true,
       className: 'username-item',
     },
@@ -80,11 +138,32 @@ function HeaderBar({ collapsed, toggleCollapse }) {
         <Dropdown
           menu={{ 
             items: userMenuItems,
-            onClick: handleMenuClick // Add onClick handler
+            onClick: handleMenuClick
           }} 
           trigger={["click"]}
         >
-          <Button className="icon-btn"><UserOutlined /></Button>
+          <Button className="icon-btn">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="User avatar"
+                style={{ 
+                  width: '30px', 
+                  height: '30px', 
+                  borderRadius: '50%', 
+                  objectFit: 'cover',
+                  border: '1px solid #d9d9d9',
+                  backgroundColor: '#f5f5f5',
+                  verticalAlign: 'middle'
+                }}
+                onError={(e) => {
+                  e.target.src = '/default-avatar.png';
+                }}
+              />
+            ) : (
+              <UserOutlined />
+            )}
+          </Button>
         </Dropdown>
       </div>
     </Header>

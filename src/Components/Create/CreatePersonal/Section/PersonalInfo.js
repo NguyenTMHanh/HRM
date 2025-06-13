@@ -25,7 +25,7 @@ const PersonalInfo = () => {
   };
 
   useEffect(() => {
-    axios.get('https://restcountries.com/v3.1/all')
+    axios.get('https://restcountries.com/v3.1/all?fields=name')
       .then(response => {
         const countryList = response.data.map(country => ({
           value: countryMap[country.name.common] || country.name.common, // Store translated value

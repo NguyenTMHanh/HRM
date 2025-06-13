@@ -105,7 +105,7 @@ const HRPersonel = () => {
       jobTitle: apiData.jobtitleName || '',
       level: apiData.rankName || '',
       position: apiData.positionName || '',
-      managedBy: apiData.managerId ? `${apiData.managerId} - ${apiData.nameManager}` : '',
+      managedBy: apiData.managerName || '',
       workLocation: apiData.branchName || '',
       workMode: apiData.jobTypeName || '',
       lunchBreak: formatBreakLunch(apiData.breakLunch),
@@ -133,7 +133,7 @@ const HRPersonel = () => {
           position: item.positionName,
           joinDate: formatDate(item.dateJoinCompany),
           managedBy: item.nameManager,
-          workType: item.jobTypeName,
+          workType: item.jobtypeName,
           lunchBreak: formatBreakLunch(item.breakLunch),
           phoneNumber: item.phoneNumber,
           originalData: item,
@@ -332,7 +332,6 @@ const HRPersonel = () => {
       </div>
     );
   }
-
   return (
     <>
       <TableComponent
@@ -395,6 +394,7 @@ const HRPersonel = () => {
         ) : editData ? (
           <CreatePersonel
             initialData={editData}
+            
             isEditMode={true}
             isViewMode={false}
             onSave={handleEditSave}

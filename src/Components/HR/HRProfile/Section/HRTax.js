@@ -70,6 +70,21 @@ const HRTax = () => {
     return `${axios.defaults.baseURL}/api/FileUpload/GetFile/${fileId}`;
   };
 
+  // Function to fetch file from server
+  const fetchFile = async (fileId) => {
+    try {
+      const response = await axios.get(`/api/FileUpload/GetFile/${fileId}`, {
+        responseType: 'blob', // Nhận dữ liệu dạng blob (ảnh)
+      });
+      const fileUrl = URL.createObjectURL(response.data); // Tạo URL tạm thời từ blob
+      return fileUrl;
+    } catch (error) {
+      console.error('Error fetching file:', error);
+      message.error('Không thể tải file.');
+      return null;
+    }
+  };
+
   // Function to format date from API response
   const formatDate = (dateString) => {
     if (!dateString || dateString === '0001-01-01T00:00:00Z') return 'N/A';
@@ -83,7 +98,32 @@ const HRTax = () => {
   };
 
   // Function to map API data to component format for view/edit
-  const mapApiDataToComponentFormat = (apiData) => {
+  const mapApiDataToComponentFormat = async (apiData) => {
+    const dependents = await Promise.all(
+      (apiData.dependents || []).map(async (dep) => {
+        let fileUrl = null;
+        if (dep.evidencePath) {
+          fileUrl = await fetchFile(dep.evidencePath); // Gọi API để lấy ảnh
+        }
+        return {
+          registered: dep.registerDependentStatus || '',
+          taxCode: dep.taxCode || '',
+          fullName: dep.nameDependent || '',
+          birthDate: formatDate(dep.dayOfBirthDependent),
+          relationship: dep.relationship || '',
+          proofFile: dep.evidencePath && fileUrl
+            ? [{
+                uid: dep.evidencePath,
+                name: dep.evidencePath, // Có thể thay bằng tên file thực tế nếu API trả về
+                status: 'done',
+                url: fileUrl, // URL để hiển thị ảnh
+                fileId: dep.evidencePath,
+              }]
+            : [],
+        };
+      })
+    );
+
     return {
       employeeCode: apiData.employeeCode || '',
       fullName: apiData.nameEmployee || '',
@@ -91,16 +131,7 @@ const HRTax = () => {
       gender: apiData.gender || '',
       hasTax: apiData.hasTaxCode || false,
       taxCode: apiData.taxCode || '',
-      dependents: apiData.dependents
-        ? apiData.dependents.map((dep) => ({
-            registered: dep.registerDependentStatus || '',
-            taxCode: dep.taxCode || '',
-            fullName: dep.nameDependent || '',
-            birthDate: formatDate(dep.dayOfBirthDependent),
-            relationship: dep.relationship || '',
-            proofFile: dep.evidencePath ? [{ fileId: dep.evidencePath, name: dep.evidencePath }] : [],
-          }))
-        : [],
+      dependents: apiData.dependents,
       avatar: getImageUrl(apiData.avatarPath),
     };
   };
@@ -110,7 +141,6 @@ const HRTax = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/Employee/GetAllTax');
-
       if (response.data.code === 0) {
         const mappedData = response.data.data.map((item, index) => ({
           stt: index + 1,
@@ -120,13 +150,11 @@ const HRTax = () => {
           branch: item.branchName,
           department: item.departmentName,
           position: item.positionName,
-          hasTaxCode: formatHasTax(item.hasTax),
+          hasTaxCode: formatHasTax(item.hasTaxCode),
           taxCode: item.codeTax || '',
-          dependents: item.countDependent,
-          // Keep original data for editing
-          originalData: item
+          dependents: item.countDependent || '0',
+          originalData: item, 
         }));
-
         setTaxData(mappedData);
       } else {
         message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu thuế TNCN.');
@@ -160,7 +188,7 @@ const HRTax = () => {
       else setViewLoading(true);
       const response = await axios.get(`/api/Employee/GetTaxInformation?employeeCode=${employeeCode}`);
       if (response.data.code === 0) {
-        const mappedData = mapApiDataToComponentFormat(response.data.data);
+        const mappedData = await mapApiDataToComponentFormat(response.data.data); // Chờ ánh xạ dữ liệu
         if (isEdit) {
           setEditData(mappedData);
           setIsEditModalVisible(true);
@@ -252,7 +280,10 @@ const HRTax = () => {
     { label: 'Vị trí', key: 'position' },
     { label: 'Đã có mã số thuế TNCN', key: 'hasTaxCode' },
     { label: 'Mã số thuế TNCN', key: 'taxCode' },
-    { label: 'Số lượng người phụ thuộc', key: 'dependents' },
+    {
+      label: 'Số lượng người phụ thuộc',
+      key: 'dependents',
+    },
   ];
 
   const columnGroups = [

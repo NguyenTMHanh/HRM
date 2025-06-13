@@ -141,7 +141,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
             dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
             relationship: dependent.relationship || '',
             evidencePath: dependent.proofFile && dependent.proofFile.length > 0
-              ? dependent.proofFile[0].fileId || dependent.proofFile[0].name || ''
+              ? dependent.proofFile[0].fileId || dependent.proofFile // Sử dụng fileId nếu có
               : '',
           }))
         : [];
@@ -156,6 +156,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
         dependents: processedDependents,
       };
 
+      console.log('data send: ', dataToSend);
       let response;
       let successMessage;
 

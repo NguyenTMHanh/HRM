@@ -28,7 +28,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
+function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isEditIndividual = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -128,7 +128,6 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
     if (!imageId) return;
     try {
       await axios.delete(`/api/FileUpload/DeleteFile/${imageId}`);
-      console.log(`Successfully deleted image: ${imageId}`);
     } catch (error) {
       console.error('Error deleting old image:', error);
     }
@@ -164,6 +163,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
     }
   };
 
+
   const handleSave = async () => {
     if (isEditMode && !canUpdate) {
       message.error("Bạn không có quyền cập nhật thông tin cá nhân.");
@@ -182,7 +182,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
         if (frontImageId !== originalFrontImageId && originalFrontImageId) {
           await deleteOldImage(originalFrontImageId);
         }
-        
+
         if (backImageId !== originalBackImageId && originalBackImageId) {
           await deleteOldImage(originalBackImageId);
         }
@@ -215,27 +215,26 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
       };
 
       let response;
-      
+
       if (isEditMode) {
         const userId = localStorage.getItem('userId');
         if (!userId) {
           message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
           return;
         }
-        
-        const employeeCode = await getEmployeeCode(userId);
+        const employeeCode = isEditIndividual ? await getEmployeeCode(userId) : initialData.employeeCode;
         response = await axios.put(`/api/Employee/UpdatePersonal/${employeeCode}`, dataToSend);
       } else {
         response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
       }
       if (response.status === 200 && response.data.code === 0) {
-        const successMessage = isEditMode ? 
-          "Cập nhật thông tin cá nhân thành công!" : 
+        const successMessage = isEditMode ?
+          "Cập nhật thông tin cá nhân thành công!" :
           "Tạo mới thông tin cá nhân thành công!";
-        
+
         message.success(successMessage);
         setIsSavedSuccessfully(true);
-        
+
         if (!isEditMode) {
           form.resetFields();
           setFrontImage(null);
@@ -250,8 +249,8 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
           onSave(response.data.data || dataToSend);
         }
       } else {
-        const errorMessage = isEditMode ? 
-          "Cập nhật thông tin thất bại!" : 
+        const errorMessage = isEditMode ?
+          "Cập nhật thông tin thất bại!" :
           "Tạo nhân viên thất bại!";
         message.error(response.data.message || errorMessage);
       }
@@ -266,7 +265,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
         const { status, data } = err.response;
         const { code, errors } = data || {};
         const errorMsg = errors?.[0] || data?.message || "Không thể xử lý yêu cầu.";
-        
+
         switch (status) {
           case 400:
             switch (code) {

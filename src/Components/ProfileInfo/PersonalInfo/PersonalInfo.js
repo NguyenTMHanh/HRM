@@ -309,11 +309,12 @@ function PersonalInfoProfile() {
         >
           <CreatePersonal
             key={formKey}
-            initialData={data}
+            initialData={data}           
             onSave={handleSave}
             onCancel={handleModalClose}
             isModalFooter={true}
             isEditMode={true} 
+            isEditIndividual={true}
           />
         </Modal>
       </div>

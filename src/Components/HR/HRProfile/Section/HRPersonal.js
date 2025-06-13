@@ -86,7 +86,7 @@ const HRPersonal = () => {
   // Function to map API data to component format
   const mapApiDataToComponentFormat = (apiData) => {
     const displayGender = apiData.gender === 'Female' ? 'Nữ' : apiData.gender === 'Male' ? 'Nam' : " ";
-    return {
+    return {      
       fullName: apiData.nameEmployee || " ",
       gender: displayGender,
       dateOfBirth: formatDate(apiData.dateOfBirth),
@@ -180,6 +180,8 @@ const HRPersonal = () => {
       const response = await axios.get(`/api/Employee/GetPersonalInformation?employeeCode=${employeeCode}`);
       if (response.data.code === 0) {
         const mappedData = mapApiDataToComponentFormat(response.data.data);
+        console.log ('response.data.data ', response.data.data)
+        console.log ('mappedData ', mappedData)
         if (isEdit) {
           setEditData(mappedData);
           setIsEditModalVisible(true);

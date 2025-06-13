@@ -81,7 +81,7 @@ const HRContract = () => {
   // Function to format contract type
   const formatContractType = (type) => {
     if (!type) return '';
-    return type === 'LimitedContract' ? 'Xác định thời hạn' : 'Không xác định thời hạn';
+    return type === 'LimitedContract' ? 'HĐLĐ xác định thời hạn' : 'HĐLĐ không xác định thời hạn';
   };
 
   // Function to format contract status
@@ -103,14 +103,14 @@ const HRContract = () => {
       fullName: `${apiData.employeeCode} - ${apiData.nameEmployee || ''}`,
       gender: apiData.gender === 'Female' ? 'Nữ' : apiData.gender === 'Male' ? 'Nam' : '',
       dateOfBirth: formatDate(apiData.dateOfBirth),
-      contractId: apiData.contractCode || '',
+      contractId: apiData.codeContract || '',
       contractType: formatContractType(apiData.typeContract),
       startDate: formatDate(apiData.startContract),
       endDate: formatDate(apiData.endContract),
       status: formatContractStatus(apiData.statusContract),
       hourlyWage: apiData.hourlySalary ? `${formatWithSpaces(apiData.hourlySalary)} VNĐ` : '',
       workHoursPerDay: apiData.hourWorkStandard ? `${apiData.hourWorkStandard} giờ/ngày` : '',
-      position: apiData.positionName || '',
+      position: apiData.namePosition || '',
       salaryCoefficient: apiData.coefficientSalary != null ? apiData.coefficientSalary.toString() : '',
       standardWorkingDays: apiData.dayWorkStandard ? `${apiData.dayWorkStandard} ngày` : '',
       basicSalary: apiData.basicSalary ? `${formatWithSpaces(apiData.basicSalary)} VNĐ` : '',
@@ -146,7 +146,6 @@ const HRContract = () => {
           validTo: formatDate(item.endContract),
           originalData: item
         }));
-
         setContractData(mappedData);
       } else {
         message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu hợp đồng.');
@@ -260,6 +259,7 @@ const HRContract = () => {
   };
 
   const handleCreate = () => {
+    
     if (!canCreate) {
       message.error('Bạn không có quyền tạo mới thông tin hợp đồng.');
       return;

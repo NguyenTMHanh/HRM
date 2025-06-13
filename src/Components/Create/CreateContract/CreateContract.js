@@ -151,7 +151,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
     () =>
       debounce((employeeCode) => {
         if (employeeCode) {
-          if (!isEditMode || !initialData) {
+          if (!isEditMode && !isViewMode) {
             fetchContractCode(employeeCode);
             fetchPositionAndCoefficient(employeeCode);
           }
@@ -171,29 +171,29 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
   );
 
   useEffect(() => {
-    if (!isEditMode && !isViewMode) {
+    if (!isEditMode) {
       fetchEmployees();
     }
-  }, [fetchEmployees, isEditMode, isViewMode]);
+  }, [fetchEmployees, isEditMode]);
 
   useEffect(() => {
-    if (!isEditMode && !isViewMode && selectedEmployee && typeof selectedEmployee === 'string') {
+    if (!isEditMode && selectedEmployee && typeof selectedEmployee === 'string') {
       const employeeCode = selectedEmployee.split(' - ')[0];
       debouncedFetch(employeeCode);
-    } else if (!isEditMode && !isViewMode) {
+    } else if (!isEditMode) {
       debouncedFetch(null);
     }
 
     return () => {
       debouncedFetch.cancel();
     };
-  }, [selectedEmployee, debouncedFetch, isEditMode, isViewMode]);
+  }, [selectedEmployee, debouncedFetch, isEditMode]);
 
   useEffect(() => {
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(" - ")[1] || initialData.fullName}`
-        : initialData.fullName || null;
+        : null;
 
       const parseFormattedValue = (formattedValue) => {
         if (!formattedValue) return undefined;
@@ -203,7 +203,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
       form.setFieldsValue({
         fullName,
         dateOfBirth: initialData.dateOfBirth ? moment(initialData.dateOfBirth, "DD/MM/YYYY") : null,
-        gender: initialData.gender,
+        gender: initialData.gender === 'Nữ' ? 'Female' : initialData.gender === 'Nam' ? 'Male' : initialData.gender,
         contractId: initialData.contractId,
         contractType: initialData.contractType,
         startDate: initialData.startDate
@@ -213,21 +213,21 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
           ? moment(initialData.endDate, 'DD/MM/YYYY')
           : null,
         status: initialData.status,
-        hourlyWage: initialData.hourlyWage ? `${formatWithSpaces(parseFormattedValue(initialData.hourlyWage))} VNĐ` : undefined,
-        workHoursPerDay: initialData.workHoursPerDay ? `${parseFormattedValue(initialData.workHoursPerDay)} giờ/ngày` : undefined,
+        hourlyWage: parseFormattedValue(initialData.hourlyWage),
+        workHoursPerDay: parseFormattedValue(initialData.workHoursPerDay),
         position: initialData.position,
         salaryCoefficient: parseFormattedValue(initialData.salaryCoefficient),
-        standardWorkingDays: initialData.standardWorkingDays ? `${parseFormattedValue(initialData.standardWorkingDays)} ngày` : undefined,
-        basicSalary: initialData.basicSalary ? `${formatWithSpaces(parseFormattedValue(initialData.basicSalary))} VNĐ` : undefined,
+        standardWorkingDays: parseFormattedValue(initialData.standardWorkingDays),
+        basicSalary: parseFormattedValue(initialData.basicSalary),
         allowances: initialData.allowances?.map(allowance => ({
           name: allowance.name,
-          amount: allowance.amount ? `${formatWithSpaces(parseFormattedValue(allowance.amount))} VNĐ` : undefined
+          amount: parseFormattedValue(allowance.amount)
         })) || initialValues.allowances,
       });
     } else {
       form.setFieldsValue(initialValues);
     }
-  }, [initialData, form, initialValues]);
+  }, [initialData, form]);
 
   const handleCancel = () => {
     if (typeof onCancel === "function") {
@@ -244,11 +244,12 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
   };
 
   const handleSave = async () => {
+    // Check permissions based on mode
     if (isEditMode && !canUpdateContract) {
       message.error('Bạn không có quyền cập nhật hợp đồng lao động.');
       return;
     }
-    
+
     if (!isEditMode && !canCreateContract) {
       message.error('Bạn không có quyền tạo hợp đồng lao động.');
       return;
@@ -262,15 +263,15 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
       const nameEmployee = formData.fullName ? formData.fullName.split(' - ')[1] : null;
 
       const dataToSend = {
-        employeeCode: employeeCode,
-        nameEmployee: nameEmployee,
+        employeeCode,
+        nameEmployee,
         gender: formData.gender,
         dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : null,
         codeContract: formData.contractId,
-        typeContract: formData.contractType || "",
+        typeContract: formData.contractType === 'HĐLĐ không xác định thời hạn' ? 'NoLimitedContract' : formData.contractType === 'HĐLĐ xác định thời hạn' ? 'LimitedContract' : formData.contractType,
         startContract: formData.startDate ? formData.startDate.toISOString() : null,
         endContract: formData.endDate ? formData.endDate.toISOString() : null,
-        statusContract: formData.status || "",
+        statusContract: formData.status === 'Còn hiệu lực' ? 'Valid' : formData.status === 'Hết hiệu lực' ? 'expire' : formData.status,
         hourlySalary: parseNumber(formData.hourlyWage),
         hourWorkStandard: parseNumber(formData.workHoursPerDay),
         namePosition: formData.position,
@@ -282,6 +283,8 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
           moneyAllowance: parseNumber(allowance.amount),
         })),
       };
+
+      console.log('Data to send:', dataToSend);
 
       let response;
       let successMessage;
@@ -298,12 +301,11 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
         message.destroy();
         message.success(successMessage);
         setIsSavedSuccessfully(true);
-        
         if (!isEditMode) {
           form.resetFields();
           fetchEmployees();
         }
-        
+
         if (typeof onSave === 'function') {
           onSave(dataToSend);
         }
@@ -378,7 +380,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
         layout="vertical"
         initialValues={initialValues}
         style={{ flex: '1 1 auto', overflowY: 'auto' }}
-        disabled={isViewMode}
+        disabled={isViewMode} // Disable form when in view mode
       >
         <div className="scroll-container">
           <div className="collapse-container">
@@ -386,14 +388,16 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
               item={{
                 key: '1',
                 header: 'Thông tin cơ bản',
-                children: <BasicInfo 
-                  form={form} 
-                  initialData={initialData} 
-                  employees={employees} 
-                  isModalFooter={isModalFooter}
-                  isEditMode={isEditMode}
-                  isViewMode={isViewMode}
-                />,
+                children: (
+                  <BasicInfo
+                    form={form}
+                    initialData={initialData}
+                    employees={employees}
+                    isModalFooter={isModalFooter}
+                    isEditMode={isEditMode}
+                    disabled={isViewMode} // Pass disabled prop to BasicInfo
+                  />
+                ),
               }}
             />
           </div>
@@ -403,7 +407,12 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
               item={{
                 key: '2',
                 header: 'Thông tin HĐLĐ',
-                children: <ContractInfo form={form} isViewMode={isViewMode} />,
+                children: (
+                  <ContractInfo
+                    form={form}
+                    disabled={isViewMode} // Pass disabled prop to ContractInfo
+                  />
+                ),
               }}
             />
           </div>
@@ -412,20 +421,25 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
               item={{
                 key: '3',
                 header: 'Thông tin phụ cấp',
-                children: <Allowance form={form} isViewMode={isViewMode} />,
+                children: (
+                  <Allowance
+                    form={form}
+                    disabled={isViewMode} // Pass disabled prop to Allowance
+                  />
+                ),
               }}
             />
           </div>
         </div>
       </Form>
 
-      {!isViewMode && (
+      {!isViewMode && ( // Hide FooterBar in view mode, similar to CreatePersonel
         <FooterBar
           onSave={handleSave}
           onCancel={handleCancel}
           onNext={handleNext}
           onBack={handleBack}
-          showNext={!isModalFooter} 
+          showNext={!isModalFooter}
           showBack={!isModalFooter}
           showCancel={true}
           showSave={true}

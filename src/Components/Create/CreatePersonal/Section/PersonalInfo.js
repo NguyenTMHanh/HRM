@@ -134,7 +134,6 @@ const PersonalInfo = () => {
             <Select placeholder="Chọn giới tính" style={{ width: '100%' }}>
               <Select.Option value="Male">Nam</Select.Option>
               <Select.Option value="Female">Nữ</Select.Option>
-              <Select.Option value="Other">Khác</Select.Option>
             </Select>
           </Form.Item>
         </Col>

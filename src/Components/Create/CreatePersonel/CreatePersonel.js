@@ -240,6 +240,8 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
       } else {
         message.error(response.data.message || (isEditMode ? "Cập nhật hồ sơ nhân sự thất bại!" : "Tạo mới hồ sơ nhân sự thất bại!"));
       }
+      fetchBreakTime();
+      fetchEmployees();
     } catch (err) {
       if (err.errorFields) {
         message.error("Vui lòng nhập đầy đủ các trường bắt buộc!");

@@ -5,6 +5,7 @@ import Status from '../../../../Shared/Status/Status';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CreateInsurance from '../../../Create/CreateInsurance/CreateInsurance';
+import ConfirmDlg from './Dlg/ConfirmDeleteInsuranceDlg';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -33,6 +34,8 @@ const HRInsurance = () => {
   const [editData, setEditData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+    const [isConfirmDlgOpen, setIsConfirmDlgOpen] = useState(false); // Thêm trạng thái cho ConfirmDlg
+  const [selectedItem, setSelectedItem] = useState(null); // Lưu item được chọn để xóa
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -44,25 +47,25 @@ const HRInsurance = () => {
   const canUpdate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'update'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
   );
 
   const canDelete = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'delete'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
   );
 
   const canCreate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
 
   const canView = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'view'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'view'
   );
 
   // Function to get image URL from file ID (avatar)
@@ -301,27 +304,66 @@ const HRInsurance = () => {
     },
   ];
 
-  const handleDelete = async (item) => {
+  // Handle Delete action
+  const handleDelete = (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin bảo hiểm.');
       return;
     }
 
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa thông tin bảo hiểm của ${item.fullName} (${item.employeeId})?`);
-    if (!confirmed) return;
+    // Lưu item được chọn và mở ConfirmDlg
+    setSelectedItem(item);
+    setIsConfirmDlgOpen(true);
+  };
+
+  // Handle Confirm Delete action
+  const handleConfirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      const response = await axios.delete(`/api/Employee/DeleteInsurance/${item.employeeId}`);
+      const response = await axios.delete(`/api/Employee/DeleteInsurance/${selectedItem.employeeId}`);
+
       if (response.data.code === 0) {
-        message.success(`Đã xóa thông tin bảo hiểm của ${item.fullName}`);
-        fetchAllInsuranceData();
+        message.success(`Đã xóa thông tin bảo hiểm của ${selectedItem.fullName}`);
+        fetchAllInsuranceData(); // Làm mới dữ liệu bảng sau khi xóa
       } else {
-        message.error(response.data.message || 'Xóa thông tin bảo hiểm thất bại.');
+        message.error(response.data.message || 'Có lỗi xảy ra khi xóa thông tin bảo hiểm.');
       }
     } catch (error) {
       console.error('Error deleting insurance:', error);
-      message.error('Có lỗi xảy ra khi xóa thông tin bảo hiểm.');
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 400:
+            if (errorData.code === 1029) {
+              message.error('Thông tin bảo hiểm không tồn tại.');
+            } else {
+              message.error(errorData.message || 'Yêu cầu không hợp lệ.');
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xóa thông tin bảo hiểm.');
+            break;
+          default:
+            message.error('Có lỗi xảy ra khi xóa thông tin bảo hiểm.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      // Đóng ConfirmDlg sau khi xử lý
+      setIsConfirmDlgOpen(false);
+      setSelectedItem(null);
     }
+  };
+
+  // Handle Cancel Delete action
+  const handleCancelDelete = () => {
+    setIsConfirmDlgOpen(false);
+    setSelectedItem(null);
   };
 
   const filterData = (data, searchTerm) => {
@@ -425,6 +467,14 @@ const HRInsurance = () => {
           />
         ) : null}
       </Modal>
+      <ConfirmDlg
+        open={isConfirmDlgOpen}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        employeeCode={selectedItem?.employeeId}
+        bhytId={selectedItem?.bhytId}
+        bhxhId={selectedItem?.bhxhId}
+      />
     </>
   );
 };

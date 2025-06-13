@@ -314,7 +314,7 @@ function PersonalInfoProfile() {
             onCancel={handleModalClose}
             isModalFooter={true}
             isEditMode={true} 
-            isEditIndividual={true}
+            isIndividual={true}
           />
         </Modal>
       </div>

@@ -5,6 +5,7 @@ import Status from '../../../../Shared/Status/Status';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CreateContract from '../../../Create/CreateContract/CreateContract';
+import ConfirmDlg from './Dlg/ConfirmDeleteContractDlg';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -33,6 +34,8 @@ const HRContract = () => {
   const [editData, setEditData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+    const [isConfirmDlgOpen, setIsConfirmDlgOpen] = useState(false); // Thêm trạng thái cho ConfirmDlg
+  const [selectedItem, setSelectedItem] = useState(null); // Lưu item được chọn để xóa
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -44,26 +47,26 @@ const HRContract = () => {
   const canUpdate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileContract' && p.actionId === 'update'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
   );
 
   const canDelete = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileContract' && p.actionId === 'delete'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
   );
 
   const canCreate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileContract' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
 
   const canView = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileContract' && p.actionId === 'view'
-  );
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'view'
+  ) ;
 
   // Function to get image URL from file ID (avatar)
   const getImageUrl = (fileId) => {
@@ -225,28 +228,66 @@ const HRContract = () => {
     fetchAllContractData(); // Refresh table data after save
   };
 
-  // Handle Delete action
-  const handleDelete = async (item) => {
+// Handle Delete action
+  const handleDelete = (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin hợp đồng.');
       return;
     }
 
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa hợp đồng ${item.contractId} của ${item.name}?`);
-    if (!confirmed) return;
+    // Lưu item được chọn và mở ConfirmDlg
+    setSelectedItem(item);
+    setIsConfirmDlgOpen(true);
+  };
+
+  // Handle Confirm Delete action
+  const handleConfirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      const response = await axios.delete(`/api/Employee/DeleteContract/${item.contractId}`);
+      const response = await axios.delete(`/api/Employee/DeleteContract/${selectedItem.employeeId}`);
+
       if (response.data.code === 0) {
-        message.success(`Đã xóa hợp đồng ${item.contractId}`);
-        fetchAllContractData();
+        message.success(`Đã xóa hợp đồng ${selectedItem.contractId} của ${selectedItem.name}`);
+        fetchAllContractData(); // Làm mới dữ liệu bảng sau khi xóa
       } else {
         message.error(response.data.message || 'Có lỗi xảy ra khi xóa hợp đồng.');
       }
     } catch (error) {
       console.error('Error deleting contract:', error);
-      message.error('Có lỗi xảy ra khi xóa thông tin hợp đồng.');
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 400:
+            if (errorData.code === 1030) {
+              message.error('Hợp đồng không tồn tại.');
+            } else {
+              message.error(errorData.message || 'Yêu cầu không hợp lệ.');
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xóa thông tin hợp đồng.');
+            break;
+          default:
+            message.error('Có lỗi xảy ra khi xóa hợp đồng.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      // Đóng ConfirmDlg sau khi xử lý
+      setIsConfirmDlgOpen(false);
+      setSelectedItem(null);
     }
+  };
+
+  // Handle Cancel Delete action
+  const handleCancelDelete = () => {
+    setIsConfirmDlgOpen(false);
+    setSelectedItem(null);
   };
 
   const filterData = (data, searchTerm) => {
@@ -430,6 +471,13 @@ const HRContract = () => {
           />
         ) : null}
       </Modal>
+      <ConfirmDlg
+        open={isConfirmDlgOpen}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        employeeCode={selectedItem?.employeeId}
+        contractId={selectedItem?.contractId}
+      />
     </>
   );
 };

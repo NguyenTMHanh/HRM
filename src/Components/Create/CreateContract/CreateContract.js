@@ -31,7 +31,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
+function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isIndividual = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -63,7 +63,9 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
   );
   const canUpdateContract = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileContract' && p.actionId === 'update'
-  );
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
+
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -289,10 +291,14 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
       let response;
       let successMessage;
 
-      if (isEditMode) {
+      if (isEditMode && !isIndividual) {
         response = await axios.put('/api/Employee/UpdateContract', dataToSend);
         successMessage = 'Cập nhật hợp đồng lao động thành công!';
-      } else {
+      } else if (isEditMode && isIndividual) {
+        response = await axios.put('/api/Employee/UpdateContractIndividual', dataToSend);
+        successMessage = 'Cập nhật hợp đồng lao động thành công!';
+      }
+      else {
         response = await axios.post('/api/Employee/CreateContract', dataToSend);
         successMessage = 'Tạo mới hợp đồng lao động thành công!';
       }

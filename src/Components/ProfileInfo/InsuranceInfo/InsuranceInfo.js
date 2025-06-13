@@ -344,6 +344,7 @@ function InsuranceInfoProfile() {
             onCancel={handleModalClose}
             isModalFooter={true}
             isEditMode={true}
+            isIndividual={true}
           />
         </Modal>
       </div>

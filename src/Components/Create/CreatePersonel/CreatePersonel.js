@@ -25,7 +25,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
+function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false , isIndividual = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
@@ -50,7 +50,8 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
   );
   const canUpdateRoleGroup = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "HrPersonel" && p.actionId === "update"
-  );
+  )|| permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
 
   // Extract image ID from URL
   const extractImageIdFromUrl = (imageUrl) => {
@@ -219,9 +220,12 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
       };
 
       let response;
-      if (isEditMode) {
+      if (isEditMode && !isIndividual) {
         response = await axios.put("/api/Employee/UpdatePersonel", dataToSend);
-      } else {
+      } else if (isEditMode && isIndividual) {
+        response = await axios.put("/api/Employee/UpdatePersonelIndividual", dataToSend);
+      }    
+      else {
         response = await axios.post("/api/Employee/CreatePersonel", dataToSend);
       }
 

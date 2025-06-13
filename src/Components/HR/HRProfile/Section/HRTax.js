@@ -4,6 +4,7 @@ import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CreateTax from '../../../Create/CreateTax/CreateTax';
+import ConfirmDlg from './Dlg/ConfirmDeleteTaxDlg';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -32,6 +33,8 @@ const HRTax = () => {
   const [editData, setEditData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [isConfirmDlgOpen, setIsConfirmDlgOpen] = useState(false); // Thêm trạng thái cho ConfirmDlg
+  const [selectedItem, setSelectedItem] = useState(null); // Lưu item được chọn để xóa
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -43,25 +46,25 @@ const HRTax = () => {
   const canUpdate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'update'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update'
   );
 
   const canDelete = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'delete'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'delete'
   );
 
   const canCreate = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
 
   const canView = permissions.some(
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   ) || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'view'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'view'
   );
 
   // Function to get image URL from file ID (avatar)
@@ -96,43 +99,37 @@ const HRTax = () => {
   const formatHasTax = (hasTax) => {
     return hasTax ? 'Có' : 'Không';
   };
-
+  const formatGender = (gender) => {
+    if (!gender) return '';
+    return gender.toLowerCase() === 'female' ? 'Nữ' :
+      gender.toLowerCase() === 'male' ? 'Nam' : gender;
+  };
   // Function to map API data to component format for view/edit
-  const mapApiDataToComponentFormat = async (apiData) => {
-    const dependents = await Promise.all(
-      (apiData.dependents || []).map(async (dep) => {
-        let fileUrl = null;
-        if (dep.evidencePath) {
-          fileUrl = await fetchFile(dep.evidencePath); // Gọi API để lấy ảnh
-        }
-        return {
-          registered: dep.registerDependentStatus || '',
-          taxCode: dep.taxCode || '',
-          fullName: dep.nameDependent || '',
-          birthDate: formatDate(dep.dayOfBirthDependent),
-          relationship: dep.relationship || '',
-          proofFile: dep.evidencePath && fileUrl
-            ? [{
-                uid: dep.evidencePath,
-                name: dep.evidencePath, // Có thể thay bằng tên file thực tế nếu API trả về
-                status: 'done',
-                url: fileUrl, // URL để hiển thị ảnh
-                fileId: dep.evidencePath,
-              }]
-            : [],
-        };
-      })
-    );
-
+  const mapApiDataToComponentFormat = (apiData) => {
     return {
-      employeeCode: apiData.employeeCode || '',
-      fullName: apiData.nameEmployee || '',
+      employeeCode: apiData.employeeCode || " ",
+      fullName: apiData.nameEmployee || " ",
+      gender: formatGender(apiData.gender),
       dateOfBirth: formatDate(apiData.dateOfBirth),
-      gender: apiData.gender || '',
       hasTax: apiData.hasTaxCode || false,
       taxCode: apiData.taxCode || '',
-      dependents: apiData.dependents,
-      avatar: getImageUrl(apiData.avatarPath),
+      dependents: apiData.dependents?.map((dependent) => ({
+        registered: dependent.registerDependentStatus || '',
+        taxCode: dependent.taxCode || '',
+        fullName: dependent.nameDependent || '',
+        birthDate: dependent.dayOfBirthDependent ? formatDate(dependent.dayOfBirthDependent) : '',
+        relationship: dependent.relationship || '',
+        proofFile: dependent.evidencePath
+          ? [
+            {
+              uid: dependent.evidencePath,
+              name: dependent.evidencePath, // File name (will be updated after fetching file)
+              status: 'done',
+              fileId: dependent.evidencePath, // Store file ID for fetching
+            },
+          ]
+          : [],
+      })) || [],
     };
   };
 
@@ -188,7 +185,9 @@ const HRTax = () => {
       else setViewLoading(true);
       const response = await axios.get(`/api/Employee/GetTaxInformation?employeeCode=${employeeCode}`);
       if (response.data.code === 0) {
+
         const mappedData = await mapApiDataToComponentFormat(response.data.data); // Chờ ánh xạ dữ liệu
+
         if (isEdit) {
           setEditData(mappedData);
           setIsEditModalVisible(true);
@@ -297,27 +296,66 @@ const HRTax = () => {
     },
   ];
 
-  const handleDelete = async (item) => {
+  // Handle Delete action
+  const handleDelete = (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin thuế TNCN.');
       return;
     }
 
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa thông tin thuế TNCN của ${item.fullName} (${item.employeeId})?`);
-    if (!confirmed) return;
+    // Lưu item được chọn và mở ConfirmDlg
+    setSelectedItem(item);
+    setIsConfirmDlgOpen(true);
+  };
+
+  // Handle Confirm Delete action
+  const handleConfirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      const response = await axios.delete(`/api/Employee/DeleteTax/${item.employeeId}`);
+      const response = await axios.delete(`/api/Employee/DeleteTax/${selectedItem.employeeId}`);
+
       if (response.data.code === 0) {
-        message.success(`Đã xóa thông tin thuế TNCN của ${item.fullName}`);
-        fetchAllTaxData();
+        message.success(`Đã xóa thông tin thuế TNCN của ${selectedItem.fullName}`);
+        fetchAllTaxData(); // Làm mới dữ liệu bảng sau khi xóa
       } else {
-        message.error(response.data.message || 'Xóa thông tin thuế TNCN thất bại.');
+        message.error(response.data.message || 'Có lỗi xảy ra khi xóa thông tin thuế TNCN.');
       }
     } catch (error) {
       console.error('Error deleting tax:', error);
-      message.error('Có lỗi xảy ra khi xóa thông tin thuế TNCN.');
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 400:
+            if (errorData.code === 1031) {
+              message.error('Thông tin thuế TNCN không tồn tại.');
+            } else {
+              message.error(errorData.message || 'Yêu cầu không hợp lệ.');
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xóa thông tin thuế TNCN.');
+            break;
+          default:
+            message.error('Có lỗi xảy ra khi xóa thông tin thuế TNCN.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      // Đóng ConfirmDlg sau khi xử lý
+      setIsConfirmDlgOpen(false);
+      setSelectedItem(null);
     }
+  };
+
+  // Handle Cancel Delete action
+  const handleCancelDelete = () => {
+    setIsConfirmDlgOpen(false);
+    setSelectedItem(null);
   };
 
   const filterData = (data, searchTerm) => {
@@ -420,6 +458,12 @@ const HRTax = () => {
           />
         ) : null}
       </Modal>
+      <ConfirmDlg
+        open={isConfirmDlgOpen}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        employeeCode={selectedItem?.employeeId}
+      />
     </>
   );
 };

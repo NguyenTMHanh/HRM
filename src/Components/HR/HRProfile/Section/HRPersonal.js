@@ -4,6 +4,7 @@ import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CreatePersonal from '../../../Create/CreatePersonal/CreatePersonal';
+import ConfirmDlg from './Dlg/ConfirmDeletePersonalDlg';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -32,6 +33,8 @@ const HRPersonal = () => {
   const [editData, setEditData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [isConfirmDlgOpen, setIsConfirmDlgOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const storedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
@@ -86,7 +89,7 @@ const HRPersonal = () => {
   // Function to map API data to component format
   const mapApiDataToComponentFormat = (apiData) => {
     const displayGender = apiData.gender === 'Female' ? 'Nữ' : apiData.gender === 'Male' ? 'Nam' : " ";
-    return {      
+    return {
       fullName: apiData.nameEmployee || " ",
       gender: displayGender,
       dateOfBirth: formatDate(apiData.dateOfBirth),
@@ -119,7 +122,7 @@ const HRPersonal = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/Employee/GetAllPersonal');
-      
+
       if (response.data.code === 0) {
         const mappedData = response.data.data.map((item, index) => ({
           stt: index + 1,
@@ -144,14 +147,14 @@ const HRPersonal = () => {
           bankName: item.nameBank || '',
           originalData: item
         }));
-        
+
         setPersonalData(mappedData);
       } else {
         message.error(response.data.message || 'Có lỗi xảy ra khi tải dữ liệu nhân sự.');
       }
     } catch (error) {
       console.error('Error fetching personnel data:', error);
-      
+
       if (error.response) {
         const { status, data: errorData } = error.response;
         switch (status) {
@@ -238,10 +241,10 @@ const HRPersonal = () => {
           <img
             src={value}
             alt={`${item.name}'s avatar`}
-            style={{ 
-              width: '30px', 
-              height: '30px', 
-              borderRadius: '50%', 
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '50%',
               objectFit: 'cover',
               border: '1px solid #d9d9d9',
               backgroundColor: '#f5f5f5'
@@ -297,17 +300,58 @@ const HRPersonal = () => {
       message.error('Bạn không có quyền xóa thông tin nhân sự.');
       return;
     }
-    
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa nhân sự ${item.name} (${item.id})?`);
-    if (!confirmed) return;
+
+    // Lưu item được chọn và mở ConfirmDlg
+    setSelectedItem(item);
+    setIsConfirmDlgOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      message.success(`Đã xóa thông tin nhân sự ${item.name}`);
-      fetchAllPersonalData();
+      const response = await axios.delete(`/api/Employee/DeletePersonal/${selectedItem.id}`);
+
+      if (response.data.code === 0) {
+        message.success(`Đã xóa thông tin nhân sự ${selectedItem.name}`);
+        fetchAllPersonalData(); // Làm mới dữ liệu bảng sau khi xóa
+      } else {
+        message.error(response.data.message || 'Có lỗi xảy ra khi xóa thông tin nhân sự.');
+      }
     } catch (error) {
       console.error('Error deleting personnel:', error);
-      message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 400:
+            if (errorData.code === 1027) {
+              message.error('Nhân sự không tồn tại.');
+            } else {
+              message.error(errorData.message || 'Yêu cầu không hợp lệ.');
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xóa thông tin nhân sự.');
+            break;
+          default:
+            message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      // Đóng ConfirmDlg sau khi xử lý
+      setIsConfirmDlgOpen(false);
+      setSelectedItem(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setIsConfirmDlgOpen(false);
+    setSelectedItem(null);
   };
 
   const filterData = (data, searchTerm) => {
@@ -421,6 +465,12 @@ const HRPersonal = () => {
           />
         ) : null}
       </Modal>
+      <ConfirmDlg
+        open={isConfirmDlgOpen}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        employeeCode={selectedItem?.id} // Truyền mã nhân sự
+      />
     </>
   );
 };

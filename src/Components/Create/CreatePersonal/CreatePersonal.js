@@ -28,7 +28,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isEditIndividual = false }) {
+function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isIndividual = false }) {
   const [form] = Form.useForm();
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -58,7 +58,8 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
   );
   const canUpdate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "profilePersonal" && p.actionId === "update"
-  );
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
 
   // Handle image upload callback
   const handleImageUpload = (imageId, type) => {
@@ -222,8 +223,13 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
           message.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
           return;
         }
-        const employeeCode = isEditIndividual ? await getEmployeeCode(userId) : initialData.employeeCode;
-        response = await axios.put(`/api/Employee/UpdatePersonal/${employeeCode}`, dataToSend);
+        const employeeCode = isIndividual ? await getEmployeeCode(userId) : initialData.employeeCode;
+        if (isIndividual) {
+          response = await axios.put(`/api/Employee/UpdatePersonalIndividual/${employeeCode}`, dataToSend);
+        }
+        else{
+          response = await axios.put(`/api/Employee/UpdatePersonal/${employeeCode}`, dataToSend);
+        }
       } else {
         response = await axios.post("/api/Employee/CreatePersonal", dataToSend);
       }

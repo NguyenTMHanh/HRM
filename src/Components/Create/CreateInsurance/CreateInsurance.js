@@ -27,7 +27,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
+function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isIndividual = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [bhxhCode, setBhxhCode] = useState('');
@@ -79,7 +79,8 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
   );
   const canUpdateInsurance = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileInsurance' && p.actionId === 'update'
-  );
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
 
   // Fetch employees
   const fetchEmployees = useCallback(async () => {
@@ -236,10 +237,14 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
       let response;
       let successMessage;
 
-      if (isEditMode) {
+      if (isEditMode && !isIndividual) {
         response = await axios.put('/api/Employee/UpdateInsurance', dataToSend);
         successMessage = 'Cập nhật thông tin bảo hiểm thành công!';
-      } else {
+      } else if (isEditMode && isIndividual) {
+        response = await axios.put('/api/Employee/UpdateInsuranceIndividual', dataToSend);
+        successMessage = 'Cập nhật thông tin bảo hiểm thành công!';
+      }
+      else {
         response = await axios.post('/api/Employee/CreateInsurance', dataToSend);
         successMessage = 'Tạo mới thông tin bảo hiểm thành công!';
       }

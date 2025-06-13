@@ -23,7 +23,7 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false }) {
+function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEditMode = false, isViewMode = false, isIndividual = false }) {
   const [form] = Form.useForm();
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -56,8 +56,9 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
     (p) => p.moduleId === 'profileTax' && p.actionId === 'create'
   );
   const canUpdateTax = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'update'
-  );
+    (p) => (p.moduleId === 'profileTax' && p.actionId === 'update')
+  ) || permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
 
   // Fetch employees without tax information
   const fetchEmployees = useCallback(async () => {
@@ -78,6 +79,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
   }, [fetchEmployees, isEditMode, isViewMode]);
 
   useEffect(() => {
+    console.log('initialData: ', initialData);
     if (initialData) {
       const fullName = initialData.employeeCode && initialData.fullName
         ? `${initialData.employeeCode} - ${initialData.fullName.split(' - ')[1] || initialData.fullName}`
@@ -91,13 +93,13 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
         taxCode: initialData.taxCode || initialValues.taxCode,
         dependents: initialData.dependents
           ? initialData.dependents.map((dependent) => ({
-              registered: dependent.registered || '',
-              taxCode: dependent.taxCode || '',
-              fullName: dependent.fullName || '',
-              birthDate: dependent.birthDate ? moment(dependent.birthDate, 'DD/MM/YYYY') : null,
-              relationship: dependent.relationship || '',
-              proofFile: dependent.proofFile || [],
-            }))
+            registered: dependent.registered || '',
+            taxCode: dependent.taxCode || '',
+            fullName: dependent.fullName || '',
+            birthDate: dependent.birthDate ? moment(dependent.birthDate, 'DD/MM/YYYY') : null,
+            relationship: dependent.relationship || '',
+            proofFile: dependent.proofFile || [],
+          }))
           : initialValues.dependents,
       };
 
@@ -135,15 +137,15 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
 
       const processedDependents = formData.dependents
         ? formData.dependents.map((dependent) => ({
-            registerDependentStatus: dependent.registered || '',
-            taxCode: dependent.taxCode || '',
-            nameDependent: dependent.fullName || '',
-            dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
-            relationship: dependent.relationship || '',
-            evidencePath: dependent.proofFile && dependent.proofFile.length > 0
-              ? dependent.proofFile[0].fileId || dependent.proofFile // Sử dụng fileId nếu có
-              : '',
-          }))
+          registerDependentStatus: dependent.registered || '',
+          taxCode: dependent.taxCode || '',
+          nameDependent: dependent.fullName || '',
+          dayOfBirthDependent: dependent.birthDate ? dependent.birthDate.toISOString() : null,
+          relationship: dependent.relationship || '',
+          evidencePath: dependent.proofFile && dependent.proofFile.length > 0
+            ? dependent.proofFile[0].fileId || dependent.proofFile // Sử dụng fileId nếu có
+            : '',
+        }))
         : [];
 
       const dataToSend = {
@@ -160,10 +162,14 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
       let response;
       let successMessage;
 
-      if (isEditMode) {
+      if (isEditMode && !isIndividual) {
         response = await axios.put('/api/Employee/UpdateTax', dataToSend);
         successMessage = 'Cập nhật thông tin thuế thành công!';
-      } else {
+      } else if (isEditMode && isIndividual) {
+        response = await axios.put('/api/Employee/UpdateTaxIndividual', dataToSend);
+        successMessage = 'Cập nhật thông tin thuế thành công!';
+      }
+      else {
         response = await axios.post('/api/Employee/CreateTax', dataToSend);
         successMessage = 'Tạo mới thông tin thuế thành công!';
       }

@@ -4,6 +4,7 @@ import TableComponent from '../../../../Shared/Table/Table';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CreatePersonel from '../../../Create/CreatePersonel/CreatePersonel'; // Import CreatePersonel
+import ConfirmDlg from './Dlg/ConfirmDeletePersonelDlg';
 
 // Axios configuration
 axios.defaults.baseURL = "https://localhost:7239";
@@ -32,6 +33,8 @@ const HRPersonel = () => {
   const [editData, setEditData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+    const [isConfirmDlgOpen, setIsConfirmDlgOpen] = useState(false); // Thêm trạng thái cho ConfirmDlg
+  const [selectedItem, setSelectedItem] = useState(null); // Lưu item được chọn để xóa
 
   // Load permissions from localStorage
   useEffect(() => {
@@ -282,26 +285,66 @@ const HRPersonel = () => {
       columns: ['phoneNumber'],
     },
   ];
-
-  const handleDelete = async (item) => {
+  const handleDelete = (item) => {
     if (!canDelete) {
       message.error('Bạn không có quyền xóa thông tin nhân sự.');
       return;
     }
 
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa nhân sự ${item.name} (${item.id})?`);
-    if (!confirmed) return;
+    // Lưu item được chọn và mở ConfirmDlg
+    setSelectedItem(item);
+    setIsConfirmDlgOpen(true);
+  };
+
+    const handleConfirmDelete = async () => {
+    if (!selectedItem) return;
 
     try {
-      // Placeholder for delete API call
-      // const response = await axios.delete(`/api/Employee/DeletePersonel/${item.id}`);
-      message.success(`Đã xóa thông tin nhân sự ${item.name}`);
-      fetchAllPersonelData();
+      const response = await axios.delete(`/api/Employee/DeletePersonel/${selectedItem.id}`);
+
+      if (response.data.code === 0) {
+        message.success(`Đã xóa thông tin hồ sơ nhân sự ${selectedItem.name}`);
+        fetchAllPersonelData(); // Làm mới dữ liệu bảng sau khi xóa
+      } else {
+        message.error(response.data.message || 'Có lỗi xảy ra khi xóa thông tin hồ sơ nhân sự.');
+      }
     } catch (error) {
       console.error('Error deleting personnel:', error);
-      message.error('Có lỗi xảy ra khi xóa thông tin nhân sự.');
+      if (error.response) {
+        const { status, data: errorData } = error.response;
+        switch (status) {
+          case 400:
+            if (errorData.code === 1028) {
+              message.error('Hồ sơ nhân sự không tồn tại.');
+            } else {
+              message.error(errorData.message || 'Yêu cầu không hợp lệ.');
+            }
+            break;
+          case 401:
+            message.error('Bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
+            break;
+          case 403:
+            message.error('Bạn không có quyền xóa thông tin hồ sơ nhân sự.');
+            break;
+          default:
+            message.error('Có lỗi xảy ra khi xóa thông tin hồ sơ nhân sự.');
+        }
+      } else {
+        message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+      }
+    } finally {
+      // Đóng ConfirmDlg sau khi xử lý
+      setIsConfirmDlgOpen(false);
+      setSelectedItem(null);
     }
   };
+
+  // Handle Cancel Delete action
+  const handleCancelDelete = () => {
+    setIsConfirmDlgOpen(false);
+    setSelectedItem(null);
+  };
+
 
   const filterData = (data, searchTerm) => {
     return data.filter(
@@ -403,6 +446,12 @@ const HRPersonel = () => {
           />
         ) : null}
       </Modal>
+      <ConfirmDlg
+        open={isConfirmDlgOpen}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        employeeCode={selectedItem?.id}
+      />
     </>
   );
 };

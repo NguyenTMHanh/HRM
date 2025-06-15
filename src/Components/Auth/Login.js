@@ -25,7 +25,7 @@ axios.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // Prevent infinite retry loop
+      originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -35,16 +35,14 @@ axios.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        // Call refresh token endpoint
         const response = await axios.post('/api/account/refresh-token', { refreshToken });
         const { code, data } = response.data;
 
         if (code === 0 && data?.accessToken) {
           localStorage.setItem('accessToken', data.accessToken);
           if (data.refreshToken) {
-            localStorage.setItem('refreshToken', data.refreshToken); // Update refresh token if provided
+            localStorage.setItem('refreshToken', data.refreshToken);
           }
-          // Retry the original request with the new access token
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
           return axios(originalRequest);
         } else {
@@ -66,10 +64,12 @@ function Login() {
   const [signIn, setSignIn] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const passwordRef = useRef(null);
+  const emailRef = useRef(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -99,7 +99,6 @@ function Login() {
             localStorage.setItem('permissions', JSON.stringify(permissions));
             navigate('/dashboard');
           } else {
-            // Allow access to default modules if no permissions
             localStorage.setItem('permissions', JSON.stringify([]));
             navigate('/dashboard');
           }
@@ -110,10 +109,8 @@ function Login() {
             status: roleError.response?.status,
           });
           if (roleError.response?.status === 401) {
-            // Token refresh will be handled by the interceptor
             return;
           } else {
-            // Allow access to default modules
             localStorage.setItem('permissions', JSON.stringify([]));
             navigate('/dashboard');
           }
@@ -141,6 +138,7 @@ function Login() {
   const handleForgotPassword = (e) => {
     e.preventDefault();
     message.info("Tính năng lấy lại mật khẩu chưa được triển khai.");
+    console.log("Forgot password attempt:", { username, email });
   };
 
   const togglePasswordVisibility = () => {
@@ -150,7 +148,18 @@ function Login() {
   const handleUsernameKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      passwordRef.current.focus();
+      if (signIn) {
+        passwordRef.current.focus();
+      } else {
+        emailRef.current.focus();
+      }
+    }
+  };
+
+  const handleEmailKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleForgotPassword(e);
     }
   };
 
@@ -177,6 +186,15 @@ function Login() {
                 placeholder='Tài khoản'
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleUsernameKeyDown}
+              />
+              <Components.Input
+                type='email'
+                placeholder='Email'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleEmailKeyDown}
+                ref={emailRef}
               />
               <Components.Button type="submit" disabled={loading}>
                 {loading ? 'Đang xử lý...' : 'LẤY LẠI MẬT KHẨU'}

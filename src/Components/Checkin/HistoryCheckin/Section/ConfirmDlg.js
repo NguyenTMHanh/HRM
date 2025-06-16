@@ -1,15 +1,16 @@
 import React from 'react';
 import { Modal, Button, Space } from 'antd';
+import FooterBar from '../../../Footer/Footer';
 import './styles.css';
 
 const ConfirmDlg = ({ open, onCancel }) => {
   const handleConfirm = () => {
     console.log("Xác nhận bảng lương");
-    onCancel(); 
+    onCancel();
   };
 
   const currentDate = new Date();
-  const month = currentDate.getMonth() + 1; 
+  const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
   const formattedDate = `${month}/${year}`;
 
@@ -20,14 +21,13 @@ const ConfirmDlg = ({ open, onCancel }) => {
       onCancel={onCancel}
       centered={true}
       footer={
-        <Space>
-          <Button onClick={onCancel} className="cancel-btn">
-            Hủy
-          </Button>
-          <Button type="primary" onClick={handleConfirm} className="confirm-btn">
-            Xác nhận
-          </Button>
-        </Space>
+        <FooterBar
+          onConfirm={handleConfirm}
+          onCancel={onCancel}
+          showConfirm={true}
+          showCancel={true}
+          isModalFooter={true}
+        />
       }
       className="confirm-dlg"
     >

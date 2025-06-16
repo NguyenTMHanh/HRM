@@ -74,12 +74,6 @@ const WorkStats = ({
         </div>
         <div className="stat-box">
           <p>
-            <MdLaptopMac className="stat-icon wfh-days-icon" /> Ngày làm từ xa
-          </p>
-          <h3>{totalWFHDays} ngày</h3>
-        </div>
-        <div className="stat-box">
-          <p>
             <MdAccessTime className="stat-icon working-hours-icon" /> Giờ làm việc
           </p>
           <h3>{totalWorkingHours} giờ</h3>
@@ -95,18 +89,6 @@ const WorkStats = ({
             <MdBeachAccess className="stat-icon days-off-icon" /> Ngày nghỉ
           </p>
           <h3>{totalDaysOff} ngày</h3>
-        </div>
-        <div className="stat-box">
-          <p>
-            <MdEvent className="stat-icon weekend-ot-icon" /> Tăng ca cuối tuần
-          </p>
-          <h3>{totalWeekendOT} giờ</h3>
-        </div>
-        <div className="stat-box">
-          <p>
-            <MdCelebration className="stat-icon holiday-ot-icon" /> Tăng ca ngày lễ
-          </p>
-          <h3>{totalHolidayOT} giờ</h3>
         </div>
       </div>
 

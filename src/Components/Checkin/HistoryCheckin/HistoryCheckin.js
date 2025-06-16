@@ -89,7 +89,7 @@ const HistoryCheckin = () => {
               lunchBreak: { old: '1.5 hrs', new: '1.5 hrs' },
               workingType: { old: 'Office', new: 'Office' },
               checkFlag: { old: 'WorkDay', new: 'WorkDay' },
-              description: 'quên checkout trên công ty, về nhà mới checkout',
+              description: 'Quên checkout',
             },
           },
           {
@@ -101,7 +101,7 @@ const HistoryCheckin = () => {
               lunchBreak: { old: '1.5 hrs', new: '1.5 hrs' },
               workingType: { old: 'Office', new: 'Office' },
               checkFlag: { old: 'WorkDay', new: 'WorkDay' },
-              description: 'quên checkout trên công ty, về nhà mới checkout',
+              description: 'Quên checkout',
             },
           },
         ];

@@ -18,7 +18,7 @@ const StructureSetting = () => {
   const items = [
     { key: "rank", label: "Cấp bậc", children: <Rank /> },
     { key: "department", label: "Bộ phận", children: <Department /> },
-    { key: "jobtitle", label: "Chức vụ", children: <JobTitle /> },
+    // { key: "jobtitle", label: "Chức vụ", children: <JobTitle /> },
     { key: "position", label: "Vị trí", children: <Position /> },
     { key: "branch", label: "Chi nhánh", children: <Branch /> },
     //{ key: "view", label: "Xem cơ cấu tổ chức", children: <StructureView /> },

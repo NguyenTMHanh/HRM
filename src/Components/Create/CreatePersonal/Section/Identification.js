@@ -192,7 +192,7 @@ const Identification = ({ setFrontImage, setBackImage, frontImage, backImage, on
               <>
                 <Placeholder>
                   <Icon>
-                    <UserOutlined style={{ fontSize: '80px', color: '#ccc' }} />
+                    <UserOutlined style={{ color: '#ccc', transform: 'scale(4)' }} />
                   </Icon>
                   <Bar style={{ width: '60%' }} />
                   <Bar style={{ width: '40%' }} />
@@ -247,7 +247,7 @@ const Identification = ({ setFrontImage, setBackImage, frontImage, backImage, on
               <>
                 <Placeholder>
                   <Icon>
-                    <UserOutlined style={{ fontSize: '80px', color: '#ccc' }} />
+                    <UserOutlined style={{ color: '#ccc', transform: 'scale(4)' }} />
                   </Icon>
                   <Bar style={{ width: '60%' }} />
                   <Bar style={{ width: '40%' }} />

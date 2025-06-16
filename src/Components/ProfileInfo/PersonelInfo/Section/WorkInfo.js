@@ -29,7 +29,7 @@ const WorkInfo = ({
         { label: 'Ngày sinh', value: formatDate(dateOfBirth) },
         { label: 'Ngày gia nhập công ty', value: formatDate(joinDate) },
         { label: 'Bộ phận', value: department },
-        { label: 'Chức vụ', value: jobTitle },
+        // { label: 'Chức vụ', value: jobTitle },
         { label: 'Cấp bậc', value: level },
         { label: 'Vị trí', value: position },
         { label: 'Được quản lý bởi', value: managedBy },

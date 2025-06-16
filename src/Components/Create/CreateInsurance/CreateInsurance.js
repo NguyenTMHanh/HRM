@@ -75,7 +75,7 @@ function CreateInsurance({ initialData, onSave, onCancel, isModalFooter = false,
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   );
   const canCreateInsurance = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'profileInsurance' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
   const canUpdateInsurance = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileInsurance' && p.actionId === 'update'

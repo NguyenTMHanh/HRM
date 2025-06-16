@@ -270,7 +270,7 @@ const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
               <Select placeholder="Chọn bộ phận">{departmentOptions}</Select>
             </Form.Item>
           </Col>
-          <Col xs={24} sm={6}>
+          {/* <Col xs={24} sm={6}>
             <Form.Item
               label="Chức vụ"
               name="jobTitle"
@@ -278,7 +278,7 @@ const WorkInfo = React.memo(({ form, initialData, breakTime }) => {
             >
               <Select placeholder="Chọn chức vụ">{jobTitleOptions}</Select>
             </Form.Item>
-          </Col>
+          </Col> */}
           <Col xs={24} sm={6}>
             <Form.Item
               label="Cấp bậc"

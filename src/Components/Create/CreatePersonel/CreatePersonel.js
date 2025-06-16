@@ -47,12 +47,17 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
   );
   const canUpdate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "profilePersonel" && p.actionId === "update"
-  );
+  )|| permissions.some(
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
+
   const canUpdateRoleGroup = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "HrPersonel" && p.actionId === "update"
   )|| permissions.some(
     (p) => p.moduleId === 'HrPersonel' && p.actionId === 'update');
 
+  const canCreate = hasAllModuleAuthority || permissions.some(
+    (p) => p.moduleId === "HrPersonel" && p.actionId === "create"
+  );
   // Extract image ID from URL
   const extractImageIdFromUrl = (imageUrl) => {
     if (!imageUrl) return null;
@@ -176,7 +181,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
       message.error("Bạn không có quyền cập nhật hồ sơ nhân sự.");
       return;
     }
-    if (!canUpdate && !isEditMode) {
+    if (!isEditMode && !canCreate) {
       message.error("Bạn không có quyền tạo mới hồ sơ nhân sự.");
       return;
     }
@@ -208,7 +213,7 @@ function CreatePersonel({ initialData, onSave, onCancel, isModalFooter = false, 
         password: formData.password || "",
         dateJoinCompany: formData.joinDate ? formData.joinDate.toISOString() : null,
         departmentName: formData.department,
-        jobtitleName: formData.jobTitle,
+        // jobtitleName: formData.jobTitle ,
         rankName: formData.level,
         positionName: formData.position,
         managerId: managerCode,

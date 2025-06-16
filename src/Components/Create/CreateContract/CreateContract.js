@@ -59,7 +59,7 @@ function CreateContract({ initialData, onSave, onCancel, isModalFooter = false, 
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   );
   const canCreateContract = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'profileContract' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
   const canUpdateContract = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === 'profileContract' && p.actionId === 'update'

@@ -54,7 +54,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
     (p) => p.moduleId === "allModule" && p.actionId === "fullAuthority"
   );
   const canCreate = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === "profilePersonal" && p.actionId === "create"
+    (p) => p.moduleId === "HrPersonel" && p.actionId === "create"
   );
   const canUpdate = hasAllModuleAuthority || permissions.some(
     (p) => p.moduleId === "profilePersonal" && p.actionId === "update"
@@ -171,7 +171,7 @@ function CreatePersonal({ initialData, onSave, onCancel, isModalFooter = false, 
       return;
     }
     if (!isEditMode && !canCreate) {
-      message.error("Bạn không có quyền tạo mới nhân viên.");
+      message.error("Bạn không có quyền tạo mới thông tin cá nhân.");
       return;
     }
 

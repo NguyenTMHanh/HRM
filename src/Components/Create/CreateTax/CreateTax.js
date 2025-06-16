@@ -53,7 +53,7 @@ function CreateTax({ initialData, onSave, onCancel, isModalFooter = false, isEdi
     (p) => p.moduleId === 'allModule' && p.actionId === 'fullAuthority'
   );
   const canCreateTax = hasAllModuleAuthority || permissions.some(
-    (p) => p.moduleId === 'profileTax' && p.actionId === 'create'
+    (p) => p.moduleId === 'HrPersonel' && p.actionId === 'create'
   );
   const canUpdateTax = hasAllModuleAuthority || permissions.some(
     (p) => (p.moduleId === 'profileTax' && p.actionId === 'update')

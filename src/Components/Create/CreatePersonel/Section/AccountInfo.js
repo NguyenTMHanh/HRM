@@ -295,7 +295,7 @@ const AccountInfo = React.memo(({
               >
                 {!avatarImage && !uploadLoading && (
                   <Placeholder>
-                    <UserOutlined style={{ fontSize: '120px', color: '#fff' }} />
+                    <UserOutlined style={{ color: '#ccc', transform: 'scale(8)' }} />
                   </Placeholder>
                 )}
                 {uploadLoading && (

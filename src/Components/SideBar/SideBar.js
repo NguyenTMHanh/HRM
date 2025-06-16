@@ -21,8 +21,8 @@ function Sidebar({ collapsed, toggleCollapse }) {
       collapsed={collapsed}
       collapsible
       trigger={null}
-      width={250}
-      collapsedWidth={80}
+      width={200} // Reduced from 250
+      collapsedWidth={60} // Reduced from 80
     >
       <Logo />
       <div className="menu-container">

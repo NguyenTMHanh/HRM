@@ -22,14 +22,15 @@
 }
 
 .filter-controls {
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   border-bottom: 1px solid #e5e7eb;
 }
 .year-month-filter {
+  height: 45px;
   display: flex;
   align-items: center;
   gap: 20px;
-  background: #f8fafc;
+  background: #e9f3f9;
   padding: 10px 15px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -42,7 +43,7 @@
 
 .year-month-filter label {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #1f2937;
   letter-spacing: 0.2px;
   margin-right: 5px;
@@ -53,7 +54,7 @@
   padding: 8px 30px 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #374151;
   background-color: #ffffff;
@@ -86,14 +87,14 @@
 
 .table-content-salary {
   padding: 20px;
-  margin: 15px;
+  margin: 10px;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 155px); 
+  height: calc(100vh - 116px); 
   box-sizing: border-box;
 }
 
@@ -107,7 +108,7 @@
 }
 .left-column-salary{
   flex: 1;
-  max-width: 60%;
+  max-width: 70%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -136,7 +137,7 @@
 /* Cột phải có thanh cuộn riêng */
 .right-column-salary {
   flex: 1;
-  max-width: 40%;
+  max-width: 30%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -202,12 +203,12 @@
 .item-title {
   font-weight: normal;
   color: #333;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
 .item-source {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #888;
   line-height: 1.4;
 }

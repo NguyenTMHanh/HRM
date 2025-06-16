@@ -1,6 +1,6 @@
 .table-content {
   padding: 20px;
-  margin: 15px;
+  margin: 10px;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -30,7 +30,7 @@
 }
 
 .filter-controls {
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -51,7 +51,7 @@
 
 .year-month-filter label {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #1f2937;
   letter-spacing: 0.2px;
   margin-right: 5px;
@@ -62,7 +62,7 @@
   padding: 8px 30px 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #374151;
   background-color: #ffffff;

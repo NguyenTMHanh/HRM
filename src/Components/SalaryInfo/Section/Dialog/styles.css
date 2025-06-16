@@ -3,7 +3,7 @@
   }
   
   .question-dlg .ant-modal-title {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: #000;
   }
@@ -22,7 +22,7 @@
   .question-input {
     border-radius: 4px;
     border: 1px solid #d9d9d9;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     resize: none; 
   }
   
@@ -37,7 +37,7 @@
   }
   
   .confirm-dlg .ant-modal-title {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: #000;
   }
@@ -54,7 +54,7 @@
   
   .confirm-content p {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: #000;
   }
   

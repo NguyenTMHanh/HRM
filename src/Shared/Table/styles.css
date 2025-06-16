@@ -1,7 +1,7 @@
 .table-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 220px);
+  height: calc(100vh - 180px);
   box-sizing: border-box;
 }
 
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  width: 80%;
+  width: 85%;
 }
 
 .search-container {
@@ -31,7 +31,7 @@
   padding: 8px 40px 8px 12px;
   border: 1px solid #ccc;
   border-radius: 20px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho input tìm kiếm */
 }
 
 .search-button {
@@ -54,13 +54,13 @@
 .items-per-page {
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho nhãn */
   gap: 8px;
 }
 
 .items-per-page select {
   padding: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho select */
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -71,7 +71,7 @@
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho nút Tạo mới */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -105,11 +105,13 @@ table {
   text-align: left;
   box-sizing: border-box;
   white-space: nowrap;
+  font-size: 0.75rem; /* Đặt font size cho nội dung bảng */
 }
 
 .table th {
   text-align: left;
   background-color: #f5f5f5;
+  font-size: 0.75rem; /* Đặt font size cho tiêu đề bảng */
 }
 
 td.group-cell {
@@ -134,6 +136,7 @@ td.group-cell {
   z-index: 3;
   background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
   text-align: center;
+  font-size: 0.75rem; /* Đặt font size cho tiêu đề nhóm */
 }
 
 .table thead tr:nth-child(2) th {
@@ -141,6 +144,7 @@ td.group-cell {
   top: 40px;
   z-index: 2;
   background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  font-size: 0.75rem; /* Đặt font size cho tiêu đề phụ */
 }
 
 .table tbody tr:hover {
@@ -170,6 +174,7 @@ td.group-cell {
   justify-content: center;
   width: 30px;
   height: 30px;
+  font-size: 0.75rem; /* Đặt font size cho nút hành động */
 }
 
 .btn-edit {
@@ -217,6 +222,7 @@ td.group-cell {
   border-radius: 6px;
   background-color: white;
   cursor: pointer;
+  font-size: 0.75rem; /* Đặt font size cho nút phân trang */
 }
 
 .pagination-btn.active {
@@ -261,9 +267,13 @@ td.group-cell {
   gap: 8px;
 }
 
+.branch-filter label {
+  font-size: 0.75rem; /* Đặt font size cho nhãn chi nhánh */
+}
+
 .branch-filter select {
   padding: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho select chi nhánh */
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -274,9 +284,25 @@ td.group-cell {
   gap: 8px;
 }
 
+.department-filter label {
+  font-size: 0.75rem; /* Đặt font size cho nhãn bộ phận */
+}
+
 .department-filter select {
   padding: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Đặt font size cho select bộ phận */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Đảm bảo inline styles trong component cũng đồng nhất */
+.sort-filter label {
+  font-size: 0.75rem; /* Đặt font size cho nhãn sắp xếp */
+}
+
+.sort-filter select {
+  padding: 6px;
+  font-size: 0.75rem; /* Đặt font size cho select sắp xếp */
   border: 1px solid #ccc;
   border-radius: 4px;
 }

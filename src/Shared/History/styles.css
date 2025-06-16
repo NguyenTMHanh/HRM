@@ -40,13 +40,13 @@
 .item-title {
   font-weight: 600 !important;
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   margin-bottom: 4px;
 }
 
 .item-source {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.5;
 }

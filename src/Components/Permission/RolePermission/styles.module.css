@@ -1,11 +1,11 @@
 .tableContent {
   padding: 20px;
-  margin: 15px;
+  margin: 10px;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  height: calc(100vh - 105px); 
+  height: calc(100vh - 70px); 
   display: flex;
   flex-direction: column;
 }

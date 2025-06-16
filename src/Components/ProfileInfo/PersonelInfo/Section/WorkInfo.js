@@ -40,7 +40,7 @@ const WorkInfo = ({
 
     return (
         <div className="info-display" style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <div style={{ marginRight: '60px'}}>
+            <div style={{ marginRight: '20px'}}>
                 <Avatar
                     style={{backgroundColor: '#e6e9f0'}}
                     size={200}
@@ -56,7 +56,7 @@ const WorkInfo = ({
                             <Col xs={12} sm={6} className="info-label">
                                 {item.label}
                             </Col>
-                            <Col xs={12} sm={6} className="info-value">
+                            <Col xs={12} sm={18} className="info-value" style={{ flex: 1 }}>
                                 {item.value}
                             </Col>
                         </Row>

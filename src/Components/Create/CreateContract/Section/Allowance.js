@@ -10,6 +10,7 @@ const DeleteButton = styled(Button)`
   border-radius: 4px;
   padding: 8px 16px;
   transition: all 0.3s ease;
+  font-size: 0.75rem; /* Thêm font size cho chữ "Xóa" */
 
   &:hover {
     background-color: #d42a2a;
@@ -30,6 +31,7 @@ const AddButton = styled(Button)`
   border-radius: 4px;
   padding: 8px 16px;
   transition: all 0.3s ease;
+  font-size: 0.75rem; /* Thêm font size cho chữ "Thêm mới phụ cấp" */
 
   &:hover {
     background-color: #002d72 !important;
@@ -58,12 +60,11 @@ const Allowance = ({ form }) => {
       try {
         const response = await axios.get('/api/Allowance');
         if (response.status === 200 && Array.isArray(response.data)) {
-          // Map API response to the format expected by the Select component
           const options = response.data.map((allowance) => ({
             label: allowance.nameAllowance,
             value: allowance.nameAllowance,
             amount: `${formatWithSpaces(allowance.moneyAllowance)} VNĐ`,
-            moneyAllowance: allowance.moneyAllowance, // Store raw amount for reference
+            moneyAllowance: allowance.moneyAllowance,
           }));
           setAllowanceOptions(options);
         } else {

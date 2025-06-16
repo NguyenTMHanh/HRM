@@ -230,7 +230,7 @@ function Login() {
                     transform: 'translateY(-50%)',
                     cursor: 'pointer',
                     color: '#888',
-                    fontSize: '20px',
+                    fontSize: '0.75rem',
                     zIndex: 1
                   }}
                 >

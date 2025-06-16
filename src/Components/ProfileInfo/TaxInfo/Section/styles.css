@@ -24,13 +24,13 @@
 }
 
 .info-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: #8c8c8c;
 }
 
 .info-value {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #141414;
 }
@@ -40,19 +40,21 @@
   background: #e8e8e8;
 }
 
-.custom-dependent-table .ant-table-thead > tr > th {
-  background-color: #f0f2f5;
-  font-weight: bold;
-  text-align: left;
-  padding: 8px 16px;
+.custom-allowance-table .ant-table-thead > tr > th {
+  font-size: 0.75rem !important; /* Đặt font size cho tiêu đề */
+  font-weight: 500; /* Tùy chọn, giữ trọng số phù hợp */
+  color: #141414; /* Tùy chọn, giữ màu tương tự nội dung */
 }
 
-.custom-dependent-table .ant-table-tbody > tr > td {
-  padding: 8px 16px;
-  text-align: left;
+.custom-allowance-table .ant-table-tbody > tr > td {
+  font-size: 0.75rem !important; /* Đặt font size cho nội dung */
+  font-weight: 400; /* Tùy chọn, giữ trọng số phù hợp */
+  color: #141414; /* Tùy chọn, giữ màu tương tự tiêu đề */
 }
 
-.custom-dependent-table .ant-table {
-  table-layout: fixed;
-  width: 100%;
+/* Đảm bảo các ô trong bảng không bị cắt */
+.custom-allowance-table .ant-table-cell {
+  white-space: nowrap; /* Ngăn ngắt dòng tự động */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Thêm dấu ... nếu nội dung bị cắt */
 }

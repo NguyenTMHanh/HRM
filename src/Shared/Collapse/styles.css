@@ -1,8 +1,17 @@
-
 .header-title {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   line-height: 20px;
   text-align: left;
   color: #141414;
+}
+
+.panel-collapse .ant-collapse-content > .ant-collapse-content-box {
+  font-size: 0.75rem; /* Đặt font size cho nội dung trong panel */
+  color: #141414; /* Đảm bảo màu sắc nhất quán */
+}
+
+/* Đảm bảo các phần tử con trong panel cũng tuân theo font size */
+.panel-collapse * {
+  font-size: 0.75rem !important; /* Áp dụng cho tất cả chữ trong panel */
 }

@@ -21,7 +21,7 @@ const CollapseComponent = ({ item, headerStyle, panelStyle, headerTitleStyle }) 
 
   return (
     <Collapse
-      defaultActiveKey={Array.from({ length: 15}, (_, i) => String(i + 1))}
+      defaultActiveKey={Array.from({ length: 15 }, (_, i) => String(i + 1))}
       expandIconPosition="end"
       items={collapseItems}
     />

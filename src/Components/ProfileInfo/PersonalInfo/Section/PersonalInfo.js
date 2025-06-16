@@ -32,11 +32,11 @@ const PersonalInfo = ({
     <div className="info-display">
       {infoItems.map((item, index) => (
         <div key={index}>
-          <Row gutter={[16, 16]} className="info-row">
+          <Row gutter={[16, 16]} className="info-row" style={{ flexWrap: 'nowrap' }}>
             <Col xs={12} sm={6} className="info-label">
               {item.label}
             </Col>
-            <Col xs={12} sm={6} className="info-value">
+            <Col xs={12} sm={18} className="info-value" style={{ flex: 1 }}>
               {item.value}
             </Col>
           </Row>

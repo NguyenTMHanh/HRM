@@ -209,7 +209,7 @@ const TableComponent = ({
           {/* Branch Filter - Load from API */}
           {onBranchShow && (
             <div className="branch-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label htmlFor="branch-select" style={{ fontSize: '14px' }}>Chi nhánh: </label>
+              <label htmlFor="branch-select" style={{ fontSize: '0.75rem' }}>Chi nhánh: </label>
               <select
                 id="branch-select"
                 value={selectedBranch}
@@ -217,7 +217,7 @@ const TableComponent = ({
                 disabled={loadingBranches}
                 style={{ 
                   padding: '6px', 
-                  fontSize: '14px', 
+                  fontSize: '0.75rem', 
                   borderRadius: '4px', 
                   border: '1px solid #ccc',
                   opacity: loadingBranches ? 0.6 : 1
@@ -238,7 +238,7 @@ const TableComponent = ({
           {/* Department Filter - Load from API and filter by branch */}
           {onDepartmentShow && (
             <div className="department-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label htmlFor="department-select" style={{ fontSize: '14px' }}>Bộ phận: </label>
+              <label htmlFor="department-select" style={{ fontSize: '0.75rem' }}>Bộ phận: </label>
               <select
                 id="department-select"
                 value={selectedDepartment}
@@ -246,7 +246,7 @@ const TableComponent = ({
                 disabled={loadingDepartments}
                 style={{ 
                   padding: '6px', 
-                  fontSize: '14px', 
+                  fontSize: '0.75rem', 
                   borderRadius: '4px', 
                   border: '1px solid #ccc',
                   opacity: loadingDepartments ? 0.6 : 1
@@ -277,12 +277,12 @@ const TableComponent = ({
           {/* Sort Combobox */}
           {sortField && (
             <div className="sort-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label htmlFor="sort-select" style={{ fontSize: '14px' }}>Sắp xếp: </label>
+              <label htmlFor="sort-select" style={{ fontSize: '0.75rem' }}>Sắp xếp: </label>
               <select
                 id="sort-select"
                 value={sortOrder}
                 onChange={handleSortChange}
-                style={{ padding: '6px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ccc' }}
+                style={{ padding: '6px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
               >
                 <option value="asc">A → Z</option>
                 <option value="desc">Z → A</option>

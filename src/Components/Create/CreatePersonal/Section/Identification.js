@@ -6,8 +6,8 @@ import axios from 'axios';
 
 const UploadBox = styled.div`
   position: relative;
-  width: 400px;
-  height: 260px;
+  width: 350px;
+  height: 230px;
   border: 2px dashed #ccc;
   border-radius: 10px;
   display: flex;
@@ -20,7 +20,7 @@ const UploadBox = styled.div`
   background-color: #e6f0fa;
   text-align: center;
   color: #666;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   transition: all 0.3s;
 
   &:hover {
@@ -47,7 +47,7 @@ const Bar = styled.div`
 
 const Text = styled.div`
   margin-top: 10px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #666;
 `;
 

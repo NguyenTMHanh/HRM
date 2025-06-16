@@ -1,5 +1,5 @@
 .scroll-container {
-    height: calc(100vh - 280px); 
+    height: calc(100vh - 200px) !important; 
     overflow-y: auto;
     padding-right: 10px;
   }
@@ -7,4 +7,27 @@
   .collapse-container {
     margin-bottom: 20px;
   }
-  
+  /* Áp dụng font size cho tất cả các input trong Ant Design */
+.ant-input {
+  font-size: 0.75rem !important; /* Đảm bảo ghi đè style mặc định */
+}
+
+/* Áp dụng font size cho Select */
+.ant-select-selector {
+  font-size: 0.75rem !important;
+}
+
+/* Áp dụng font size cho DatePicker */
+.ant-picker-input input {
+  font-size: 0.75rem !important;
+}
+
+/* Áp dụng font size cho label */
+.ant-form-item-label > label {
+  font-size: 0.75rem !important;
+}
+
+/* Đảm bảo nội dung con (nếu có) cũng kế thừa style */
+.ant-form-item-label > label span {
+  font-size: 0.75rem;
+}

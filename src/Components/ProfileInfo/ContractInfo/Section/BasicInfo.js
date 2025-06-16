@@ -28,7 +28,7 @@ const BasicInfo = ({
             <Col xs={12} sm={6} className="info-label">
               {item.label}
             </Col>
-            <Col xs={12} sm={6} className="info-value">
+            <Col xs={12} sm={18} className="info-value" style={{ flex: 1 }}>
               {item.value}
             </Col>
           </Row>

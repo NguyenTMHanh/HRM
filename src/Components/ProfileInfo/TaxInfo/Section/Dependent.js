@@ -170,7 +170,7 @@ const DependentInfo = ({ dependents = [] }) => {
         pagination={false}
         locale={{ emptyText: 'Không có người phụ thuộc' }}
         bordered
-        className="custom-dependent-table"
+        className="custom-allowance-table"
       />
     </div>
   );

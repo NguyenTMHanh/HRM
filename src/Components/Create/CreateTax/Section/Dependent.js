@@ -12,6 +12,7 @@ const DeleteButton = styled(Button)`
   border-radius: 4px;
   padding: 8px 16px;
   transition: all 0.3s ease;
+  font-size: 0.75rem; 
 
   &:hover {
     background-color: #d42a2a;
@@ -31,6 +32,7 @@ const AddButton = styled(Button)`
   border-radius: 4px;
   padding: 8px 16px;
   transition: all 0.3s ease;
+  font-size: 0.75rem;
 
   &:hover {
     background-color: #002d72 !important;
@@ -54,6 +56,7 @@ const StyledUpload = styled(Upload)`
   .ant-btn {
     width: 100% !important;
     text-align: left;
+    font-size: 0.75rem; /* Đặt font size cho chữ "Tải lên" */
   }
 `;
 
@@ -65,12 +68,10 @@ const Dependent = ({ form, disabled }) => {
     { label: 'Khác', value: 'Khác' },
   ];
 
-  // State to store fileList and file IDs for each dependent
   const [fileLists, setFileLists] = useState({});
-  const [fileIds, setFileIds] = useState({}); // Store file IDs
-  const [uploadLoading, setUploadLoading] = useState({}); // Track loading state per index
+  const [fileIds, setFileIds] = useState({});
+  const [uploadLoading, setUploadLoading] = useState({});
 
-  // Upload file to server
   const uploadProofFile = async (file, index) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -78,7 +79,6 @@ const Dependent = ({ form, disabled }) => {
     try {
       setUploadLoading((prev) => ({ ...prev, [index]: true }));
 
-      // Create a new axios instance for upload
       const uploadAxios = axios.create({
         baseURL: axios.defaults.baseURL,
       });
@@ -109,7 +109,6 @@ const Dependent = ({ form, disabled }) => {
     }
   };
 
-  // Handle file upload change
   const handleUploadChange = async (index, info) => {
     const file = info.file;
     const newFileLists = { ...fileLists, [index]: [file] };
@@ -118,10 +117,8 @@ const Dependent = ({ form, disabled }) => {
     if (file.status !== 'removed') {
       try {
         const { id, fileName } = await uploadProofFile(file, index);
-        // Update file ID in state
         setFileIds((prev) => ({ ...prev, [index]: id }));
 
-        // Update form field with file ID and URL
         const currentDependents = form.getFieldValue('dependents') || [];
         currentDependents[index] = {
           ...currentDependents[index],
@@ -129,7 +126,7 @@ const Dependent = ({ form, disabled }) => {
             uid: id,
             name: fileName,
             status: 'done',
-            url: URL.createObjectURL(file), // Hiển thị ảnh ngay sau khi upload
+            url: URL.createObjectURL(file),
             fileId: id,
           }],
         };
@@ -137,11 +134,9 @@ const Dependent = ({ form, disabled }) => {
 
         message.success('Tải hồ sơ minh chứng thành công!');
       } catch (error) {
-        // Remove file from fileList if upload fails
         setFileLists((prev) => ({ ...prev, [index]: [] }));
       }
     } else {
-      // Handle file removal
       setFileLists((prev) => ({ ...prev, [index]: [] }));
       setFileIds((prev) => {
         const newFileIds = { ...prev };
@@ -158,7 +153,6 @@ const Dependent = ({ form, disabled }) => {
     }
   };
 
-  // Sync fileLists and fileIds with Form.List when fields change
   useEffect(() => {
     const currentDependents = form.getFieldValue('dependents') || [];
     const newFileLists = {};
@@ -170,7 +164,7 @@ const Dependent = ({ form, disabled }) => {
           uid: file.uid || `-${index}`,
           name: file.name || 'File',
           status: 'done',
-          url: file.url, // Giữ URL từ initialData
+          url: file.url,
           fileId: file.fileId,
         }));
       } else {
@@ -277,7 +271,7 @@ const Dependent = ({ form, disabled }) => {
                     fileList={fileLists[index] || []}
                     onChange={(info) => handleUploadChange(index, info)}
                     disabled={disabled || uploadLoading[index]}
-                    beforeUpload={() => false} // Ngăn upload tự động
+                    beforeUpload={() => false}
                     accept="image/*"
                   >
                     <Button
@@ -298,10 +292,6 @@ const Dependent = ({ form, disabled }) => {
                 )}
               </Col>
             </Row>
-
-
-
-            
           ))}
 
           {!disabled && (

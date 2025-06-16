@@ -248,7 +248,7 @@ function ContractInfoProfile() {
   if (!data && !loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
-        <div style={{ fontSize: '0.875rem', color: '#666' }}>
+        <div style={{ fontSize: '0.75rem', color: '#666' }}>
           Chưa có thông tin hợp đồng. Vui lòng tạo hợp đồng trước.
         </div>
       </div>

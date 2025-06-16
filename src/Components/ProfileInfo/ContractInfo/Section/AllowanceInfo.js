@@ -19,7 +19,7 @@ const AllowanceInfo = ({ allowances = [] }) => {
   ];
 
   return (
-    <div className="info-display" style={{ fontSize: '0.875rem !important' }}>
+    <div className="info-display">
       <Table
         columns={columns}
         dataSource={allowances.map((item, index) => ({ ...item, key: index }))}

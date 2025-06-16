@@ -40,7 +40,7 @@ const AllPayroll = ({ payrolls = [] }) => {
   ];
 
   return (
-    <div className="info-display" style={{ fontSize: '0.875rem !important' }}>
+    <div className="info-display" style={{ fontSize: '0.75rem !important' }}>
       <Table
         columns={columns}
         dataSource={payrolls.map((item, index) => ({ ...item, key: index }))}

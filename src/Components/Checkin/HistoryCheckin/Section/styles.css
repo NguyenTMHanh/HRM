@@ -502,3 +502,78 @@
     color: #333;
     flex: 1; 
   }
+
+  /* Styles for AbsenceRequestDlg */
+.absence-request-dlg .ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.absence-request-dlg .ant-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.absence-request-content {
+  padding: 24px 0;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.absence-request-dlg .ant-select-selector {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  height: 40px;
+}
+
+.absence-request-dlg .ant-input {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+}
+
+.absence-request-dlg .ant-picker {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  height: 40px;
+}
+
+.absence-request-dlg .ant-space-vertical {
+  width: 100%;
+}
+
+/* Focus states */
+.absence-request-dlg .ant-select-focused .ant-select-selector,
+.absence-request-dlg .ant-input:focus,
+.absence-request-dlg .ant-picker:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Modal footer adjustments */
+.absence-request-dlg .ant-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .absence-request-dlg {
+    margin: 0 16px;
+  }
+  
+  .absence-request-dlg .ant-modal {
+    max-width: calc(100vw - 32px);
+  }
+}

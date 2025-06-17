@@ -101,7 +101,6 @@ const WorkStats = ({
               <th>Nghỉ trưa</th>
               <th>Giờ làm</th>
               <th>Hình thức làm việc</th>
-              <th>Loại ngày công</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -122,7 +121,6 @@ const WorkStats = ({
                 <td>{row.lunchBreak}</td>
                 <td>{row.hours}</td>
                 <td>{row.type}</td>
-                <td>{row.checkFlag}</td>
                 <td>
                   {row.checkInOut && (
                     <button

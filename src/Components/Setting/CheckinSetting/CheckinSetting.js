@@ -4,6 +4,7 @@ import Checkin from "./Section/Checkin";
 import WorkType from "./Section/WorkType";
 import Holiday from "./Section/Holiday";
 import BreakLunch from "./Section/BreakLunch";
+import LocationCheckin from "./Section/LocationCheckin";
 import styles from "./styles.module.css";
 
 function CheckinSetting() {
@@ -15,6 +16,16 @@ function CheckinSetting() {
               <Collapse
                 item={{
                   key: "1",
+                  header: "Cài đặt vị trí Checkin/Checkout",
+                  children: <LocationCheckin />,
+                }}
+              />
+            </div>
+
+            <div className={styles.collapseContainer}>
+              <Collapse
+                item={{
+                  key: "2",
                   header: "Cài đặt thời gian Checkin/Checkout",
                   children: <Checkin />,
                 }}
@@ -24,7 +35,7 @@ function CheckinSetting() {
             <div className={styles.collapseContainer}>
               <Collapse
                 item={{
-                  key: "2",
+                  key: "3",
                   header: "Cài đặt thời gian nghỉ trưa",
                   children: <BreakLunch />,
                 }}
@@ -34,7 +45,7 @@ function CheckinSetting() {
             <div className={styles.collapseContainer}>
               <Collapse
                 item={{
-                  key: "3",
+                  key: "4",
                   header: "Cài đặt loại hình làm việc",
                   children: <WorkType />,
                 }}
@@ -44,7 +55,7 @@ function CheckinSetting() {
             <div className={styles.collapseContainer}>
               <Collapse
                 item={{
-                  key: "4",
+                  key: "5",
                   header: "Cài đặt ngày nghỉ lễ",
                   children: <Holiday />,
                 }}

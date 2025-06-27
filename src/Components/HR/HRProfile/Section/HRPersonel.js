@@ -265,7 +265,7 @@ const HRPersonel = () => {
     { label: 'Họ và tên NLĐ', key: 'name' },
     { label: 'Chi nhánh', key: 'branch' },
     { label: 'Bộ phận', key: 'department' },
-    { label: 'Chức vụ', key: 'jobTitle' },
+    // { label: 'Chức vụ', key: 'jobTitle' },
     { label: 'Cấp bậc', key: 'rank' },
     { label: 'Vị trí', key: 'position' },
     { label: 'Ngày gia nhập', key: 'joinDate' },
@@ -278,7 +278,7 @@ const HRPersonel = () => {
   const columnGroups = [
     {
       label: 'Thông tin hồ sơ nhân sự',
-      columns: ['stt', 'avatar', 'name', 'branch', 'department', 'jobTitle', 'rank', 'position', 'joinDate', 'managedBy', 'workType', 'lunchBreak'],
+      columns: ['stt', 'avatar', 'name', 'branch', 'department', 'rank', 'position', 'joinDate', 'managedBy', 'workType', 'lunchBreak'],
     },
     {
       label: 'Thông tin liên hệ',

@@ -5,7 +5,6 @@ import Collapse from "../../../Shared/Collapse/Collapse";
 import WorkStats from "./Section/WorkingTime";
 import FooterBar from "../../Footer/Footer";
 import ConfirmDlg from "./Section/ConfirmDlg";
-import QuestionDlg from "../../SalaryInfo/Section/Dialog/QuestionDlg";
 import ChangeTimeRequest from "./Section/ChangeTimeRequest";
 import { Spin } from 'antd';
 import moment from 'moment';
@@ -236,21 +235,13 @@ const HistoryCheckin = () => {
       </div>
 
       <FooterBar
-        showQuestion={true}
         showConfirm={true}
         onConfirm={handleConfirm}
-        onQuestion={handleQuestion}
       />
       <ConfirmDlg
         open={isConfirmDlgOpen}
         onCancel={handleCloseConfirmDlg}
         onConfirm={handleConfirmSubmit}
-      />
-
-      <QuestionDlg
-        visible={isQuestionDlgVisible}
-        onCancel={handleCloseQuestionDlg}
-        onOk={handleSubmitQuestion}
       />
     </div>
   );

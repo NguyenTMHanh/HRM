@@ -31,9 +31,8 @@ const HRHistoryCheckin = () => {
       position: 'Chuyên viên',
       checkinTime: '08:00',
       checkoutTime: '17:00',
-      lunchBreak: '12:00 - 13:00',
+      lunchBreak: '2h',
       workType: 'Văn phòng',
-      dayType: 'WorkDay',
     },
     {
       employeeId: 'IT002',
@@ -44,9 +43,8 @@ const HRHistoryCheckin = () => {
       position: 'Kỹ sư phần mềm',
       checkinTime: '09:00',
       checkoutTime: '18:00',
-      lunchBreak: '12:30 - 13:30',
+      lunchBreak: '2h',
       workType: 'Làm việc từ xa',
-      dayType: 'WorkDay',
     },
     {
       employeeId: 'FIN003',
@@ -57,9 +55,8 @@ const HRHistoryCheckin = () => {
       position: 'Kế toán viên',
       checkinTime: '08:30',
       checkoutTime: '16:30',
-      lunchBreak: '12:00 - 13:00',
+      lunchBreak: '2h',
       workType: 'Văn phòng',
-      dayType: 'AM-OFF',
     },
     {
       employeeId: 'HR002',
@@ -70,9 +67,8 @@ const HRHistoryCheckin = () => {
       position: 'Chuyên viên',
       checkinTime: '08:00',
       checkoutTime: '17:00',
-      lunchBreak: '12:00 - 13:00',
+      lunchBreak: '2h',
       workType: 'Văn phòng',
-      dayType: 'DAY-OFF',
     },
     {
       employeeId: 'IT003',
@@ -83,9 +79,8 @@ const HRHistoryCheckin = () => {
       position: 'Kỹ sư phần mềm',
       checkinTime: '09:00',
       checkoutTime: '18:00',
-      lunchBreak: '12:30 - 13:30',
+      lunchBreak: '2h',
       workType: 'Làm việc từ xa',
-      dayType: 'PM-OFF',
     },
     {
       employeeId: 'FIN004',
@@ -96,9 +91,8 @@ const HRHistoryCheckin = () => {
       position: 'Kế toán viên',
       checkinTime: '08:30',
       checkoutTime: '16:30',
-      lunchBreak: '12:00 - 13:00',
+      lunchBreak: '2h',
       workType: 'Văn phòng',
-      dayType: 'WorkDay',
     },
   ].map((item, index) => ({
     ...item,
@@ -129,7 +123,7 @@ const HRHistoryCheckin = () => {
     { label: 'Giờ ra', key: 'checkoutTime' },
     { label: 'Giờ nghỉ trưa', key: 'lunchBreak' },
     { label: 'Hình thức làm việc', key: 'workType' },
-    { label: 'Loại ngày công', key: 'dayType' },
+
   ];
 
   const columnGroups = [
@@ -139,7 +133,7 @@ const HRHistoryCheckin = () => {
     },
     {
       label: 'Thông tin lịch sử chấm công',
-      columns: ['checkinTime', 'checkoutTime', 'lunchBreak', 'workType', 'dayType'],
+      columns: ['checkinTime', 'checkoutTime', 'lunchBreak', 'workType'],
     },
   ];
 

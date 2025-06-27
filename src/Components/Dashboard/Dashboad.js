@@ -1,54 +1,73 @@
 import React from 'react';
-import KPICardsSection from './KPICardsSection';
-import CircularProgressSection from './CircularProgressSection';
-import AgingChart from './AgingChart';
+import DepartmentChart from './AgingChart';
+import KPICard from './KPICard';
 import WorkingCapitalChart from './WorkingCapitalChart';
 import ProfitLossChart from './ProfitLossChart';
 
 const styles = {
-  collapseWrapper: {
-    width: '100%',
-    height: '100vh',
-    backgroundColor: '#f5f7fa',
+  mainContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gridTemplateRows: '1fr 1fr',
+    height: 'calc(100vh - 70px)',
+    margin: '10px',
+    gap: '10px',
+    overflow: 'hidden',
   },
-  scrollContainer: {
-    height: 'calc(100vh - 105px)',
-    overflowY: 'auto',
-    padding: '20px',
-    margin: '15px',
+  chartContainer: {
+    padding: '15px',
     backgroundColor: '#fff',
     borderRadius: '10px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    maxWidth: 'calc(100% - 30px)',
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    minWidth: 0,
+    overflow: 'hiden', // Allow scrolling if content overflows
   },
+  
 };
 
-const Dashboard = () => (
-  <div style={styles.collapseWrapper}>
-    <div style={styles.scrollContainer}>
-      <div className="bg-gray-50 min-h-screen p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Left - KPI Cards */}
-          <div>
-            <KPICardsSection />
-          </div>
-          {/* Top Right - Aging Chart */}
-          <div>
-            <AgingChart />
-          </div>
-          {/* Bottom Left - Circular Progress */}
-          <div>
-            <CircularProgressSection />
-          </div>
-          {/* Bottom Right - Working Capital and Profit Loss */}
-          <div className="grid grid-cols-1 gap-6">
-            <WorkingCapitalChart />
-            <ProfitLossChart />
-          </div>
-        </div>
+const responsiveCSS = `
+  @media (max-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: repeat(4, 1fr) !important;
+    }
+  }
+  @media (max-width: 480px) {
+    .dashboard-grid {
+      margin: 5px !important;
+      gap: 5px !important;
+    }
+    .chart-container {
+      padding: 10px !important;
+    }
+  }
+`;
+
+const Dashboard = () => {
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = responsiveCSS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
+  return (
+    <div className="dashboard-grid" style={styles.mainContainer}>
+        <KPICard />
+      <div className="chart-container" style={styles.chartContainer}>
+        <WorkingCapitalChart />
+      </div>
+      <div className="chart-container" style={styles.chartContainer}>
+        <DepartmentChart />
+      </div>
+      <div className="chart-container" style={styles.chartContainer}>
+        <ProfitLossChart />
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default Dashboard;
